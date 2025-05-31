@@ -1,10 +1,21 @@
-import { User, Report, BinStatus, Route, Delivery } from '../types';
+import { User, Report, BinStatus, Route, Delivery, WasteSite, Notification } from '../types';
 
 // Simulated API delay
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Mock data
-const mockUsers: User[] = [
+// Load persisted data from localStorage or use defaults
+const loadPersistedData = (key: string, defaultData: any) => {
+  const stored = localStorage.getItem(key);
+  return stored ? JSON.parse(stored) : defaultData;
+};
+
+// Save data to localStorage
+const persistData = (key: string, data: any) => {
+  localStorage.setItem(key, JSON.stringify(data));
+};
+
+// Mock data with persistence
+const mockUsers = loadPersistedData('mockUsers', [
   {
     id: '1',
     email: 'resident@example.com',
@@ -30,7 +41,7 @@ const mockUsers: User[] = [
     facility: 'North Recycling Center',
     createdAt: '2024-03-20T10:00:00Z',
   },
-];
+]);
 
 const mockReports: Report[] = [
   {
@@ -111,6 +122,47 @@ const mockDeliveries: Delivery[] = [
   },
 ];
 
+const mockNotifications = loadPersistedData('mockNotifications', []);
+const mockWasteSites = loadPersistedData('mockWasteSites', [
+  {
+    id: 'WS001',
+    name: 'North Dumping Site',
+    location: 'North Industrial Area',
+    currentCapacity: 750,
+    maxCapacity: 1000,
+    composition: {
+      plastic: 40,
+      paper: 25,
+      glass: 15,
+      metal: 10,
+      organic: 10,
+    },
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    id: 'WS002',
+    name: 'South Dumping Site',
+    location: 'South Industrial Zone',
+    currentCapacity: 500,
+    maxCapacity: 1000,
+    composition: {
+      plastic: 30,
+      paper: 30,
+      glass: 20,
+      metal: 15,
+      organic: 5,
+    },
+    lastUpdated: new Date().toISOString(),
+  },
+]);
+
+let notificationCounter = loadPersistedData('notificationCounter', 1);
+
+// Helper function to get users by role
+const getUsersByRole = (role: 'resident' | 'dispatcher' | 'recycler') => {
+  return mockUsers.filter(user => user.role === role);
+};
+
 // Mock API functions
 export const api = {
   auth: {
@@ -133,6 +185,7 @@ export const api = {
         createdAt: new Date().toISOString(),
       };
       mockUsers.push(newUser);
+      persistData('mockUsers', mockUsers);
       return newUser;
     },
   },
@@ -208,6 +261,85 @@ export const api = {
       };
       mockDeliveries.push(newDelivery);
       return newDelivery;
+    },
+  },
+  wasteSites: {
+    list: async () => {
+      await delay(1000);
+      return mockWasteSites;
+    },
+    
+    getById: async (id: string) => {
+      await delay(500);
+      const site = mockWasteSites.find(site => site.id === id);
+      if (!site) throw new Error('Waste site not found');
+      return site;
+    },
+    
+    updateComposition: async (id: string, composition: WasteSite['composition']) => {
+      await delay(1000);
+      const siteIndex = mockWasteSites.findIndex(site => site.id === id);
+      if (siteIndex === -1) throw new Error('Waste site not found');
+      
+      mockWasteSites[siteIndex] = {
+        ...mockWasteSites[siteIndex],
+        composition,
+        lastUpdated: new Date().toISOString(),
+      };
+      
+      persistData('mockWasteSites', mockWasteSites);
+      return mockWasteSites[siteIndex];
+    }
+  },
+  notifications: {
+    create: async (data: {
+      type: Notification['type'];
+      title: string;
+      message: string;
+      forRole: 'resident' | 'dispatcher' | 'recycler';
+      metadata?: Record<string, any>;
+    }) => {
+      await delay(500);
+      
+      const targetUsers = getUsersByRole(data.forRole);
+      const notificationId = String(notificationCounter++);
+      const timestamp = new Date().toISOString();
+      
+      const notifications = targetUsers.map(user => ({
+        id: notificationId,
+        userId: user.id,
+        type: data.type,
+        title: data.title,
+        message: data.message,
+        timestamp,
+        read: false,
+        metadata: data.metadata,
+      }));
+
+      mockNotifications.push(...notifications);
+      
+      // Persist the updated data
+      persistData('mockNotifications', mockNotifications);
+      persistData('notificationCounter', notificationCounter);
+      
+      return notifications[0];
+    },
+
+    list: async (userId: string) => {
+      await delay(500);
+      return mockNotifications
+        .filter(n => n.userId === userId)
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    },
+
+    markAsRead: async (id: string) => {
+      await delay(500);
+      const notifications = mockNotifications.filter(n => n.id === id);
+      notifications.forEach(notification => {
+        notification.read = true;
+      });
+      persistData('mockNotifications', mockNotifications);
+      return notifications[0];
     },
   },
 }; 

@@ -123,8 +123,25 @@ export interface Notification {
   message: string;
   timestamp: string;
   read: boolean;
+  metadata?: Record<string, any>;
   action?: {
     label: string;
     url: string;
   };
+}
+
+export interface WasteSite {
+  id: string;
+  name: string;
+  location: string;
+  currentCapacity: number;
+  maxCapacity: number;
+  composition: {
+    plastic: number;
+    paper: number;
+    glass: number;
+    metal: number;
+    organic: number;
+  };
+  lastUpdated?: string;
 } 

@@ -5,7 +5,7 @@ import Layout from '../components/Layout/Layout';
 
 // Auth Pages
 import Login from '../pages/auth/Login';
-// import SignupResident from '../pages/auth/SignupResident';
+import SignupResident from '../pages/auth/SignupResident';
 // import SignupRecycler from '../pages/auth/SignupRecycler';
 // import ForgotPassword from '../pages/auth/ForgotPassword';
 
@@ -55,8 +55,8 @@ export default function AppRoutes() {
     <Routes>
       {/* Public Routes */}
       <Route path="/login" element={<Login />} />
-      {/* <Route path="/signup/resident" element={<SignupResident />} />
-      <Route path="/signup/recycler" element={<SignupRecycler />} />
+      <Route path="/signup/resident" element={<SignupResident />} />
+      {/* <Route path="/signup/recycler" element={<SignupRecycler />} />
       <Route path="/forgot-password" element={<ForgotPassword />} /> */}
 
       {/* Resident Routes */}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useAuth } from '../../context/AuthContext';
@@ -11,28 +11,36 @@ const validationSchema = Yup.object({
   password: Yup.string()
     .min(8, 'Password must be at least 8 characters')
     .required('Password is required'),
+  name: Yup.string()
+    .required('Name is required'),
+  phone: Yup.string()
+    .matches(/^\+?[\d\s-]+$/, 'Invalid phone number'),
+  zone: Yup.string(),
 });
 
-export default function Login() {
-  const { login } = useAuth();
+export default function SignupResident() {
+  const { signup } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [error, setError] = useState('');
 
   const formik = useFormik({
     initialValues: {
       email: '',
       password: '',
+      name: '',
+      phone: '',
+      zone: '',
     },
     validationSchema,
     onSubmit: async (values) => {
       try {
-        const user = await login(values.email, values.password);
-        // Navigate to the return URL if available, otherwise to the role-specific dashboard
-        const returnUrl = location.state?.from || `/${user.role}/dashboard`;
-        navigate(returnUrl, { replace: true });
+        await signup({
+          ...values,
+          role: 'resident',
+        });
+        navigate('/resident/dashboard', { replace: true });
       } catch (err) {
-        setError('Invalid email or password');
+        setError('Failed to create account. Please try again.');
       }
     },
   });
@@ -45,18 +53,20 @@ export default function Login() {
             WasteSense
           </h1>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
+            Create your resident account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Demo accounts (use any password):
+            Or{' '}
+            <Link
+              to="/login"
+              className="font-medium text-primary-600 hover:text-primary-500"
+            >
+              sign in to your existing account
+            </Link>
           </p>
-          <ul className="mt-2 text-sm text-gray-600 space-y-1 text-center">
-            <li>resident@example.com</li>
-            <li>dispatcher@example.com</li>
-            <li>recycler@example.com</li>
-          </ul>
         </div>
-        <form onSubmit={formik.handleSubmit} className="mt-8 space-y-6">
+
+        <form className="mt-8 space-y-6" onSubmit={formik.handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="email" className="sr-only">
@@ -88,9 +98,9 @@ export default function Login() {
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="current-password"
+                autoComplete="new-password"
                 required
-                className={`input rounded-b-md ${
+                className={`input ${
                   formik.touched.password && formik.errors.password
                     ? 'border-red-500'
                     : ''
@@ -102,6 +112,69 @@ export default function Login() {
                 <p className="mt-1 text-sm text-red-600">
                   {formik.errors.password}
                 </p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="name" className="sr-only">
+                Full Name
+              </label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                required
+                className={`input ${
+                  formik.touched.name && formik.errors.name
+                    ? 'border-red-500'
+                    : ''
+                }`}
+                placeholder="Full Name"
+                {...formik.getFieldProps('name')}
+              />
+              {formik.touched.name && formik.errors.name && (
+                <p className="mt-1 text-sm text-red-600">{formik.errors.name}</p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="phone" className="sr-only">
+                Phone Number
+              </label>
+              <input
+                id="phone"
+                name="phone"
+                type="tel"
+                autoComplete="tel"
+                className={`input ${
+                  formik.touched.phone && formik.errors.phone
+                    ? 'border-red-500'
+                    : ''
+                }`}
+                placeholder="Phone Number (optional)"
+                {...formik.getFieldProps('phone')}
+              />
+              {formik.touched.phone && formik.errors.phone && (
+                <p className="mt-1 text-sm text-red-600">{formik.errors.phone}</p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="zone" className="sr-only">
+                Zone
+              </label>
+              <input
+                id="zone"
+                name="zone"
+                type="text"
+                className={`input rounded-b-md ${
+                  formik.touched.zone && formik.errors.zone
+                    ? 'border-red-500'
+                    : ''
+                }`}
+                placeholder="Zone (optional)"
+                {...formik.getFieldProps('zone')}
+              />
+              {formik.touched.zone && formik.errors.zone && (
+                <p className="mt-1 text-sm text-red-600">{formik.errors.zone}</p>
               )}
             </div>
           </div>
@@ -116,32 +189,13 @@ export default function Login() {
             </div>
           )}
 
-          <div className="flex items-center justify-between">
-            <div className="text-sm">
-              <Link
-                to="/forgot-password"
-                className="font-medium text-primary-600 hover:text-primary-500"
-              >
-                Forgot your password?
-              </Link>
-            </div>
-            <div className="text-sm">
-              <Link
-                to="/signup/resident"
-                className="font-medium text-primary-600 hover:text-primary-500"
-              >
-                Create an account
-              </Link>
-            </div>
-          </div>
-
           <div>
             <button
               type="submit"
               className="btn btn-primary w-full"
               disabled={formik.isSubmitting}
             >
-              {formik.isSubmitting ? 'Signing in...' : 'Sign in'}
+              {formik.isSubmitting ? 'Creating account...' : 'Create account'}
             </button>
           </div>
         </form>

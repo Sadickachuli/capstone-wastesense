@@ -13,6 +13,10 @@ export default function ResidentDashboard() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
+  const hasActiveReport = reports.some(
+    (r) => r.status === 'new' || r.status === 'in-progress'
+  );
+
   const handleOpenModal = () => {
     setShowReportModal(true);
     setSuccess(false);
@@ -43,8 +47,10 @@ export default function ResidentDashboard() {
       setSuccess(true);
       setShowReportModal(false);
       setDescription('');
-    } catch (err) {
-      setError('Failed to submit report');
+    } catch (err: any) {
+      // Show backend error message if available
+      const backendMsg = err?.response?.data?.message;
+      setError(backendMsg || 'Failed to submit report');
     } finally {
       setSubmitting(false);
     }
@@ -61,9 +67,18 @@ export default function ResidentDashboard() {
         <div className="card">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
           <div className="space-y-4">
-            <button className="btn btn-primary w-full" onClick={handleOpenModal}>
+            <button
+              className="btn btn-primary w-full"
+              onClick={handleOpenModal}
+              disabled={hasActiveReport}
+            >
               Report Bin Full
             </button>
+            {hasActiveReport && (
+              <p className="text-red-600 text-sm mt-2">
+                You have already reported your bin full for this cycle. Please wait until collection is confirmed.
+              </p>
+            )}
             <button className="btn btn-secondary w-full">
               View Collection Schedule
             </button>

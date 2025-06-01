@@ -73,12 +73,25 @@ export default function DispatcherDashboard() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [notificationsLoading, setNotificationsLoading] = useState(true);
   const [notificationsError, setNotificationsError] = useState('');
+  const [activeReports, setActiveReports] = useState<any[]>([]);
+  const [activeReportsLoading, setActiveReportsLoading] = useState(true);
+  const [activeReportsError, setActiveReportsError] = useState('');
+  const [updatingReportId, setUpdatingReportId] = useState<string | null>(null);
+  const [markAllLoading, setMarkAllLoading] = useState(false);
+  const [markAllMessage, setMarkAllMessage] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
+  const [archivedNotifications, setArchivedNotifications] = useState<any[]>([]);
+  const [archivedLoading, setArchivedLoading] = useState(false);
+  const [archivedError, setArchivedError] = useState('');
+  const [mlRecommendation, setMlRecommendation] = useState<any>(null);
+  const [mlLoading, setMlLoading] = useState(true);
+  const [mlError, setMlError] = useState('');
 
   // Calculate total percentage
   const totalPercentage = Object.values(composition).reduce((sum, value) => sum + value, 0);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     const fetchThreshold = async () => {
       setThresholdLoading(true);
       setThresholdError('');
@@ -98,7 +111,7 @@ export default function DispatcherDashboard() {
 
   // Fetch notifications with polling
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     const fetchNotifications = async () => {
       setNotificationsLoading(true);
       setNotificationsError('');
@@ -115,6 +128,46 @@ export default function DispatcherDashboard() {
     interval = setInterval(fetchNotifications, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  // Fetch active reports with polling
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    const fetchActiveReports = async () => {
+      setActiveReportsLoading(true);
+      setActiveReportsError('');
+      try {
+        const res = await axios.get('/api/auth/reports/active');
+        setActiveReports(res.data.reports);
+      } catch (err) {
+        setActiveReportsError('Failed to fetch active reports');
+      } finally {
+        setActiveReportsLoading(false);
+      }
+    };
+    fetchActiveReports();
+    interval = setInterval(fetchActiveReports, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchArchivedNotifications = async () => {
+    setArchivedLoading(true);
+    setArchivedError('');
+    try {
+      const res = await axios.get('/api/auth/notifications/dispatcher/archived');
+      setArchivedNotifications(res.data.notifications);
+    } catch (err) {
+      setArchivedError('Failed to fetch archived notifications');
+    } finally {
+      setArchivedLoading(false);
+    }
+  };
+
+  const handleToggleArchived = () => {
+    if (!showArchived) {
+      fetchArchivedNotifications();
+    }
+    setShowArchived((prev) => !prev);
+  };
 
   const handleCompositionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,6 +223,58 @@ export default function DispatcherDashboard() {
     setShowCompositionModal(true);
   };
 
+  // Handler to mark report as collected
+  const handleMarkCollected = async (reportId: string) => {
+    setUpdatingReportId(reportId);
+    try {
+      await axios.patch(`/api/auth/reports/${reportId}/status`, { status: 'collected' });
+      // Refresh active reports
+      const res = await axios.get('/api/auth/reports/active');
+      setActiveReports(res.data.reports);
+    } catch (err) {
+      alert('Failed to update report status');
+    } finally {
+      setUpdatingReportId(null);
+    }
+  };
+
+  // Handler to mark all reports as collected
+  const handleMarkAllCollected = async () => {
+    setMarkAllLoading(true);
+    setMarkAllMessage('');
+    try {
+      const res = await axios.patch('/api/auth/reports/mark-all-collected');
+      setMarkAllMessage(`Marked ${res.data.updatedCount} reports as collected.`);
+      // Refresh active reports
+      const refreshed = await axios.get('/api/auth/reports/active');
+      setActiveReports(refreshed.data.reports);
+    } catch (err) {
+      setMarkAllMessage('Failed to mark all as collected');
+    } finally {
+      setMarkAllLoading(false);
+    }
+  };
+
+  // Fetch ML dispatch recommendation with polling
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    const fetchRecommendation = async () => {
+      setMlLoading(true);
+      setMlError('');
+      try {
+        const res = await axios.get('/api/auth/dispatch/recommendation');
+        setMlRecommendation(res.data);
+      } catch (err) {
+        setMlError('Failed to fetch dispatch recommendation');
+      } finally {
+        setMlLoading(false);
+      }
+    };
+    fetchRecommendation();
+    interval = setInterval(fetchRecommendation, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -205,23 +310,52 @@ export default function DispatcherDashboard() {
 
       <div className="card bg-green-50 mb-4">
         <h2 className="text-lg font-medium text-green-900 mb-2">Notifications</h2>
-        {notificationsLoading ? (
-          <p>Loading notifications...</p>
-        ) : notificationsError ? (
-          <p className="text-red-600">{notificationsError}</p>
-        ) : notifications.length > 0 ? (
-          <ul className="space-y-2">
-            {notifications.map((n) => (
-              <li key={n.id} className="p-2 rounded bg-white shadow">
-                <div className="font-semibold text-green-800">{n.title}</div>
-                <div className="text-sm text-gray-700">{n.message}</div>
-                <div className="text-xs text-gray-500">{new Date(n.created_at).toLocaleString()}</div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-gray-600">No notifications yet.</p>
+        <div className="flex items-center mb-2">
+          <button
+            className="btn btn-secondary btn-xs"
+            onClick={handleToggleArchived}
+          >
+            {showArchived ? 'Hide Archived' : 'Show Archived'}
+          </button>
+        </div>
+        {showArchived && (
+          <div className="mb-2">
+            {archivedLoading ? (
+              <p>Loading archived notifications...</p>
+            ) : archivedError ? (
+              <p className="text-red-600">{archivedError}</p>
+            ) : archivedNotifications.length > 0 ? (
+              <ul className="space-y-2">
+                {archivedNotifications.map((n) => (
+                  <li key={n.id} className="p-2 rounded bg-gray-100 shadow">
+                    <div className="font-semibold text-gray-800">{n.title}</div>
+                    <div className="text-sm text-gray-700">{n.message}</div>
+                    <div className="text-xs text-gray-500">{new Date(n.created_at).toLocaleString()}</div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-600">No archived notifications.</p>
+            )}
+          </div>
         )}
+      </div>
+
+      {/* ML Dispatch Recommendation */}
+      <div className="card bg-purple-50 mb-4">
+        <h2 className="text-lg font-medium text-purple-900 mb-2">ML Dispatch Recommendation</h2>
+        {mlLoading ? (
+          <p>Loading recommendation...</p>
+        ) : mlError ? (
+          <p className="text-red-600">{mlError}</p>
+        ) : mlRecommendation ? (
+          <div>
+            <p className="text-purple-900 font-semibold">{mlRecommendation.recommendation}</p>
+            <p className="text-sm text-gray-700">Confidence: {(mlRecommendation.confidence * 100).toFixed(1)}%</p>
+            <p className="text-sm text-gray-700">Next Collection: {new Date(mlRecommendation.nextCollectionTime).toLocaleString()}</p>
+            <p className="text-xs text-gray-500">Reason: {mlRecommendation.reason}</p>
+          </div>
+        ) : null}
       </div>
 
       {/* Waste Composition Modal */}
@@ -335,7 +469,7 @@ export default function DispatcherDashboard() {
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             Pending Reports
           </h3>
-          <p className="text-3xl font-bold text-yellow-600">8</p>
+          <p className="text-3xl font-bold text-yellow-600">{activeReports.length}</p>
         </div>
       </div>
 
@@ -400,6 +534,52 @@ export default function DispatcherDashboard() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Bin Full Reports Section */}
+      <div className="card bg-yellow-50 mb-4">
+        <h2 className="text-lg font-medium text-yellow-900 mb-2">Active Bin Full Reports</h2>
+        <div className="mb-2 flex items-center space-x-4">
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={handleMarkAllCollected}
+            disabled={
+              markAllLoading ||
+              activeReports.length === 0 ||
+              !thresholdStatus ||
+              thresholdStatus.reportedCount < thresholdStatus.threshold
+            }
+          >
+            {markAllLoading ? 'Marking All...' : 'Mark All as Collected'}
+          </button>
+          {markAllMessage && <span className="text-sm text-gray-700">{markAllMessage}</span>}
+        </div>
+        {activeReportsLoading ? (
+          <p>Loading reports...</p>
+        ) : activeReportsError ? (
+          <p className="text-red-600">{activeReportsError}</p>
+        ) : activeReports.length === 0 ? (
+          <p className="text-gray-600">No active reports</p>
+        ) : (
+          <ul className="divide-y divide-gray-200">
+            {activeReports.map((report) => (
+              <li key={report.id} className="py-3 flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-gray-900">{report.resident_name} ({report.zone})</p>
+                  <p className="text-sm text-gray-600">{report.description || 'No description'}</p>
+                  <p className="text-xs text-gray-500">{new Date(report.timestamp).toLocaleString()}</p>
+                </div>
+                <button
+                  className="btn btn-primary btn-sm"
+                  disabled={updatingReportId === report.id}
+                  onClick={() => handleMarkCollected(report.id)}
+                >
+                  {updatingReportId === report.id ? 'Updating...' : 'Mark as Collected'}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );

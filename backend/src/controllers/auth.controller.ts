@@ -191,9 +191,10 @@ export const reportBinFull = async (req: Request, res: Response) => {
       .countDistinct('reports.user_id as count');
     const reportedCount = parseInt(String(reported[0].count), 10) || 0;
     // If threshold reached, notify dispatchers
-    if (residentCount > 0) {
-      await notifyDispatchers(`Threshold reached: ${residentCount}/${total} residents have reported their bins full in North.`);
+    if (reportedCount >= threshold) {
+      await notifyDispatchers(`Threshold reached: ${reportedCount}/${total} residents have reported their bins full in North.`);
     }
+    console.log('DEBUG: reportedCount =', reportedCount, 'threshold =', threshold);
     res.status(201).json({ report, total, threshold, reportedCount });
   } catch (err) {
     console.error('Report Bin Full error:', err);
@@ -225,6 +226,7 @@ export const getDispatcherNotifications = async (req: Request, res: Response) =>
   try {
     const notifications = await db('notifications')
       .where('for_role', 'dispatcher')
+      .andWhere('archived', false)
       .orderBy('created_at', 'desc')
       .limit(20);
     res.json({ notifications });
@@ -232,4 +234,98 @@ export const getDispatcherNotifications = async (req: Request, res: Response) =>
     console.error('Get Dispatcher Notifications error:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
+};
+
+// Update report status (for dispatcher)
+export const updateReportStatus = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const validStatuses = ['new', 'in-progress', 'collected', 'completed'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+    const [updated] = await db('reports')
+      .where({ id })
+      .update({ status, updated_at: new Date().toISOString() })
+      .returning(['id', 'user_id', 'location', 'description', 'status', 'timestamp']);
+    if (!updated) {
+      return res.status(404).json({ message: 'Report not found' });
+    }
+    res.json({ report: updated });
+  } catch (err) {
+    console.error('Update Report Status error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Get all active reports (for dispatcher dashboard)
+export const getActiveReports = async (req: Request, res: Response) => {
+  try {
+    const reports = await db('reports')
+      .join('users', 'reports.user_id', 'users.id')
+      .select(
+        'reports.id',
+        'reports.user_id',
+        'users.name as resident_name',
+        'users.zone',
+        'reports.location',
+        'reports.description',
+        'reports.status',
+        'reports.timestamp'
+      )
+      .whereIn('reports.status', ['new', 'in-progress'])
+      .orderBy('reports.timestamp', 'desc');
+    res.json({ reports });
+  } catch (err) {
+    console.error('Get Active Reports error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Mark all active reports as collected
+export const markAllReportsCollected = async (req: Request, res: Response) => {
+  try {
+    const reportsUpdated = await db('reports')
+      .whereIn('status', ['new', 'in-progress'])
+      .update({ status: 'collected', updated_at: new Date().toISOString() });
+    console.log('DEBUG: Reports marked as collected:', reportsUpdated);
+    // Archive all threshold notifications for dispatchers
+    const notificationsUpdated = await db('notifications')
+      .where('for_role', 'dispatcher')
+      .andWhere('title', 'Bin Full Threshold Reached')
+      .andWhere('archived', false)
+      .update({ archived: true, updated_at: new Date().toISOString() });
+    console.log('DEBUG: Notifications archived:', notificationsUpdated);
+    res.json({ updatedCount: reportsUpdated });
+  } catch (err) {
+    console.error('Mark All Reports Collected error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Get archived notifications for dispatchers
+export const getArchivedDispatcherNotifications = async (req: Request, res: Response) => {
+  try {
+    const notifications = await db('notifications')
+      .where('for_role', 'dispatcher')
+      .andWhere('archived', true)
+      .orderBy('created_at', 'desc')
+      .limit(20);
+    res.json({ notifications });
+  } catch (err) {
+    console.error('Get Archived Dispatcher Notifications error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// ML Model Placeholder: Get dispatch recommendation
+export const getDispatchRecommendation = async (req: Request, res: Response) => {
+  // TODO: Replace with real ML model logic
+  res.json({
+    recommendation: 'Dispatch trucks to North zone. 3/3 bins reported full.',
+    confidence: 0.95,
+    nextCollectionTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
+    reason: 'Threshold reached based on current reports.'
+  });
 }; 

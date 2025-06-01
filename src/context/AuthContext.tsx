@@ -57,12 +57,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
+      // If the input matches the employee ID pattern, send as employee_id
+      const isEmployeeId = /^[A-Z]{3,4}\d{3}$/i.test(email);
+      const body = isEmployeeId
+        ? { employee_id: email, password }
+        : { email, password };
+
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {

@@ -1,10 +1,54 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useReports } from '../../hooks/useReports';
+import axios from 'axios';
 
 export default function ResidentDashboard() {
   const { user } = useAuth();
   const { reports, loading } = useReports();
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [description, setDescription] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleOpenModal = () => {
+    setShowReportModal(true);
+    setSuccess(false);
+    setError('');
+    // Try to get geolocation
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => setLocation(null)
+      );
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !location) {
+      setError('Missing user or location');
+      return;
+    }
+    setSubmitting(true);
+    setError('');
+    try {
+      await axios.post('/api/auth/report-bin-full', {
+        userId: user.id,
+        location,
+        description,
+      });
+      setSuccess(true);
+      setShowReportModal(false);
+      setDescription('');
+    } catch (err) {
+      setError('Failed to submit report');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -17,8 +61,8 @@ export default function ResidentDashboard() {
         <div className="card">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
           <div className="space-y-4">
-            <button className="btn btn-primary w-full">
-              Report Waste Collection
+            <button className="btn btn-primary w-full" onClick={handleOpenModal}>
+              Report Bin Full
             </button>
             <button className="btn btn-secondary w-full">
               View Collection Schedule
@@ -90,6 +134,49 @@ export default function ResidentDashboard() {
           <li>Check for recycling symbols on packaging</li>
         </ul>
       </div>
+
+      {showReportModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Report Bin Full</h3>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Location</label>
+                <input
+                  type="text"
+                  className="input w-full"
+                  value={location ? `${location.lat}, ${location.lng}` : ''}
+                  readOnly
+                  placeholder="Auto-detected or enter manually"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Description (optional)</label>
+                <textarea
+                  className="input w-full"
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  placeholder="E.g. Bin is overflowing"
+                />
+              </div>
+              {error && <p className="text-red-600 text-sm">{error}</p>}
+              <div className="flex justify-end space-x-2">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowReportModal(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={submitting}>
+                  {submitting ? 'Reporting...' : 'Submit'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {success && (
+        <div className="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50">
+          Bin full report submitted successfully!
+        </div>
+      )}
     </div>
   );
 } 

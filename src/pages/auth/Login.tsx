@@ -6,8 +6,17 @@ import { useAuth } from '../../context/AuthContext';
 
 const validationSchema = Yup.object({
   email: Yup.string()
-    .email('Invalid email address')
-    .required('Email is required'),
+    .test(
+      'email-or-employee-id',
+      'Enter a valid email or employee ID',
+      value =>
+        !!value &&
+        (
+          /^[A-Z]{3,4}\d{3}$/i.test(value) || // Matches DISP001, REC001, etc.
+          Yup.string().email().isValidSync(value)
+        )
+    )
+    .required('Email or Employee ID is required'),
   password: Yup.string()
     .min(8, 'Password must be at least 8 characters')
     .required('Password is required'),
@@ -60,20 +69,19 @@ export default function Login() {
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="email" className="sr-only">
-                Email address
+                Email address or Employee ID
               </label>
               <input
                 id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
+                type="text"
+                autoComplete="username"
                 required
                 className={`input rounded-t-md ${
                   formik.touched.email && formik.errors.email
                     ? 'border-red-500'
                     : ''
                 }`}
-                placeholder="Email address"
+                placeholder="Email address or Employee ID"
                 {...formik.getFieldProps('email')}
               />
               {formik.touched.email && formik.errors.email && (
@@ -86,7 +94,6 @@ export default function Login() {
               </label>
               <input
                 id="password"
-                name="password"
                 type="password"
                 autoComplete="current-password"
                 required

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../api/mockApi';
 import { Route, WasteSite } from '../../types';
+import axios from 'axios';
 
 interface Alert {
   id: string;
@@ -66,9 +67,54 @@ export default function DispatcherDashboard() {
     organic: 0,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [thresholdStatus, setThresholdStatus] = useState<{ reportedCount: number; total: number; threshold: number } | null>(null);
+  const [thresholdLoading, setThresholdLoading] = useState(true);
+  const [thresholdError, setThresholdError] = useState('');
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(true);
+  const [notificationsError, setNotificationsError] = useState('');
 
   // Calculate total percentage
   const totalPercentage = Object.values(composition).reduce((sum, value) => sum + value, 0);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    const fetchThreshold = async () => {
+      setThresholdLoading(true);
+      setThresholdError('');
+      try {
+        const res = await axios.get('/api/auth/reports/threshold-status');
+        setThresholdStatus(res.data);
+      } catch (err) {
+        setThresholdError('Failed to fetch threshold status');
+      } finally {
+        setThresholdLoading(false);
+      }
+    };
+    fetchThreshold();
+    interval = setInterval(fetchThreshold, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Fetch notifications with polling
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    const fetchNotifications = async () => {
+      setNotificationsLoading(true);
+      setNotificationsError('');
+      try {
+        const res = await axios.get('/api/auth/notifications/dispatcher');
+        setNotifications(res.data.notifications);
+      } catch (err) {
+        setNotificationsError('Failed to fetch notifications');
+      } finally {
+        setNotificationsLoading(false);
+      }
+    };
+    fetchNotifications();
+    interval = setInterval(fetchNotifications, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleCompositionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,6 +177,51 @@ export default function DispatcherDashboard() {
           Dispatcher Dashboard
         </h1>
         <button className="btn btn-primary">Create New Route</button>
+      </div>
+
+      <div className="card bg-blue-50 mb-4">
+        <h2 className="text-lg font-medium text-blue-900 mb-2">Bin Full Reports Status</h2>
+        {thresholdLoading ? (
+          <p>Loading status...</p>
+        ) : thresholdError ? (
+          <p className="text-red-600">{thresholdError}</p>
+        ) : thresholdStatus ? (
+          <div>
+            <p className="text-blue-900 font-semibold">
+              {thresholdStatus.reportedCount} / {thresholdStatus.total} residents have reported their bins full
+            </p>
+            <p className={
+              thresholdStatus.reportedCount >= thresholdStatus.threshold
+                ? 'text-green-700 font-bold'
+                : 'text-yellow-700 font-semibold'
+            }>
+              {thresholdStatus.reportedCount >= thresholdStatus.threshold
+                ? 'Threshold reached! Trucks should be dispatched.'
+                : `${thresholdStatus.threshold - thresholdStatus.reportedCount} more reports needed to reach threshold.`}
+            </p>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="card bg-green-50 mb-4">
+        <h2 className="text-lg font-medium text-green-900 mb-2">Notifications</h2>
+        {notificationsLoading ? (
+          <p>Loading notifications...</p>
+        ) : notificationsError ? (
+          <p className="text-red-600">{notificationsError}</p>
+        ) : notifications.length > 0 ? (
+          <ul className="space-y-2">
+            {notifications.map((n) => (
+              <li key={n.id} className="p-2 rounded bg-white shadow">
+                <div className="font-semibold text-green-800">{n.title}</div>
+                <div className="text-sm text-gray-700">{n.message}</div>
+                <div className="text-xs text-gray-500">{new Date(n.created_at).toLocaleString()}</div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-600">No notifications yet.</p>
+        )}
       </div>
 
       {/* Waste Composition Modal */}

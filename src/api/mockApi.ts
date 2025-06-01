@@ -1,4 +1,5 @@
 import { User, Report, BinStatus, Route, Delivery, WasteSite, Notification } from '../types';
+import axios from 'axios';
 
 // Simulated API delay
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -265,8 +266,9 @@ export const api = {
   },
   wasteSites: {
     list: async () => {
-      await delay(1000);
-      return mockWasteSites;
+      // Use real backend
+      const res = await axios.get('/api/auth/waste-sites');
+      return res.data.sites;
     },
     
     getById: async (id: string) => {
@@ -276,19 +278,12 @@ export const api = {
       return site;
     },
     
-    updateComposition: async (id: string, composition: WasteSite['composition']) => {
-      await delay(1000);
-      const siteIndex = mockWasteSites.findIndex(site => site.id === id);
-      if (siteIndex === -1) throw new Error('Waste site not found');
-      
-      mockWasteSites[siteIndex] = {
-        ...mockWasteSites[siteIndex],
-        composition,
-        lastUpdated: new Date().toISOString(),
-      };
-      
-      persistData('mockWasteSites', mockWasteSites);
-      return mockWasteSites[siteIndex];
+    updateComposition: async (id: string, data: WasteSite['composition'] & { updated_by?: string }) => {
+      // POST to backend with flat fields and optional updated_by
+      const res = await axios.post(`/api/auth/waste-sites/${id}/composition`, {
+        ...data
+      });
+      return res.data;
     }
   },
   notifications: {

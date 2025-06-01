@@ -26,6 +26,8 @@ import RecyclerDashboard from '../pages/recycler/Dashboard';
 import RecyclerDeliveries from '../pages/recycler/Deliveries';
 import RecyclerInsights from '../pages/recycler/Insights';
 import RecyclerProfile from '../pages/recycler/Profile';
+import RecyclerNotifications from '../pages/recycler/Notifications';
+import WasteSiteDetails from '../pages/recycler/WasteSiteDetails';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -157,6 +159,22 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={['recycler']}>
             <RecyclerProfile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/recycler/notifications"
+        element={
+          <ProtectedRoute allowedRoles={['recycler']}>
+            <RecyclerNotifications />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/recycler/sites/:siteId"
+        element={
+          <ProtectedRoute allowedRoles={['recycler']}>
+            <WasteSiteDetails />
           </ProtectedRoute>
         }
       />

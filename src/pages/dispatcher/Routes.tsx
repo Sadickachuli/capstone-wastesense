@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useWasteSites } from '../../hooks/useWasteSites';
 import { api } from '../../api/mockApi';
 import { Route, WasteSite } from '../../types';
 
@@ -33,6 +34,7 @@ const mockRoutes: Route[] = [
 
 export default function Routes() {
   const { user } = useAuth();
+  const { updateSiteComposition } = useWasteSites();
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
   const [showCompositionModal, setShowCompositionModal] = useState(false);
   const [selectedSite, setSelectedSite] = useState<string>('');
@@ -61,9 +63,8 @@ export default function Routes() {
 
     setIsSubmitting(true);
     try {
-      await api.wasteSites.updateComposition(selectedSite, composition);
+      await updateSiteComposition(selectedSite, composition);
       setShowCompositionModal(false);
-      // Show success message
       alert('Waste composition updated successfully');
     } catch (error) {
       console.error('Failed to update composition:', error);

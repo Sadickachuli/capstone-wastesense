@@ -6,6 +6,7 @@ import authRoutes from './routes/auth.routes';
 dotenv.config();
 
 const app = express();
+app.disable('etag');
 const port = process.env.PORT || 3001;
 
 // Middleware

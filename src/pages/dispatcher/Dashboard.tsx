@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { api } from '../../api/mockApi';
 import { Route, WasteSite } from '../../types';
 import axios from 'axios';
+import { useWasteSites } from '../../hooks/useWasteSites';
 
 interface Alert {
   id: string;
@@ -56,6 +57,7 @@ const mockAlerts: Alert[] = [
 
 export default function DispatcherDashboard() {
   const { user } = useAuth();
+  const { updateSiteComposition } = useWasteSites();
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
   const [showCompositionModal, setShowCompositionModal] = useState(false);
   const [selectedSite, setSelectedSite] = useState<string>('');
@@ -86,6 +88,7 @@ export default function DispatcherDashboard() {
   const [mlRecommendation, setMlRecommendation] = useState<any>(null);
   const [mlLoading, setMlLoading] = useState(true);
   const [mlError, setMlError] = useState('');
+  const [currentCapacity, setCurrentCapacity] = useState<number | ''>('');
 
   // Calculate total percentage
   const totalPercentage = Object.values(composition).reduce((sum, value) => sum + value, 0);
@@ -177,28 +180,14 @@ export default function DispatcherDashboard() {
       alert('Total percentage must equal 100%');
       return;
     }
-
+    if (currentCapacity === '' || isNaN(Number(currentCapacity)) || Number(currentCapacity) < 0) {
+      alert('Please enter a valid current capacity');
+      return;
+    }
     setIsSubmitting(true);
     try {
-      // Update waste composition
-      await api.wasteSites.updateComposition(selectedSite, composition);
-      
-      // Create notification for recyclers
-      const site = await api.wasteSites.getById(selectedSite);
-      await api.notifications.create({
-        type: 'info',
-        title: 'New Waste Composition Update',
-        message: `Waste composition updated at ${site.name}`,
-        forRole: 'recycler',
-        metadata: {
-          siteId: selectedSite,
-          siteName: site.name,
-          updateType: 'composition'
-        }
-      });
-
+      await updateSiteComposition(selectedSite, Object.assign({}, composition, { currentCapacity: Number(currentCapacity) }));
       setShowCompositionModal(false);
-      // Show success message
       alert('Waste composition updated successfully');
     } catch (error) {
       console.error('Failed to update composition:', error);
@@ -431,6 +420,19 @@ export default function DispatcherDashboard() {
                   />
                 </div>
               ))}
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Current Capacity (tons)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  value={currentCapacity}
+                  onChange={e => setCurrentCapacity(e.target.value === '' ? '' : Number(e.target.value))}
+                  required
+                />
+              </div>
 
               <div className="mt-6 flex justify-end space-x-3">
                 <button

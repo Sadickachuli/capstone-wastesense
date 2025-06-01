@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { db } from '../db';
+import { v4 as uuidv4 } from 'uuid';
 
 // Validation schemas
 const residentSignupSchema = z.object({
@@ -328,4 +329,130 @@ export const getDispatchRecommendation = async (req: Request, res: Response) => 
     nextCollectionTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
     reason: 'Threshold reached based on current reports.'
   });
+};
+
+// Get notifications for recycler
+export const getRecyclerNotifications = async (req: Request, res: Response) => {
+  try {
+    const notifications = await db('notifications')
+      .where('for_role', 'recycler')
+      .andWhere('archived', false)
+      .orderBy('created_at', 'desc')
+      .limit(20);
+    console.log('Recycler notifications:', notifications);
+    res.json({ notifications });
+  } catch (err) {
+    console.error('Get Recycler Notifications error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Update waste composition and notify recyclers
+export const updateWasteComposition = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { plastic, paper, glass, metal, organic, updated_by, currentCapacity } = req.body;
+    // Validate input
+    const total = [plastic, paper, glass, metal, organic].reduce((a, b) => Number(a) + Number(b), 0);
+    if (total !== 100) {
+      return res.status(400).json({ message: 'Total percentage must equal 100' });
+    }
+    // Generate a unique id for the new composition
+    const newId = uuidv4();
+    // Insert into waste_compositions table
+    const [composition] = await db('waste_compositions')
+      .insert({
+        id: newId,
+        site_id: id,
+        updated_by: updated_by || null,
+        plastic_percent: plastic,
+        paper_percent: paper,
+        glass_percent: glass,
+        metal_percent: metal,
+        organic_percent: organic,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .returning(['id', 'site_id', 'plastic_percent', 'paper_percent', 'glass_percent', 'metal_percent', 'organic_percent', 'created_at']);
+
+    // Update waste_sites table for current values and capacity
+    const updateFields: any = {
+      last_updated: new Date().toISOString(),
+      'composition_plastic': plastic,
+      'composition_paper': paper,
+      'composition_glass': glass,
+      'composition_metal': metal,
+      'composition_organic': organic,
+    };
+    if (currentCapacity !== undefined) {
+      updateFields.current_capacity = currentCapacity;
+    }
+    await db('waste_sites')
+      .where({ id })
+      .update(updateFields);
+
+    // Get site info for notification
+    const site = await db('waste_sites').where({ id }).first();
+
+    // Create notification for recyclers
+    await db('notifications').insert({
+      type: 'info',
+      title: 'New Waste Composition Update',
+      message: `Waste composition updated at ${site.name}`,
+      for_role: 'recycler',
+      metadata: {
+        siteId: id,
+        siteName: site.name,
+        updateType: 'composition',
+        composition: { plastic, paper, glass, metal, organic },
+      },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      archived: false,
+    });
+
+    res.status(200).json({ message: 'Waste composition updated and recyclers notified', composition });
+  } catch (err) {
+    console.error('Update Waste Composition error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Get all waste sites
+export const getWasteSites = async (req: Request, res: Response) => {
+  try {
+    const sites = await db('waste_sites').select(
+      'id',
+      'name',
+      'location',
+      'current_capacity',
+      'max_capacity',
+      'last_updated',
+      'composition_plastic',
+      'composition_paper',
+      'composition_glass',
+      'composition_metal',
+      'composition_organic'
+    );
+    // Map DB fields to frontend WasteSite type
+    const mapped = sites.map(site => ({
+      id: site.id,
+      name: site.name,
+      location: site.location,
+      currentCapacity: Number(site.current_capacity),
+      maxCapacity: Number(site.max_capacity),
+      lastUpdated: site.last_updated,
+      composition: {
+        plastic: Number(site.composition_plastic),
+        paper: Number(site.composition_paper),
+        glass: Number(site.composition_glass),
+        metal: Number(site.composition_metal),
+        organic: Number(site.composition_organic),
+      },
+    }));
+    res.json({ sites: mapped });
+  } catch (err) {
+    console.error('Get Waste Sites error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 }; 

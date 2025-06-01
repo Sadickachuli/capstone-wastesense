@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { signup, login, reportBinFull, getThresholdStatus, getDispatcherNotifications, updateReportStatus, getActiveReports, markAllReportsCollected, getArchivedDispatcherNotifications, getDispatchRecommendation } from '../controllers/auth.controller';
+import { signup, login, reportBinFull, getThresholdStatus, getDispatcherNotifications, updateReportStatus, getActiveReports, markAllReportsCollected, getArchivedDispatcherNotifications, getDispatchRecommendation, getRecyclerNotifications, updateWasteComposition, getWasteSites } from '../controllers/auth.controller';
 
 const router = Router();
 
@@ -14,5 +14,8 @@ router.patch('/reports/:id/status', updateReportStatus);
 router.get('/reports/active', getActiveReports);
 router.patch('/reports/mark-all-collected', markAllReportsCollected);
 router.get('/dispatch/recommendation', getDispatchRecommendation);
+router.get('/notifications/recycler', getRecyclerNotifications);
+router.post('/waste-sites/:id/composition', updateWasteComposition);
+router.get('/waste-sites', getWasteSites);
 
 export default router; 

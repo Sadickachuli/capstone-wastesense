@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Notification } from '../types';
 import { api } from '../api/mockApi';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 
 export function useNotifications() {
   const { user } = useAuth();
@@ -12,14 +13,28 @@ export function useNotifications() {
   useEffect(() => {
     const fetchNotifications = async () => {
       if (!user) return;
-      
       try {
-        const data = await api.notifications.list(user.id);
+        let data;
+        if (user.role === 'recycler') {
+          // Fetch from real backend for recyclers
+          const res = await axios.get('/api/auth/notifications/recycler');
+          data = res.data.notifications;
+          // Ensure metadata is always an object
+          data = data.map(n => ({
+            ...n,
+            metadata: typeof n.metadata === 'string' ? JSON.parse(n.metadata) : n.metadata,
+            timestamp: n.timestamp || n.created_at || '', // Map created_at to timestamp
+          }));
+          console.log('Fetched recycler notifications:', data);
+        } else {
+          // Use mock API for other roles
+          data = await api.notifications.list(user.id);
+        }
         setNotifications(data);
         setError(null);
       } catch (err) {
         setError('Failed to fetch notifications');
-        console.error(err);
+        console.error('Notification fetch error:', err);
       } finally {
         setLoading(false);
       }

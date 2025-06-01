@@ -1,6 +1,6 @@
 # WasteSense - Smart Waste Management App
 
-A modern web application for efficient waste management in Ablekuma North. This application helps residents report full bins, enables dispatchers to optimize collection routes, and allows recyclers to track deliveries.
+A modern web application for efficient waste management in Ablekuma North. This application helps residents report full bins, Uses Machine Learning to enable dispatchers to optimize collection routes, and allows recyclers to track deliveries at waste dumping sites to know the composition, weight, and location of waste dumping site.
 
 ## Features
 

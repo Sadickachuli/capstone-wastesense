@@ -56,14 +56,6 @@ export default function Login() {
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Sign in to your account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Demo accounts (use any password):
-          </p>
-          <ul className="mt-2 text-sm text-gray-600 space-y-1 text-center">
-            <li>resident@example.com</li>
-            <li>dispatcher@example.com</li>
-            <li>recycler@example.com</li>
-          </ul>
         </div>
         <form onSubmit={formik.handleSubmit} className="mt-8 space-y-6">
           <div className="rounded-md shadow-sm -space-y-px">

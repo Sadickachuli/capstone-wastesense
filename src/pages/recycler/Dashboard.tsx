@@ -5,6 +5,8 @@ import { useNotifications } from '../../hooks/useNotifications';
 import { WasteSite } from '../../types';
 import { api } from '../../api/mockApi';
 import { Link, useNavigate } from 'react-router-dom';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import axios from 'axios';
 
 interface Delivery {
   id: string;
@@ -61,6 +63,14 @@ const mockDeliveries: Delivery[] = [
   },
 ];
 
+const WASTE_COLORS: Record<string, string> = {
+  plastic: '#2563eb', // blue
+  metal: '#6b7280',   // gray
+  organic: '#22c55e', // green
+  paper: '#eab308',   // yellow
+  glass: '#10b981',   // teal
+};
+
 export default function RecyclerDashboard() {
   const { user } = useAuth();
   const { sites, loading: sitesLoading, error: sitesError } = useWasteSites();
@@ -72,6 +82,10 @@ export default function RecyclerDashboard() {
   const [selectedSite, setSelectedSite] = useState<WasteSite | null>(null);
   const [hasCreatedTestNotification, setHasCreatedTestNotification] = useState(false);
   const navigate = useNavigate();
+  const [forecast, setForecast] = useState<any>(null);
+  const [detailsModal, setDetailsModal] = useState<{ open: boolean; district?: string }>({ open: false });
+  const [details, setDetails] = useState<any[]>([]);
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
   // Set initial selected site when data loads
   useEffect(() => {
@@ -105,6 +119,10 @@ export default function RecyclerDashboard() {
     createTestNotification();
   }, [hasCreatedTestNotification]);
 
+  useEffect(() => {
+    axios.get('/api/forecast/next-day').then(res => setForecast(res.data));
+  }, []);
+
   const totalProcessed = 1250; // kg
   const recyclingRate = 85; // %
   const energySaved = 750; // kWh
@@ -122,6 +140,18 @@ export default function RecyclerDashboard() {
     if (siteId) {
       navigate(`/recycler/sites/${siteId}`);
     }
+  };
+
+  const handleBarClick = (district: string) => {
+    setLoadingDetails(true);
+    // For demo, use today's date (synthetic data is for past days, but forecast is for tomorrow)
+    // In real use, would use the forecasted date
+    axios.get('/api/forecast/history', { params: { district } })
+      .then(res => {
+        setDetails(res.data.slice(-1)); // last day
+        setDetailsModal({ open: true, district });
+      })
+      .finally(() => setLoadingDetails(false));
   };
 
   if (sitesLoading || notificationsLoading) {
@@ -159,6 +189,58 @@ export default function RecyclerDashboard() {
           </div>
         </div>
       </div>
+
+      {forecast && (
+        <div className="bg-white shadow rounded-lg p-6 mb-6">
+          <h2 className="text-lg font-bold text-gray-900 mb-2">Forecast for Tomorrow</h2>
+          <p className="mb-4 text-gray-700">
+            Tomorrow's waste: <span className="font-semibold">{forecast.total_waste_tonnes.toFixed(1)} tonnes</span> from Ablekuma North and Ayawaso West. <br />
+            Composition: {Object.entries(forecast.composition_percent).map(([type, percent]) => `${percent}% ${type}`).join(', ')}
+          </p>
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={forecast.districts.map((d: any) => ({
+              name: d.district,
+              ...d.composition_percent
+            }))} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <XAxis dataKey="name" />
+              <YAxis unit="%" />
+              <Tooltip />
+              <Legend />
+              {Object.keys(WASTE_COLORS).map(type => (
+                <Bar key={type} dataKey={type} stackId="a" fill={WASTE_COLORS[type]} onClick={(_, idx) => handleBarClick(forecast.districts[idx].district)} />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+          <div className="mt-4 flex flex-col md:flex-row md:items-center md:space-x-8">
+            <div className="flex-1">
+              <PieChart width={220} height={180}>
+                <Pie
+                  data={Object.entries(forecast.composition_percent).map(([type, percent]) => ({ name: type, value: percent }))}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={70}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                >
+                  {Object.keys(WASTE_COLORS).map((type, idx) => (
+                    <Cell key={type} fill={WASTE_COLORS[type]} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </div>
+            <div className="flex-1 text-gray-600 text-sm">
+              <ul>
+                {forecast.districts.map((d: any) => (
+                  <li key={d.district} className="mb-1">
+                    <span className="font-semibold text-gray-900">{d.district}:</span> {d.total_waste_tonnes.toFixed(1)} tonnes. Composition: {Object.entries(d.composition_percent).map(([type, percent]) => `${percent}% ${type}`).join(', ')}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Notifications Preview */}
       {wasteUpdateNotifications.length > 0 && (

@@ -211,6 +211,28 @@ export default function RecyclerDashboard() {
         </div>
       </div>
 
+      {!forecast && (
+        <div className="card bg-white shadow dark:shadow-white animate-pulse">
+          <h2 className="text-lg font-bold text-gray-900 mb-2">Forecast for Tomorrow</h2>
+          <div className="mb-4 text-gray-700">
+            <div className="h-4 w-1/2 bg-gray-200 rounded mb-2" />
+            <div className="h-4 w-1/3 bg-gray-200 rounded mb-2" />
+          </div>
+          <div className="flex items-end space-x-2 h-48 mb-4">
+            {[1,2,3,4,5].map(i => (
+              <div key={i} className="flex-1 flex flex-col items-center">
+                <div className="w-8 bg-gray-200 rounded-t" style={{ height: `${40 + i*20}px` }} />
+                <div className="h-4 w-8 bg-gray-100 rounded mt-2" />
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-row space-x-4 mt-4">
+            <div className="h-8 w-32 bg-gray-200 rounded" />
+            <div className="h-8 w-32 bg-gray-100 rounded" />
+          </div>
+        </div>
+      )}
+
       {forecast && (
         <div className="card bg-white shadow dark:shadow-white">
           <h2 className="text-lg font-bold text-gray-900 mb-2">Forecast for Tomorrow</h2>

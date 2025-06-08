@@ -113,7 +113,7 @@ export default function DispatcherDashboard() {
       }
     };
     fetchThreshold();
-    interval = setInterval(fetchThreshold, 10000);
+    interval = setInterval(fetchThreshold, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -133,7 +133,7 @@ export default function DispatcherDashboard() {
       }
     };
     fetchNotifications();
-    interval = setInterval(fetchNotifications, 10000);
+    interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -153,7 +153,7 @@ export default function DispatcherDashboard() {
       }
     };
     fetchActiveReports();
-    interval = setInterval(fetchActiveReports, 10000);
+    interval = setInterval(fetchActiveReports, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -265,7 +265,7 @@ export default function DispatcherDashboard() {
       }
     };
     fetchRecommendation();
-    interval = setInterval(fetchRecommendation, 10000);
+    interval = setInterval(fetchRecommendation, 30000);
     return () => clearInterval(interval);
   }, []);
 

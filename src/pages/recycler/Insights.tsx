@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts';
 import { useWasteSites } from '../../hooks/useWasteSites';
+import { useTheme } from '../../context/ThemeContext';
 
 const WASTE_COLORS: Record<string, string> = {
   plastic: '#2563eb', // blue
@@ -13,6 +14,7 @@ const WASTE_COLORS: Record<string, string> = {
 
 export default function Insights() {
   const { sites } = useWasteSites();
+  const { isDarkMode } = useTheme();
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedSite, setSelectedSite] = useState('all');
   const [history, setHistory] = useState<any[]>([]);
@@ -20,7 +22,6 @@ export default function Insights() {
   const [composition, setComposition] = useState<Record<string, number> | null>(null);
   const [totalWeight, setTotalWeight] = useState<number | null>(null);
   const [trendData, setTrendData] = useState<any[]>([]);
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Fetch history for all sites or a specific site
   useEffect(() => {
@@ -176,10 +177,10 @@ export default function Insights() {
           <h2 className="text-lg font-bold text-gray-900 mb-2">Trends (Last 30 Days)</h2>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={trendData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-              <XAxis dataKey="date" stroke="#fff" tick={{ fill: '#fff' }} />
-              <YAxis stroke="#fff" tick={{ fill: '#fff' }} />
-              <Tooltip contentStyle={{ color: '#fff', background: '#222' }} labelStyle={{ color: '#fff' }} itemStyle={{ color: '#fff' }} />
-              <Legend wrapperStyle={{ color: '#fff' }} />
+              <XAxis dataKey="date" stroke={isDarkMode ? '#fff' : '#000'} tick={{ fill: isDarkMode ? '#fff' : '#000' }} />
+              <YAxis stroke={isDarkMode ? '#fff' : '#000'} tick={{ fill: isDarkMode ? '#fff' : '#000' }} />
+              <Tooltip contentStyle={{ color: isDarkMode ? '#fff' : '#000', background: isDarkMode ? '#222' : '#fff' }} labelStyle={{ color: isDarkMode ? '#fff' : '#000' }} itemStyle={{ color: isDarkMode ? '#fff' : '#000' }} />
+              <Legend wrapperStyle={{ color: isDarkMode ? '#fff' : '#000' }} />
               <Line type="monotone" dataKey="plastic" stroke={WASTE_COLORS.plastic} name="Plastic" />
               <Line type="monotone" dataKey="paper" stroke={WASTE_COLORS.paper} name="Paper" />
               <Line type="monotone" dataKey="glass" stroke={WASTE_COLORS.glass} name="Glass" />

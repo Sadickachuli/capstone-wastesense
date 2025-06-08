@@ -592,5 +592,30 @@ export const detectWasteFromImage = async (req: any, res: Response) => {
   }
 };
 
+// GET /api/waste-compositions/history - Get waste detection composition history for insights
+export const getWasteCompositionHistory = async (req: Request, res: Response) => {
+  try {
+    const { site_id } = req.query;
+    let query = db('waste_compositions')
+      .select(
+        'site_id',
+        db.raw('DATE(created_at) as date'),
+        'plastic_percent',
+        'paper_percent',
+        'glass_percent',
+        'metal_percent',
+        'organic_percent'
+      );
+    if (site_id) {
+      query = query.where('site_id', site_id);
+    }
+    const rows = await query.orderBy('date', 'desc');
+    res.json({ history: rows });
+  } catch (err) {
+    console.error('Get Waste Composition History error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 // Export multer upload for use in routes
 export { upload }; 

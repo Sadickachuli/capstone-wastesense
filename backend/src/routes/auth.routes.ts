@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { signup, login, reportBinFull, getThresholdStatus, getDispatcherNotifications, updateReportStatus, getActiveReports, markAllReportsCollected, getArchivedDispatcherNotifications, getDispatchRecommendation, getRecyclerNotifications, updateWasteComposition, getWasteSites, detectWasteFromImage, upload } from '../controllers/auth.controller';
+import { signup, login, reportBinFull, getThresholdStatus, getDispatcherNotifications, updateReportStatus, getActiveReports, markAllReportsCollected, getArchivedDispatcherNotifications, getDispatchRecommendation, getRecyclerNotifications, updateWasteComposition, getWasteSites, detectWasteFromImage, upload, getWasteCompositionHistory } from '../controllers/auth.controller';
 
 const router = Router();
 
@@ -18,5 +18,6 @@ router.get('/notifications/recycler', getRecyclerNotifications);
 router.post('/waste-sites/:id/composition', updateWasteComposition);
 router.get('/waste-sites', getWasteSites);
 router.post('/detect-waste-image', upload.single('file'), detectWasteFromImage);
+router.get('/waste-compositions/history', getWasteCompositionHistory);
 
 export default router; 

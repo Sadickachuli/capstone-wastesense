@@ -341,7 +341,16 @@ export default function RecyclerDashboard() {
               </BarChart>
             </ResponsiveContainer>
             <div className="mt-2 text-gray-600 text-sm">
-              <span className="font-semibold text-gray-900">{northSite.currentCapacity} kg</span> of waste today
+              <span className="font-semibold text-gray-900">{northSite.currentCapacity} kg</span> of waste{' '}
+              {(() => {
+                if (!northSite.lastUpdated) return '';
+                const last = new Date(northSite.lastUpdated);
+                const now = new Date();
+                const isToday = last.toDateString() === now.toDateString();
+                return isToday
+                  ? 'today'
+                  : `last updated on ${last.toLocaleDateString()} at ${last.toLocaleTimeString()}`;
+              })()}
             </div>
           </div>
         )}
@@ -359,7 +368,16 @@ export default function RecyclerDashboard() {
               </BarChart>
             </ResponsiveContainer>
             <div className="mt-2 text-gray-600 text-sm">
-              <span className="font-semibold text-gray-900">{southSite.currentCapacity} kg</span> of waste today
+              <span className="font-semibold text-gray-900">{southSite.currentCapacity} kg</span> of waste{' '}
+              {(() => {
+                if (!southSite.lastUpdated) return '';
+                const last = new Date(southSite.lastUpdated);
+                const now = new Date();
+                const isToday = last.toDateString() === now.toDateString();
+                return isToday
+                  ? 'today'
+                  : `last updated on ${last.toLocaleDateString()} at ${last.toLocaleTimeString()}`;
+              })()}
             </div>
           </div>
         )}

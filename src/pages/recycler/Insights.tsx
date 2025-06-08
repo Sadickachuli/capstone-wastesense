@@ -22,6 +22,8 @@ export default function Insights() {
   const [composition, setComposition] = useState<Record<string, number> | null>(null);
   const [totalWeight, setTotalWeight] = useState<number | null>(null);
   const [trendData, setTrendData] = useState<any[]>([]);
+  const [detectionHistory, setDetectionHistory] = useState<any[]>([]);
+  const [detectionTrend, setDetectionTrend] = useState<any[]>([]);
 
   // Fetch history for all sites or a specific site
   useEffect(() => {
@@ -117,6 +119,45 @@ export default function Insights() {
     return () => clearInterval(interval);
   }, [selectedSite, sites]);
 
+  // Fetch detection history for selected site
+  useEffect(() => {
+    let url = '/api/auth/waste-compositions/history';
+    let params: any = {};
+    if (selectedSite !== 'all') params.site_id = selectedSite;
+    axios.get(url, { params }).then(res => {
+      setDetectionHistory(res.data.history || []);
+    });
+  }, [selectedSite]);
+
+  // Prepare detection trend data (last 30 days)
+  useEffect(() => {
+    if (detectionHistory.length === 0) {
+      setDetectionTrend([]);
+      return;
+    }
+    // Group by date, average if multiple per day
+    const grouped: Record<string, any[]> = {};
+    detectionHistory.forEach(row => {
+      if (!grouped[row.date]) grouped[row.date] = [];
+      grouped[row.date].push(row);
+    });
+    const trend = Object.entries(grouped)
+      .map(([date, rows]) => {
+        const avg = (key: string) => Math.round(rows.reduce((a, b) => a + Number(b[key] || 0), 0) / rows.length);
+        return {
+          date,
+          plastic: avg('plastic_percent'),
+          paper: avg('paper_percent'),
+          glass: avg('glass_percent'),
+          metal: avg('metal_percent'),
+          organic: avg('organic_percent'),
+        };
+      })
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(-30);
+    setDetectionTrend(trend);
+  }, [detectionHistory]);
+
   // Export CSV
   const handleExport = () => {
     if (!trendData.length) return;
@@ -174,9 +215,28 @@ export default function Insights() {
       {/* Trend Line Chart below selection */}
       {trendData.length > 0 && (
         <div className="bg-white shadow rounded-lg p-6 mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-2">Trends (Last 30 Days)</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-2">Forecasted Waste Composition Trends (Last 30 Days)</h2>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={trendData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+              <XAxis dataKey="date" stroke={isDarkMode ? '#fff' : '#000'} tick={{ fill: isDarkMode ? '#fff' : '#000' }} />
+              <YAxis stroke={isDarkMode ? '#fff' : '#000'} tick={{ fill: isDarkMode ? '#fff' : '#000' }} />
+              <Tooltip contentStyle={{ color: isDarkMode ? '#fff' : '#000', background: isDarkMode ? '#222' : '#fff' }} labelStyle={{ color: isDarkMode ? '#fff' : '#000' }} itemStyle={{ color: isDarkMode ? '#fff' : '#000' }} />
+              <Legend wrapperStyle={{ color: isDarkMode ? '#fff' : '#000' }} />
+              <Line type="monotone" dataKey="plastic" stroke={WASTE_COLORS.plastic} name="Plastic" />
+              <Line type="monotone" dataKey="paper" stroke={WASTE_COLORS.paper} name="Paper" />
+              <Line type="monotone" dataKey="glass" stroke={WASTE_COLORS.glass} name="Glass" />
+              <Line type="monotone" dataKey="metal" stroke={WASTE_COLORS.metal} name="Metal" />
+              <Line type="monotone" dataKey="organic" stroke={WASTE_COLORS.organic} name="Organic" />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+      {/* Waste Detection Model Trends */}
+      {detectionTrend.length > 0 && (
+        <div className="bg-white shadow rounded-lg p-6 mb-6">
+          <h2 className="text-lg font-bold text-gray-900 mb-2">Detected Waste Composition Trends (from Image Analysis)</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={detectionTrend} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
               <XAxis dataKey="date" stroke={isDarkMode ? '#fff' : '#000'} tick={{ fill: isDarkMode ? '#fff' : '#000' }} />
               <YAxis stroke={isDarkMode ? '#fff' : '#000'} tick={{ fill: isDarkMode ? '#fff' : '#000' }} />
               <Tooltip contentStyle={{ color: isDarkMode ? '#fff' : '#000', background: isDarkMode ? '#222' : '#fff' }} labelStyle={{ color: isDarkMode ? '#fff' : '#000' }} itemStyle={{ color: isDarkMode ? '#fff' : '#000' }} />

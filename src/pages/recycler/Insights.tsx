@@ -20,6 +20,7 @@ export default function Insights() {
   const [composition, setComposition] = useState<Record<string, number> | null>(null);
   const [totalWeight, setTotalWeight] = useState<number | null>(null);
   const [trendData, setTrendData] = useState<any[]>([]);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Fetch history for all sites or a specific site
   useEffect(() => {
@@ -143,26 +144,28 @@ export default function Insights() {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
           <select
-            className="form-select"
+            className="form-select dark:bg-white dark:text-black"
+            style={{ backgroundColor: isDarkMode ? '#fff' : undefined, color: isDarkMode ? '#000' : undefined }}
             value={selectedDate}
             onChange={e => setSelectedDate(e.target.value)}
           >
-            <option value="">Select a date</option>
+            <option value="" className="dark:text-black">Select a date</option>
             {allDates.map(date => (
-              <option key={date} value={date}>{date}</option>
+              <option key={date} value={date} className="dark:text-black">{date}</option>
             ))}
           </select>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Dumping Site</label>
           <select
-            className="form-select"
+            className="form-select dark:bg-white dark:text-black"
+            style={{ backgroundColor: isDarkMode ? '#fff' : undefined, color: isDarkMode ? '#000' : undefined }}
             value={selectedSite}
             onChange={e => setSelectedSite(e.target.value)}
           >
-            <option value="all">All Sites (Aggregate)</option>
+            <option value="all" className="dark:text-black">All Sites (Aggregate)</option>
             {sites.map(site => (
-              <option key={site.id} value={site.id}>{site.name}</option>
+              <option key={site.id} value={site.id} className="dark:text-black">{site.name}</option>
             ))}
           </select>
         </div>
@@ -173,10 +176,10 @@ export default function Insights() {
           <h2 className="text-lg font-bold text-gray-900 mb-2">Trends (Last 30 Days)</h2>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={trendData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
+              <XAxis dataKey="date" stroke="#fff" tick={{ fill: '#fff' }} />
+              <YAxis stroke="#fff" tick={{ fill: '#fff' }} />
+              <Tooltip contentStyle={{ color: '#fff', background: '#222' }} labelStyle={{ color: '#fff' }} itemStyle={{ color: '#fff' }} />
+              <Legend wrapperStyle={{ color: '#fff' }} />
               <Line type="monotone" dataKey="plastic" stroke={WASTE_COLORS.plastic} name="Plastic" />
               <Line type="monotone" dataKey="paper" stroke={WASTE_COLORS.paper} name="Paper" />
               <Line type="monotone" dataKey="glass" stroke={WASTE_COLORS.glass} name="Glass" />

@@ -28,10 +28,10 @@ export default function Analytics() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold text-gray-900">Analytics Dashboard</h1>
         <div className="flex space-x-2">
-          <select className="form-select">
-            <option>Last 7 Days</option>
-            <option>Last 30 Days</option>
-            <option>Last 90 Days</option>
+          <select className="form-select dark:bg-white dark:text-black">
+            <option className="dark:text-black">Last 7 Days</option>
+            <option className="dark:text-black">Last 30 Days</option>
+            <option className="dark:text-black">Last 90 Days</option>
           </select>
           <button className="btn btn-secondary">Export Report</button>
         </div>
@@ -39,7 +39,7 @@ export default function Analytics() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white overflow-hidden shadow rounded-lg dark:shadow-white dark:border-white">
           <div className="px-4 py-5 sm:p-6">
             <dt className="text-sm font-medium text-gray-500 truncate">
               Total Collections
@@ -50,7 +50,7 @@ export default function Analytics() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white overflow-hidden shadow rounded-lg dark:shadow-white dark:border-white">
           <div className="px-4 py-5 sm:p-6">
             <dt className="text-sm font-medium text-gray-500 truncate">
               Completed Routes
@@ -61,7 +61,7 @@ export default function Analytics() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white overflow-hidden shadow rounded-lg dark:shadow-white dark:border-white">
           <div className="px-4 py-5 sm:p-6">
             <dt className="text-sm font-medium text-gray-500 truncate">
               Active Routes
@@ -72,7 +72,7 @@ export default function Analytics() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white overflow-hidden shadow rounded-lg dark:shadow-white dark:border-white">
           <div className="px-4 py-5 sm:p-6">
             <dt className="text-sm font-medium text-gray-500 truncate">
               Total Distance (km)
@@ -83,7 +83,7 @@ export default function Analytics() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white overflow-hidden shadow rounded-lg dark:shadow-white dark:border-white">
           <div className="px-4 py-5 sm:p-6">
             <dt className="text-sm font-medium text-gray-500 truncate">
               Route Efficiency
@@ -94,7 +94,7 @@ export default function Analytics() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-white overflow-hidden shadow rounded-lg dark:shadow-white dark:border-white">
           <div className="px-4 py-5 sm:p-6">
             <dt className="text-sm font-medium text-gray-500 truncate">
               Customer Complaints

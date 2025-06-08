@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900 dark:text-gray-100;
+    @apply bg-gray-50 text-gray-900 dark:bg-black dark:text-gray-100;
   }
 }
 
@@ -26,15 +26,15 @@
   }
   
   .card {
-    @apply bg-white rounded-lg shadow-md p-6;
+    @apply bg-white rounded-lg shadow-md p-6 dark:bg-gray-900 dark:shadow-white dark:border dark:border-white;
   }
   
   .nav-link {
-    @apply flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900;
+    @apply flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white;
   }
   
   .nav-link.active {
-    @apply bg-gray-100 text-gray-900;
+    @apply bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white;
   }
 
   .nav-link-mobile {
@@ -43,5 +43,51 @@
 
   .nav-link-mobile.active {
     @apply text-primary-600;
+  }
+}
+
+@layer utilities {
+  .bg-white {
+    @apply dark:bg-gray-900;
+  }
+  .bg-gray-50 {
+    @apply dark:bg-black;
+  }
+  /* Text color overrides for dark mode */
+  .text-gray-900 {
+    @apply dark:text-gray-100;
+  }
+  .text-gray-700 {
+    @apply dark:text-gray-200;
+  }
+  .text-gray-600 {
+    @apply dark:text-gray-300;
+  }
+  .text-gray-500 {
+    @apply dark:text-gray-400;
+  }
+  .font-medium {
+    @apply dark:text-gray-100;
+  }
+  .font-semibold {
+    @apply dark:text-white;
+  }
+  .font-bold {
+    @apply dark:text-white;
+  }
+  .text-sm {
+    @apply dark:text-gray-200;
+  }
+  .dark\:text-black {
+    @apply dark:text-black;
+  }
+  .dark\:shadow-white {
+    @apply dark:shadow-[0_2px_8px_0_rgba(255,255,255,0.15)];
+  }
+  .dark\:border-white {
+    @apply dark:border-white;
+  }
+  .dark\:bg-white {
+    @apply dark:bg-white;
   }
 } 

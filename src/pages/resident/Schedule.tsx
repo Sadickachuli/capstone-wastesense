@@ -88,7 +88,7 @@ export default function Schedule() {
                           ? 'bg-green-100 text-green-800'
                           : item.status === 'missed'
                           ? 'bg-red-100 text-red-800'
-                          : 'bg-blue-100 text-blue-800'
+                          : 'bg-blue-100 text-black dark:text-black'
                       }`}
                     >
                       {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
@@ -101,7 +101,7 @@ export default function Schedule() {
         </div>
       </div>
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+      <div className="bg-white shadow overflow-hidden sm:rounded-lg card dark:shadow-white dark:border-white">
         <div className="px-4 py-5 sm:px-6">
           <h3 className="text-lg leading-6 font-medium text-gray-900">
             Collection Guidelines

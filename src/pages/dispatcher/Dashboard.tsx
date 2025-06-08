@@ -614,8 +614,8 @@ export default function DispatcherDashboard() {
                 <span
                   className={`px-2 py-1 text-xs font-medium rounded-full ${
                     route.status === 'active'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-yellow-100 text-yellow-800'
+                      ? 'bg-green-100 text-black dark:text-black'
+                      : 'bg-yellow-100 text-black dark:text-black'
                   }`}
                 >
                   {route.status}
@@ -636,22 +636,16 @@ export default function DispatcherDashboard() {
       </div>
 
       {/* Recent Alerts */}
-      <div className="card">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Alerts</h2>
+      <div className={`card ${mockAlerts[0].type === 'warning' ? 'bg-yellow-50' : 'bg-blue-50'} dark:shadow-white dark:border-white`}>
+        <h2 className="text-lg font-medium text-gray-900 mb-4 dark:text-white">Recent Alerts</h2>
         <div className="space-y-4">
           {mockAlerts.map((alert) => (
             <div
               key={alert.id}
-              className={`p-4 rounded-lg ${
-                alert.type === 'warning'
-                  ? 'bg-yellow-50 text-yellow-800'
-                  : 'bg-blue-50 text-blue-800'
-              }`}
+              className={`p-4 rounded-lg ${alert.type === 'warning' ? 'bg-yellow-50' : 'bg-blue-50'} dark:bg-inherit`}
             >
-              <p className="text-sm">{alert.message}</p>
-              <p className="text-xs mt-1 text-gray-500">
-                {new Date(alert.timestamp).toLocaleTimeString()}
-              </p>
+              <p className="text-sm dark:text-black">{alert.message}</p>
+              <p className="text-xs mt-1 text-gray-500 dark:text-black">{new Date(alert.timestamp).toLocaleTimeString()}</p>
             </div>
           ))}
         </div>

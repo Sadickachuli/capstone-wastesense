@@ -56,11 +56,11 @@ export default function Deliveries() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold text-gray-900">Incoming Deliveries</h1>
         <div className="flex space-x-2">
-          <select className="form-select">
-            <option>All Status</option>
-            <option>Pending</option>
-            <option>In Transit</option>
-            <option>Completed</option>
+          <select className="form-select dark:bg-white dark:text-black">
+            <option className="dark:text-black">All Status</option>
+            <option className="dark:text-black">Pending</option>
+            <option className="dark:text-black">In Transit</option>
+            <option className="dark:text-black">Completed</option>
           </select>
           <button className="btn btn-primary">Schedule Delivery</button>
         </div>
@@ -75,7 +75,7 @@ export default function Deliveries() {
         <div className="border-t border-gray-200">
           <ul className="divide-y divide-gray-200">
             {mockDeliveries.map((delivery) => (
-              <li key={delivery.id} className="px-4 py-4 sm:px-6">
+              <li key={delivery.id} className="px-4 py-4 sm:px-6 card dark:shadow-white dark:border-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center">
@@ -87,8 +87,8 @@ export default function Deliveries() {
                           delivery.status === 'completed'
                             ? 'bg-green-100 text-green-800'
                             : delivery.status === 'in-transit'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-blue-100 text-blue-800'
+                            ? 'bg-yellow-100 text-black dark:text-black'
+                            : 'bg-blue-100 text-black dark:text-black'
                         }`}
                       >
                         {delivery.status.split('-').map(word => 

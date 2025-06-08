@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 interface UserSettingsProps {
   role: 'resident' | 'dispatcher' | 'recycler';
@@ -59,14 +60,12 @@ const defaultNotifications: Record<string, NotificationSetting[]> = {
 
 export default function UserSettings({ role }: UserSettingsProps) {
   const { user } = useAuth();
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const [notifications, setNotifications] = useState(defaultNotifications[role]);
   const [avatar, setAvatar] = useState<string | null>(null);
 
   const handleThemeToggle = () => {
-    setIsDarkMode(!isDarkMode);
-    // In a real app, you would persist this to your backend and
-    // update the theme in your app's context/state management
+    toggleDarkMode();
   };
 
   const handleNotificationToggle = (notificationId: string) => {

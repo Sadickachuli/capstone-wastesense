@@ -212,7 +212,7 @@ export default function RecyclerDashboard() {
       </div>
 
       {forecast && (
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
+        <div className="card bg-white shadow dark:shadow-white">
           <h2 className="text-lg font-bold text-gray-900 mb-2">Forecast for Tomorrow</h2>
           <p className="mb-4 text-gray-700">
             Tomorrow's waste: <span className="font-semibold">{forecast.total_waste_tonnes.toFixed(1)} tonnes</span> from Ablekuma North and Ayawaso West. <br />
@@ -233,18 +233,18 @@ export default function RecyclerDashboard() {
             </BarChart>
           </ResponsiveContainer>
           <div className="mt-4 flex flex-col md:flex-row md:items-center md:space-x-8">
-            <div className="flex-1">
-              <PieChart width={220} height={180}>
+            <div className="flex-1 min-w-[320px]" style={{ height: 200 }}>
+              <PieChart width={320} height={200}>
                 <Pie
                   data={Object.entries(forecast.composition_percent).map(([type, percent]) => ({ name: type, value: percent }))}
                   dataKey="value"
                   nameKey="name"
                   cx="50%"
                   cy="50%"
-                  outerRadius={70}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={40}
+                  label={({ name, value }) => `${name}: ${value}%`}
                 >
-                  {Object.keys(WASTE_COLORS).map((type, idx) => (
+                  {Object.keys(WASTE_COLORS).map((type) => (
                     <Cell key={type} fill={WASTE_COLORS[type]} />
                   ))}
                 </Pie>
@@ -264,7 +264,7 @@ export default function RecyclerDashboard() {
       )}
 
       {/* Aggregate Pie Chart */}
-      <div className="bg-white shadow rounded-lg p-6 mb-6">
+      <div className="card bg-white shadow mb-6 dark:shadow-white">
         <h2 className="text-lg font-bold text-gray-900 mb-2">Total Waste Composition (All Sites)</h2>
         <div className="flex flex-col md:flex-row md:items-center md:space-x-8">
           <div className="flex-1 min-w-[220px] p-8">
@@ -390,16 +390,14 @@ export default function RecyclerDashboard() {
                 </p>
               </div>
               <div className="flex items-center space-x-4">
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    delivery.status === 'in-transit'
-                      ? 'bg-blue-100 text-blue-800'
-                      : delivery.status === 'completed'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-yellow-100 text-yellow-800'
-                  }`}
-                >
-                  {delivery.status}
+                <span className={`ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                  delivery.status === 'completed'
+                    ? 'bg-green-100 text-green-800'
+                    : delivery.status === 'in-transit'
+                    ? 'bg-yellow-100 text-black dark:text-black'
+                    : 'bg-blue-100 text-black dark:text-black'
+                }`}>
+                  {delivery.status.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                 </span>
                 <button className="btn btn-secondary">View Details</button>
               </div>

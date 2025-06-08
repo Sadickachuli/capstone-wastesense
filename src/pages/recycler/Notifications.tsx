@@ -2,11 +2,13 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../../hooks/useNotifications';
 import { useWasteSites } from '../../hooks/useWasteSites';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function RecyclerNotifications() {
   const navigate = useNavigate();
   const { notifications, markAsRead } = useNotifications();
   const { sites } = useWasteSites();
+  const { isDarkMode } = useTheme();
 
   const handleNotificationClick = async (notificationId: string, siteId?: string) => {
     await markAsRead(notificationId);
@@ -51,25 +53,25 @@ export default function RecyclerNotifications() {
                       notification.read 
                         ? 'bg-white border-gray-200' 
                         : 'bg-blue-50 border-blue-200'
-                    }`}
+                    } ${!notification.read && isDarkMode ? 'dark:bg-blue-50 dark:border-white dark:shadow-white' : ''}`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-2">
-                          <h3 className="text-sm font-medium text-gray-900">
+                          <h3 className={`text-sm font-medium ${!notification.read && isDarkMode ? 'dark:text-black' : 'text-gray-900'}`}>
                             {notification.title}
                           </h3>
                           {!notification.read && (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:text-black">
                               New
                             </span>
                           )}
                         </div>
-                        <p className="mt-1 text-sm text-gray-600">
+                        <p className={`mt-1 text-sm ${!notification.read && isDarkMode ? 'dark:text-black' : 'text-gray-600'}`}>
                           {notification.message}
                         </p>
                         {site && (
-                          <div className="mt-2 text-sm text-gray-500">
+                          <div className={`mt-2 text-sm ${!notification.read && isDarkMode ? 'dark:text-black' : 'text-gray-500'}`}>
                             <span className="font-medium">Site Details:</span>
                             <ul className="mt-1 list-disc list-inside pl-4">
                               <li>Current Capacity: {site.currentCapacity}/{site.maxCapacity} tons</li>
@@ -78,16 +80,14 @@ export default function RecyclerNotifications() {
                             </ul>
                           </div>
                         )}
-                        <div className="mt-3">
-                          <button
-                            onClick={() => handleNotificationClick(notification.id, notification.metadata?.siteId)}
-                            className="text-sm font-medium text-blue-600 hover:text-blue-800"
-                          >
-                            View Full Details →
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => handleNotificationClick(notification.id, notification.metadata?.siteId)}
+                          className={`text-sm font-medium text-blue-600 hover:text-blue-800 ${!notification.read && isDarkMode ? 'dark:text-black' : ''}`}
+                        >
+                          View Full Details →
+                        </button>
                       </div>
-                      <span className="text-xs text-gray-500">
+                      <span className={`text-xs ${!notification.read && isDarkMode ? 'dark:text-black' : 'text-gray-500'}`}>
                         {new Date(notification.timestamp).toLocaleTimeString()}
                       </span>
                     </div>

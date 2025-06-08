@@ -195,7 +195,7 @@ export default function Routes() {
         <div className="border-t border-gray-200">
           <ul className="divide-y divide-gray-200">
             {mockRoutes.map((route) => (
-              <li key={route.id} className="px-4 py-4 sm:px-6">
+              <li key={route.id} className="px-4 py-4 sm:px-6 card dark:shadow-white dark:border-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center">
@@ -205,10 +205,10 @@ export default function Routes() {
                       <span
                         className={`ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           route.status === 'active'
-                            ? 'bg-green-100 text-green-800'
+                            ? 'bg-green-100 text-black dark:text-black'
                             : route.status === 'completed'
                             ? 'bg-gray-100 text-gray-800'
-                            : 'bg-yellow-100 text-yellow-800'
+                            : 'bg-yellow-100 text-black dark:text-black'
                         }`}
                       >
                         {route.status.charAt(0).toUpperCase() + route.status.slice(1)}

@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 const validationSchema = Yup.object({
   email: Yup.string()
@@ -22,6 +23,7 @@ export default function SignupResident() {
   const { signup } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState('');
+  const { isDarkMode, toggleDarkMode } = useTheme();
 
   const formik = useFormik({
     initialValues: {
@@ -47,7 +49,15 @@ export default function SignupResident() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+      <div className="max-w-md w-full space-y-8 relative">
+        <button
+          type="button"
+          onClick={toggleDarkMode}
+          className="absolute top-0 right-0 mt-2 mr-2 px-3 py-1 rounded bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow"
+          aria-label="Toggle dark mode"
+        >
+          {isDarkMode ? '☀️ Light' : '🌙 Dark'}
+        </button>
         <div>
           <h1 className="text-center text-3xl font-bold text-primary-600">
             WasteSense

@@ -4,6 +4,12 @@ import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { db } from '../db';
 import { v4 as uuidv4 } from 'uuid';
+// @ts-ignore
+import multer from 'multer';
+import axios from 'axios';
+import fs from 'fs';
+import path from 'path';
+import FormData from 'form-data';
 
 // Validation schemas
 const residentSignupSchema = z.object({
@@ -23,6 +29,19 @@ const residentLoginSchema = z.object({
   email: z.string().email(),
   password: z.string(),
 });
+
+// Multer setup for image uploads (in-memory)
+const upload = multer({ storage: multer.memoryStorage() });
+
+// Define WasteDetectionResult type for backend use
+// (should match frontend src/types/index.ts)
+type WasteDetectionResult = {
+  plastic: number;
+  paper: number;
+  glass: number;
+  metal: number;
+  organic: number;
+};
 
 export const signup = async (req: Request, res: Response) => {
   try {
@@ -455,4 +474,123 @@ export const getWasteSites = async (req: Request, res: Response) => {
     console.error('Get Waste Sites error:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
-}; 
+};
+
+// Waste detection controller
+// Note: req type is 'any' to allow req.file (for multer). For production, extend Request type for file.
+export const detectWasteFromImage = async (req: any, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file uploaded' });
+    }
+    // Prepare form data for ML API
+    const formData = new FormData();
+    formData.append('file', req.file.buffer, req.file.originalname);
+
+    // Send to ML API (correct endpoint)
+    const mlRes = await axios.post('https://waste-sense-api.onrender.com/predict/', formData, {
+      headers: {
+        ...formData.getHeaders(),
+      },
+      maxBodyLength: Infinity,
+    });
+
+    // Parse detections, total_weight, and annotated_image
+    const { detections, total_weight, annotated_image } = mlRes.data;
+
+    // Map class names to main types
+    const classToType: Record<string, keyof WasteDetectionResult> = {
+      // Plastic
+      'Other plastic bottle': 'plastic',
+      'Clear plastic bottle': 'plastic',
+      'Plastic bottle cap': 'plastic',
+      'Plastic lid': 'plastic',
+      'Other plastic': 'plastic',
+      'Plastic film': 'plastic',
+      'Garbage bag': 'plastic',
+      'Other plastic wrapper': 'plastic',
+      'Single-use carrier bag': 'plastic',
+      'Polypropylene bag': 'plastic',
+      'Crisp packet': 'plastic',
+      'Spread tub': 'plastic',
+      'Tupperware': 'plastic',
+      'Disposable food container': 'plastic',
+      'Foam food container': 'plastic',
+      'Other plastic container': 'plastic',
+      'Plastic glooves': 'plastic',
+      'Plastic utensils': 'plastic',
+      'Squeezable tube': 'plastic',
+      'Plastic straw': 'plastic',
+      'Six pack rings': 'plastic',
+      'Other plastic cup': 'plastic',
+      'Disposable plastic cup': 'plastic',
+      // Paper
+      'Magazine paper': 'paper',
+      'Tissues': 'paper',
+      'Wrapping paper': 'paper',
+      'Normal paper': 'paper',
+      'Paper bag': 'paper',
+      'Plastified paper bag': 'paper',
+      'Toilet tube': 'paper',
+      'Other carton': 'paper',
+      'Egg carton': 'paper',
+      'Drink carton': 'paper',
+      'Corrugated carton': 'paper',
+      'Meal carton': 'paper',
+      'Pizza box': 'paper',
+      'Paper cup': 'paper',
+      'Paper straw': 'paper',
+      // Glass
+      'Glass bottle': 'glass',
+      'Broken glass': 'glass',
+      'Glass cup': 'glass',
+      'Glass jar': 'glass',
+      // Metal
+      'Aluminium foil': 'metal',
+      'Battery': 'metal',
+      'Aluminium blister pack': 'metal',
+      'Carded blister pack': 'metal',
+      'Metal bottle cap': 'metal',
+      'Food Can': 'metal',
+      'Aerosol': 'metal',
+      'Drink can': 'metal',
+      'Metal lid': 'metal',
+      'Pop tab': 'metal',
+      'Scrap metal': 'metal',
+      // Organic
+      'Food waste': 'organic',
+      'Shoe': 'organic', // assuming
+      'Rope & strings': 'organic', // assuming
+      // Styrofoam, foam, unlabeled, cigarette, etc. can be mapped as needed
+    };
+
+    // Aggregate weights by type
+    const typeWeights: Record<keyof WasteDetectionResult, number> = {
+      plastic: 0,
+      paper: 0,
+      glass: 0,
+      metal: 0,
+      organic: 0,
+    };
+    for (const det of detections) {
+      const type = classToType[det.class];
+      if (type) {
+        typeWeights[type] += 1;
+      }
+    }
+    const total = Object.values(typeWeights).reduce((a, b) => a + b, 0);
+    let composition: WasteDetectionResult = { plastic: 0, paper: 0, glass: 0, metal: 0, organic: 0 };
+    if (total > 0) {
+      for (const type of Object.keys(typeWeights) as (keyof WasteDetectionResult)[]) {
+        composition[type] = Math.round((typeWeights[type] / total) * 100);
+      }
+    }
+    res.json({ result: composition, total_weight, annotated_image, raw: mlRes.data });
+  } catch (err: any) {
+    console.error('Waste detection error:', err);
+    res.status(500).json({ message: 'Failed to detect waste', error: err.message });
+  }
+};
+
+// Export multer upload for use in routes
+export { upload }; 

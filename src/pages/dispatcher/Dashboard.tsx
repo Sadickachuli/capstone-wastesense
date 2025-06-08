@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../api/mockApi';
-import { Route, WasteSite } from '../../types';
+import { Route, WasteSite, WasteDetectionResult, WasteImageUploadResponse } from '../../types';
 import axios from 'axios';
 import { useWasteSites } from '../../hooks/useWasteSites';
 
@@ -89,6 +89,11 @@ export default function DispatcherDashboard() {
   const [mlLoading, setMlLoading] = useState(true);
   const [mlError, setMlError] = useState('');
   const [currentCapacity, setCurrentCapacity] = useState<number | ''>('');
+  const [wasteImage, setWasteImage] = useState<File | null>(null);
+  const [detectionResult, setDetectionResult] = useState<WasteImageUploadResponse | null>(null);
+  const [detectionLoading, setDetectionLoading] = useState(false);
+  const [detectionError, setDetectionError] = useState('');
+  const [selectedSiteForDetection, setSelectedSiteForDetection] = useState<string>('');
 
   // Calculate total percentage
   const totalPercentage = Object.values(composition).reduce((sum, value) => sum + value, 0);
@@ -263,6 +268,53 @@ export default function DispatcherDashboard() {
     interval = setInterval(fetchRecommendation, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleWasteImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setWasteImage(e.target.files[0]);
+      setDetectionResult(null);
+      setDetectionError('');
+    }
+  };
+
+  const handleWasteImageUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!wasteImage) return;
+    setDetectionLoading(true);
+    setDetectionError('');
+    setDetectionResult(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', wasteImage);
+      const res = await axios.post<WasteImageUploadResponse>('/api/auth/detect-waste-image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setDetectionResult(res.data);
+    } catch (err: any) {
+      setDetectionError(err?.response?.data?.message || 'Failed to detect waste composition');
+    } finally {
+      setDetectionLoading(false);
+    }
+  };
+
+  const handleConfirmDetection = async () => {
+    if (!detectionResult || !selectedSiteForDetection) return;
+    setIsSubmitting(true);
+    try {
+      await updateSiteComposition(selectedSiteForDetection, {
+        ...detectionResult.result,
+        currentCapacity: detectionResult.total_weight,
+      });
+      setDetectionResult(null);
+      setWasteImage(null);
+      setSelectedSiteForDetection('');
+      alert('Waste composition and weight updated successfully!');
+    } catch (error) {
+      alert('Failed to update waste site');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -454,6 +506,73 @@ export default function DispatcherDashboard() {
           </div>
         </div>
       )}
+
+      {/* Waste Image Detection Card */}
+      <div className="card bg-yellow-50 mb-4">
+        <h2 className="text-lg font-medium text-yellow-900 mb-2">Image-based Waste Detection</h2>
+        <form onSubmit={handleWasteImageUpload} className="flex flex-col md:flex-row md:items-center md:space-x-4">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleWasteImageChange}
+            className="mb-2 md:mb-0"
+          />
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={!wasteImage || detectionLoading}
+          >
+            {detectionLoading ? 'Detecting...' : 'Detect Waste Composition'}
+          </button>
+        </form>
+        {detectionError && <p className="text-red-600 mt-2">{detectionError}</p>}
+        {detectionResult && (
+          <div className="mt-4">
+            <h3 className="text-md font-semibold text-gray-900 mb-2">Detected Composition:</h3>
+            <ul className="space-y-1">
+              {Object.entries(detectionResult.result).map(([type, percent]) => (
+                <li key={type} className="flex justify-between">
+                  <span className="capitalize">{type}</span>
+                  <span>{percent}%</span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-2 text-sm text-gray-700 font-medium">
+              Total Weight: <span className="font-bold">{detectionResult.total_weight} kg</span>
+            </div>
+            {detectionResult.annotated_image && (
+              <div className="mt-4">
+                <h4 className="text-sm font-semibold mb-1">Detected Objects:</h4>
+                <img
+                  src={`data:image/jpeg;base64,${detectionResult.annotated_image}`}
+                  alt="Annotated waste detection"
+                  className="w-full max-w-md border rounded shadow"
+                  style={{ maxHeight: 400, objectFit: 'contain' }}
+                />
+              </div>
+            )}
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Select Dumping Site</label>
+              <select
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                value={selectedSiteForDetection}
+                onChange={e => setSelectedSiteForDetection(e.target.value)}
+              >
+                <option value="">Select a site</option>
+                <option value="WS001">North Dumping Site</option>
+                <option value="WS002">South Dumping Site</option>
+              </select>
+            </div>
+            <button
+              className="btn btn-primary mt-4"
+              disabled={!selectedSiteForDetection || isSubmitting}
+              onClick={handleConfirmDetection}
+            >
+              {isSubmitting ? 'Updating...' : 'Confirm & Update Site'}
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

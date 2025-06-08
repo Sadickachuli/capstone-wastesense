@@ -144,4 +144,20 @@ export interface WasteSite {
     organic: number;
   };
   lastUpdated?: string;
+}
+
+export interface WasteDetectionResult {
+  plastic: number;
+  paper: number;
+  glass: number;
+  metal: number;
+  organic: number;
+  [key: string]: number;
+}
+
+export interface WasteImageUploadResponse {
+  result: WasteDetectionResult;
+  total_weight: number;
+  annotated_image: string; // base64
+  raw?: any;
 } 

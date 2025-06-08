@@ -1,207 +1,247 @@
-import React from 'react';
-import { useAuth } from '../../context/AuthContext';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts';
+import { useWasteSites } from '../../hooks/useWasteSites';
 
-interface RecyclingStats {
-  totalProcessed: number;
-  recyclingRate: number;
-  energySaved: number;
-  composition: {
-    plastic: number;
-    paper: number;
-    glass: number;
-    metal: number;
-    organic: number;
-  };
-  monthlyTrends: {
-    month: string;
-    amount: number;
-  }[];
-}
-
-// Mock data for demonstration
-const mockStats: RecyclingStats = {
-  totalProcessed: 1250,
-  recyclingRate: 85,
-  energySaved: 750,
-  composition: {
-    plastic: 30,
-    paper: 25,
-    glass: 15,
-    metal: 20,
-    organic: 10,
-  },
-  monthlyTrends: [
-    { month: 'Jan', amount: 980 },
-    { month: 'Feb', amount: 1100 },
-    { month: 'Mar', amount: 1250 },
-  ],
+const WASTE_COLORS: Record<string, string> = {
+  plastic: '#2563eb', // blue
+  metal: '#6b7280',   // gray
+  organic: '#22c55e', // green
+  paper: '#eab308',   // yellow
+  glass: '#10b981',   // teal
 };
 
 export default function Insights() {
-  const { user } = useAuth();
+  const { sites } = useWasteSites();
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedSite, setSelectedSite] = useState('all');
+  const [history, setHistory] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [composition, setComposition] = useState<Record<string, number> | null>(null);
+  const [totalWeight, setTotalWeight] = useState<number | null>(null);
+  const [trendData, setTrendData] = useState<any[]>([]);
+
+  // Fetch history for all sites or a specific site
+  useEffect(() => {
+    setLoading(true);
+    let url = '/api/forecast/history';
+    let params: any = {};
+    if (selectedSite !== 'all') {
+      const siteObj = sites.find(s => s.id === selectedSite);
+      if (siteObj) params.district = siteObj.name;
+    }
+    axios.get(url, { params }).then(res => {
+      setHistory(res.data);
+      setLoading(false);
+    });
+  }, [selectedSite, sites]);
+
+  // When date or site changes, update composition
+  useEffect(() => {
+    if (!selectedDate || history.length === 0) {
+      setComposition(null);
+      setTotalWeight(null);
+      return;
+    }
+    // Filter for the selected date
+    const dayRows = history.filter(row => row.date === selectedDate);
+    if (selectedSite === 'all') {
+      // Aggregate all sites for the day
+      let total = 0;
+      const comp: Record<string, number> = { plastic: 0, paper: 0, glass: 0, metal: 0, organic: 0 };
+      dayRows.forEach(row => {
+        total += row.total_waste_tonnes || 0;
+        Object.keys(comp).forEach(type => {
+          comp[type] += (row[`${type}_percent`] || 0) * (row.total_waste_tonnes || 0) / 100;
+        });
+      });
+      if (total > 0) {
+        Object.keys(comp).forEach(type => {
+          comp[type] = Math.round((comp[type] / total) * 100);
+        });
+      }
+      setComposition(comp);
+      setTotalWeight(total);
+    } else {
+      // Single site/district
+      const row = dayRows[0];
+      if (row) {
+        setComposition({
+          plastic: row.plastic_percent,
+          paper: row.paper_percent,
+          glass: row.glass_percent,
+          metal: row.metal_percent,
+          organic: row.organic_percent,
+        });
+        setTotalWeight(row.total_waste_tonnes);
+      } else {
+        setComposition(null);
+        setTotalWeight(null);
+      }
+    }
+  }, [selectedDate, selectedSite, history]);
+
+  // Prepare trend data (last 30 days) for the chart, always visible if history exists
+  useEffect(() => {
+    if (history.length === 0) {
+      setTrendData([]);
+      return;
+    }
+    const trend = history.slice(-30).map(row => ({
+      date: row.date,
+      plastic: row.plastic_percent,
+      paper: row.paper_percent,
+      glass: row.glass_percent,
+      metal: row.metal_percent,
+      organic: row.organic_percent,
+      total: row.total_waste_tonnes,
+    }));
+    setTrendData(trend);
+  }, [history, selectedSite]);
+
+  // Poll for history every 30 seconds for live updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      let url = '/api/forecast/history';
+      let params: any = {};
+      if (selectedSite !== 'all') {
+        const siteObj = sites.find(s => s.id === selectedSite);
+        if (siteObj) params.district = siteObj.name;
+      }
+      axios.get(url, { params }).then(res => {
+        setHistory(res.data);
+      });
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [selectedSite, sites]);
+
+  // Export CSV
+  const handleExport = () => {
+    if (!trendData.length) return;
+    const header = ['date', 'plastic', 'paper', 'glass', 'metal', 'organic', 'total'];
+    const rows = trendData.map(row => header.map(h => row[h] ?? '').join(','));
+    const csv = [header.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'waste-insights.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Get all available dates
+  const allDates = Array.from(new Set(history.map(row => row.date))).sort().reverse();
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold text-gray-900">Recycling Insights</h1>
-        <div className="flex space-x-2">
-          <select className="form-select">
-            <option>Last 7 Days</option>
-            <option>Last 30 Days</option>
-            <option>Last 90 Days</option>
+        <h1 className="text-2xl font-semibold text-gray-900">Waste Insights & History</h1>
+        <button className="btn btn-secondary" onClick={handleExport}>Export Report</button>
+      </div>
+      <div className="flex flex-col md:flex-row md:items-end md:space-x-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+          <select
+            className="form-select"
+            value={selectedDate}
+            onChange={e => setSelectedDate(e.target.value)}
+          >
+            <option value="">Select a date</option>
+            {allDates.map(date => (
+              <option key={date} value={date}>{date}</option>
+            ))}
           </select>
-          <button className="btn btn-secondary">Export Report</button>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Dumping Site</label>
+          <select
+            className="form-select"
+            value={selectedSite}
+            onChange={e => setSelectedSite(e.target.value)}
+          >
+            <option value="all">All Sites (Aggregate)</option>
+            {sites.map(site => (
+              <option key={site.id} value={site.id}>{site.name}</option>
+            ))}
+          </select>
         </div>
       </div>
-
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-500 truncate">
-              Total Waste Processed
-            </dt>
-            <dd className="mt-1 text-3xl font-semibold text-gray-900">
-              {mockStats.totalProcessed} kg
-            </dd>
-          </div>
+      {/* Trend Line Chart below selection */}
+      {trendData.length > 0 && (
+        <div className="bg-white shadow rounded-lg p-6 mb-6">
+          <h2 className="text-lg font-bold text-gray-900 mb-2">Trends (Last 30 Days)</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={trendData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="plastic" stroke={WASTE_COLORS.plastic} name="Plastic" />
+              <Line type="monotone" dataKey="paper" stroke={WASTE_COLORS.paper} name="Paper" />
+              <Line type="monotone" dataKey="glass" stroke={WASTE_COLORS.glass} name="Glass" />
+              <Line type="monotone" dataKey="metal" stroke={WASTE_COLORS.metal} name="Metal" />
+              <Line type="monotone" dataKey="organic" stroke={WASTE_COLORS.organic} name="Organic" />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
-
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-500 truncate">
-              Recycling Rate
-            </dt>
-            <dd className="mt-1 text-3xl font-semibold text-green-600">
-              {mockStats.recyclingRate}%
-            </dd>
-          </div>
-        </div>
-
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-500 truncate">
-              Energy Saved
-            </dt>
-            <dd className="mt-1 text-3xl font-semibold text-blue-600">
-              {mockStats.energySaved} kWh
-            </dd>
-          </div>
-        </div>
-      </div>
-
-      {/* Composition Breakdown */}
-      <div className="bg-white shadow sm:rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
-            Waste Composition
-          </h3>
-          <div className="mt-4">
-            <div className="relative pt-1">
-              <div className="flex mb-2 items-center justify-between">
-                <div>
-                  <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-green-600 bg-green-200">
-                    Plastic
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-xs font-semibold inline-block text-green-600">
-                    {mockStats.composition.plastic}%
-                  </span>
-                </div>
-              </div>
-              <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-green-200">
-                <div
-                  style={{ width: `${mockStats.composition.plastic}%` }}
-                  className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-green-500"
-                ></div>
-              </div>
+      )}
+      {/* Show composition for selected day/site */}
+      {selectedDate && composition && (
+        <div className="bg-white shadow rounded-lg p-6 mb-6">
+          <h2 className="text-lg font-bold text-gray-900 mb-2">
+            {selectedSite === 'all' ? 'Aggregate Composition' : 'Site Composition'} for {selectedDate}
+          </h2>
+          <div className="flex flex-col md:flex-row md:items-center md:space-x-8">
+            <div className="flex-1 min-w-[220px] p-8">
+              {selectedSite === 'all' ? (
+                <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <Pie
+                      data={Object.entries(composition).map(([type, percent]) => ({ name: type, value: percent }))}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={70}
+                      label={({ name, value }) => `${name}: ${value}%`}
+                    >
+                      {Object.keys(WASTE_COLORS).map((type) => (
+                        <Cell key={type} fill={WASTE_COLORS[type]} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={Object.entries(composition).map(([type, percent]) => ({ type, percent }))}>
+                    <XAxis dataKey="type" />
+                    <YAxis unit="%" />
+                    <Tooltip />
+                    {Object.keys(WASTE_COLORS).map(type => (
+                      <Bar key={type} dataKey={d => d.type === type ? d.percent : 0} name={type} fill={WASTE_COLORS[type]} />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
-
-            <div className="relative pt-1">
-              <div className="flex mb-2 items-center justify-between">
-                <div>
-                  <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-blue-600 bg-blue-200">
-                    Paper
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-xs font-semibold inline-block text-blue-600">
-                    {mockStats.composition.paper}%
-                  </span>
-                </div>
+            <div className="flex-1 text-gray-600 text-sm">
+              <div className="mb-2">
+                <span className="font-semibold text-gray-900">
+                  {totalWeight ? `${totalWeight} kg` : ''} of waste was generated {selectedSite === 'all' ? 'across all sites' : 'at this site'}
+                </span>
               </div>
-              <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-200">
-                <div
-                  style={{ width: `${mockStats.composition.paper}%` }}
-                  className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500"
-                ></div>
-              </div>
-            </div>
-
-            {/* Add similar blocks for glass, metal, and organic waste */}
-          </div>
-        </div>
-      </div>
-
-      {/* Monthly Trends */}
-      <div className="bg-white shadow sm:rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
-            Monthly Trends
-          </h3>
-          <div className="mt-4">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Month
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount (kg)
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Change
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {mockStats.monthlyTrends.map((month, index) => (
-                  <tr key={month.month}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {month.month}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {month.amount}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {index > 0 ? (
-                        <span
-                          className={`${
-                            month.amount > mockStats.monthlyTrends[index - 1].amount
-                              ? 'text-green-600'
-                              : 'text-red-600'
-                          }`}
-                        >
-                          {(
-                            ((month.amount -
-                              mockStats.monthlyTrends[index - 1].amount) /
-                              mockStats.monthlyTrends[index - 1].amount) *
-                            100
-                          ).toFixed(1)}
-                          %
-                        </span>
-                      ) : (
-                        '-'
-                      )}
-                    </td>
-                  </tr>
+              <ul>
+                {Object.entries(composition).map(([type, percent]) => (
+                  <li key={type} className="mb-1">
+                    <span className="font-semibold text-gray-900 capitalize">{type}:</span> {percent}%
+                  </li>
                 ))}
-              </tbody>
-            </table>
+              </ul>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 } 

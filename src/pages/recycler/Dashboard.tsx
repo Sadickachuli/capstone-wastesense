@@ -127,6 +127,27 @@ export default function RecyclerDashboard() {
   const recyclingRate = 85; // %
   const energySaved = 750; // kWh
 
+  // Aggregate today's waste composition and weight for all sites
+  let totalWeight = 0;
+  const totalComposition: Record<string, number> = { plastic: 0, paper: 0, glass: 0, metal: 0, organic: 0 };
+  sites.forEach(site => {
+    totalWeight += site.currentCapacity;
+    Object.entries(site.composition).forEach(([type, percent]) => {
+      // Weighted sum by site weight
+      totalComposition[type] += (percent / 100) * site.currentCapacity;
+    });
+  });
+  // Convert to percentages (ensure all keys are present)
+  let aggregateComposition: Record<string, number> = { plastic: 0, paper: 0, glass: 0, metal: 0, organic: 0 };
+  if (totalWeight > 0) {
+    Object.entries(totalComposition).forEach(([type, weight]) => {
+      aggregateComposition[type] = Math.round((weight / totalWeight) * 100);
+    });
+  }
+  // Get North and South sites
+  const northSite = sites.find(s => s.name.toLowerCase().includes('north'));
+  const southSite = sites.find(s => s.name.toLowerCase().includes('south'));
+
   const handleSiteSelect = (site: WasteSite) => {
     setSelectedSite(site);
     // Mark related notifications as read
@@ -242,117 +263,85 @@ export default function RecyclerDashboard() {
         </div>
       )}
 
-      {/* Notifications Preview */}
-      {wasteUpdateNotifications.length > 0 && (
-        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-lg">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-lg font-medium text-blue-900">New Waste Updates</h2>
-            <Link
-              to="/recycler/notifications"
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-            >
-              View All →
-            </Link>
-          </div>
-          <div className="space-y-2">
-            {wasteUpdateNotifications.slice(0, 3).map(notification => (
-              <div 
-                key={notification.id}
-                className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm"
-              >
-                <div>
-                  <p className="text-sm font-medium text-gray-900">
-                    {notification.title}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(notification.timestamp).toLocaleString()}
-                  </p>
-                </div>
-                <button
-                  onClick={() => handleNotificationClick(notification.id, notification.metadata?.siteId)}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+      {/* Aggregate Pie Chart */}
+      <div className="bg-white shadow rounded-lg p-6 mb-6">
+        <h2 className="text-lg font-bold text-gray-900 mb-2">Total Waste Composition (All Sites)</h2>
+        <div className="flex flex-col md:flex-row md:items-center md:space-x-8">
+          <div className="flex-1 min-w-[220px] p-8">
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie
+                  data={Object.entries(aggregateComposition).map(([type, percent]) => ({ name: type, value: percent }))}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={70}
+                  label={({ name, value }) => `${name}: ${value}%`}
                 >
-                  View Details →
-                </button>
-              </div>
-            ))}
-            {wasteUpdateNotifications.length > 3 && (
-              <p className="text-sm text-blue-600 text-center">
-                +{wasteUpdateNotifications.length - 3} more updates
-              </p>
-            )}
+                  {Object.keys(WASTE_COLORS).map((type) => (
+                    <Cell key={type} fill={WASTE_COLORS[type]} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
           </div>
-        </div>
-      )}
-
-      {/* Waste Site Composition */}
-      {selectedSite && (
-        <div className={`bg-white shadow rounded-lg p-6 ${
-          wasteUpdateNotifications.some(n => n.metadata?.siteId === selectedSite.id)
-            ? 'ring-2 ring-blue-500'
-            : ''
-        }`}>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-medium text-gray-900">Waste Site Composition</h2>
-            <select 
-              className="form-select"
-              value={selectedSite.id}
-              onChange={(e) => {
-                const site = sites.find(s => s.id === e.target.value);
-                if (site) handleSiteSelect(site);
-              }}
-            >
-              {sites.map(site => (
-                <option key={site.id} value={site.id}>
-                  {site.name}
-                  {wasteUpdateNotifications.some(n => n.metadata?.siteId === site.id) ? ' (New Update)' : ''}
-                </option>
+          <div className="flex-1 text-gray-600 text-sm">
+            <div className="mb-2">
+              <span className="font-semibold text-gray-900">
+                {totalWeight ? `${totalWeight} kg` : ''} of waste was generated across all sites
+              </span>
+            </div>
+            <ul>
+              {Object.entries(aggregateComposition).map(([type, percent]) => (
+                <li key={type} className="mb-1">
+                  <span className="font-semibold text-gray-900 capitalize">{type}:</span> {percent}%
+                </li>
               ))}
-            </select>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div>
-              <p className="text-sm text-gray-600">Location</p>
-              <p className="font-medium">{selectedSite.location}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Current Capacity</p>
-              <p className="font-medium">{selectedSite.currentCapacity} / {selectedSite.maxCapacity} tons</p>
-            </div>
-          </div>
-
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-md font-medium text-gray-900">Current Waste Composition</h3>
-            <p className="text-sm text-gray-500">
-              Last updated: {new Date(selectedSite.lastUpdated || '').toLocaleString()}
-            </p>
-          </div>
-          
-          <div className="space-y-4">
-            {Object.entries(selectedSite.composition).map(([type, percentage]) => (
-              <div key={type} className="relative">
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700 capitalize">{type}</span>
-                  <span className="text-sm font-medium text-gray-700">{percentage}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div
-                    className={`h-2.5 rounded-full ${
-                      type === 'plastic' ? 'bg-blue-600' :
-                      type === 'paper' ? 'bg-yellow-600' :
-                      type === 'glass' ? 'bg-green-600' :
-                      type === 'metal' ? 'bg-gray-600' :
-                      'bg-brown-600'
-                    }`}
-                    style={{ width: `${percentage}%` }}
-                  ></div>
-                </div>
-              </div>
-            ))}
+            </ul>
           </div>
         </div>
-      )}
+      </div>
+
+      {/* Per-Site Bar Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {northSite && (
+          <div className="bg-white shadow rounded-lg p-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-2">North Dumping Site Composition</h2>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={Object.entries(northSite.composition).map(([type, percent]) => ({ type, percent }))}>
+                <XAxis dataKey="type" />
+                <YAxis unit="%" />
+                <Tooltip />
+                {Object.keys(WASTE_COLORS).map(type => (
+                  <Bar key={type} dataKey={d => d.type === type ? d.percent : 0} name={type} fill={WASTE_COLORS[type]} />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="mt-2 text-gray-600 text-sm">
+              <span className="font-semibold text-gray-900">{northSite.currentCapacity} kg</span> of waste today
+            </div>
+          </div>
+        )}
+        {southSite && (
+          <div className="bg-white shadow rounded-lg p-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-2">South Dumping Site Composition</h2>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={Object.entries(southSite.composition).map(([type, percent]) => ({ type, percent }))}>
+                <XAxis dataKey="type" />
+                <YAxis unit="%" />
+                <Tooltip />
+                {Object.keys(WASTE_COLORS).map(type => (
+                  <Bar key={type} dataKey={d => d.type === type ? d.percent : 0} name={type} fill={WASTE_COLORS[type]} />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="mt-2 text-gray-600 text-sm">
+              <span className="font-semibold text-gray-900">{southSite.currentCapacity} kg</span> of waste today
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -360,7 +349,7 @@ export default function RecyclerDashboard() {
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             Total Processed Today
           </h3>
-          <p className="text-3xl font-bold text-green-600">{totalProcessed} kg</p>
+          <p className="text-3xl font-bold text-green-600">{totalWeight} kg</p>
         </div>
         <div className="card bg-blue-50">
           <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -414,29 +403,6 @@ export default function RecyclerDashboard() {
                 </span>
                 <button className="btn btn-secondary">View Details</button>
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Waste Composition Chart */}
-      <div className="card">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">
-          Today's Waste Composition
-        </h2>
-        <div className="grid grid-cols-5 gap-4">
-          {Object.entries(mockDeliveries[0].composition).map(([type, value]) => (
-            <div key={type} className="text-center">
-              <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                <div
-                  className="bg-primary-600 h-2 rounded-full"
-                  style={{ width: `${value}%` }}
-                />
-              </div>
-              <p className="text-sm font-medium text-gray-900 capitalize">
-                {type}
-              </p>
-              <p className="text-xs text-gray-600">{value}%</p>
             </div>
           ))}
         </div>

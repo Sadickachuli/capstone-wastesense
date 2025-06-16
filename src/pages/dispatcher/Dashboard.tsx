@@ -94,6 +94,7 @@ export default function DispatcherDashboard() {
   const [detectionLoading, setDetectionLoading] = useState(false);
   const [detectionError, setDetectionError] = useState('');
   const [selectedSiteForDetection, setSelectedSiteForDetection] = useState<string>('');
+  const [detectionMethod, setDetectionMethod] = useState<'llm' | 'yolo'>('llm');
 
   // Calculate total percentage
   const totalPercentage = Object.values(composition).reduce((sum, value) => sum + value, 0);
@@ -286,10 +287,18 @@ export default function DispatcherDashboard() {
     try {
       const formData = new FormData();
       formData.append('file', wasteImage);
-      const res = await axios.post<WasteImageUploadResponse>('/api/auth/detect-waste-image', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      setDetectionResult(res.data);
+      let res;
+      if (detectionMethod === 'llm') {
+        res = await axios.post('/api/auth/detect-waste-llm', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        setDetectionResult({ result: res.data.composition, total_weight: 0, annotated_image: '', raw: res.data.raw });
+      } else {
+        res = await axios.post('/api/auth/detect-waste-image', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        setDetectionResult(res.data);
+      }
     } catch (err: any) {
       setDetectionError(err?.response?.data?.message || 'Failed to detect waste composition');
     } finally {
@@ -510,6 +519,31 @@ export default function DispatcherDashboard() {
       {/* Waste Image Detection Card */}
       <div className="card bg-yellow-50 mb-4">
         <h2 className="text-lg font-medium text-yellow-900 mb-2">Image-based Waste Detection</h2>
+        <div className="mb-2 flex items-center space-x-4">
+          <label className="font-medium text-gray-700">Detection Method:</label>
+          <label className="inline-flex items-center">
+            <input
+              type="radio"
+              className="form-radio"
+              name="detectionMethod"
+              value="llm"
+              checked={detectionMethod === 'llm'}
+              onChange={() => setDetectionMethod('llm')}
+            />
+            <span className="ml-2">AI (LLM)</span>
+          </label>
+          <label className="inline-flex items-center">
+            <input
+              type="radio"
+              className="form-radio"
+              name="detectionMethod"
+              value="yolo"
+              checked={detectionMethod === 'yolo'}
+              onChange={() => setDetectionMethod('yolo')}
+            />
+            <span className="ml-2">YOLOv8</span>
+          </label>
+        </div>
         <form onSubmit={handleWasteImageUpload} className="flex flex-col md:flex-row md:items-center md:space-x-4">
           <input
             type="file"
@@ -529,27 +563,64 @@ export default function DispatcherDashboard() {
         {detectionResult && (
           <div className="mt-4">
             <h3 className="text-md font-semibold text-gray-900 mb-2">Detected Composition:</h3>
-            <ul className="space-y-1">
-              {Object.entries(detectionResult.result).map(([type, percent]) => (
-                <li key={type} className="flex justify-between">
-                  <span className="capitalize">{type}</span>
-                  <span>{percent}%</span>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-2 text-sm text-gray-700 font-medium">
-              Total Weight: <span className="font-bold">{detectionResult.total_weight} kg</span>
-            </div>
-            {detectionResult.annotated_image && (
-              <div className="mt-4">
-                <h4 className="text-sm font-semibold mb-1">Detected Objects:</h4>
-                <img
-                  src={`data:image/jpeg;base64,${detectionResult.annotated_image}`}
-                  alt="Annotated waste detection"
-                  className="w-full max-w-md border rounded shadow"
-                  style={{ maxHeight: 400, objectFit: 'contain' }}
-                />
+            {/* LLM Result UI */}
+            {detectionMethod === 'llm' && detectionResult.result && (
+              <div className="mb-4">
+                <div className="mb-2 text-xs text-blue-700 font-medium">AI-generated estimate (no bounding boxes)</div>
+                <ul className="space-y-1">
+                  {Object.entries(detectionResult.result).map(([type, percent]) => (
+                    <li key={type} className="flex items-center space-x-2">
+                      <span className="capitalize w-20">{type}</span>
+                      <div className="flex-1 bg-gray-200 rounded-full h-2 mx-2">
+                        <div
+                          className="h-2 rounded-full bg-blue-500"
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                      <span className="w-10 text-right">{percent}%</span>
+                    </li>
+                  ))}
+                </ul>
+                {/* Show uploaded image instead of raw LLM output */}
+                {wasteImage && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-semibold mb-1">Uploaded Image:</h4>
+                    <img
+                      src={URL.createObjectURL(wasteImage)}
+                      alt="Uploaded waste pile"
+                      className="w-full max-w-md border rounded shadow"
+                      style={{ maxHeight: 400, objectFit: 'contain' }}
+                    />
+                  </div>
+                )}
               </div>
+            )}
+            {/* YOLOv8 Result UI */}
+            {detectionMethod === 'yolo' && (
+              <>
+                <ul className="space-y-1">
+                  {Object.entries(detectionResult.result).map(([type, percent]) => (
+                    <li key={type} className="flex justify-between">
+                      <span className="capitalize">{type}</span>
+                      <span>{percent}%</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-2 text-sm text-gray-700 font-medium">
+                  Total Weight: <span className="font-bold">{detectionResult.total_weight} kg</span>
+                </div>
+                {detectionResult.annotated_image && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-semibold mb-1">Detected Objects:</h4>
+                    <img
+                      src={`data:image/jpeg;base64,${detectionResult.annotated_image}`}
+                      alt="Annotated waste detection"
+                      className="w-full max-w-md border rounded shadow"
+                      style={{ maxHeight: 400, objectFit: 'contain' }}
+                    />
+                  </div>
+                )}
+              </>
             )}
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Select Dumping Site</label>

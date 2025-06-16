@@ -156,7 +156,7 @@ export const login = async (req: Request, res: Response) => {
     console.error('Login error:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
-};
+}; 
 
 // Helper to send notification to all dispatchers
 async function notifyDispatchers(message: string) {
@@ -614,6 +614,72 @@ export const getWasteCompositionHistory = async (req: Request, res: Response) =>
   } catch (err) {
     console.error('Get Waste Composition History error:', err);
     res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// LLM-based waste detection controller
+export const detectWasteFromImageLLM = async (req: any, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file uploaded' });
+    }
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ message: 'OpenAI API key not set in environment' });
+    }
+
+    // Prepare image as base64
+    const imageBase64 = req.file.buffer.toString('base64');
+    const prompt = `You are a waste management expert. Given the attached image of a waste pile, estimate the percentage composition by material type (plastic, metal, organic, paper, glass, textile, other). Return your answer as a JSON object with keys as material types and values as percentages (e.g., { "plastic": 70, "paper": 12, ... }).`;
+
+    // Call OpenAI API (GPT-4 Vision)
+    const openaiRes = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a helpful assistant for waste composition analysis.'
+          },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: prompt },
+              { type: 'image_url', image_url: { url: `data:${req.file.mimetype};base64,${imageBase64}` } }
+            ]
+          }
+        ],
+        max_tokens: 500
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    // Parse the response
+    const content = openaiRes.data.choices[0].message.content;
+    // Try to extract JSON from the response
+    let composition = null;
+    try {
+      // Find the first JSON object in the response
+      const match = content.match(/\{[\s\S]*\}/);
+      if (match) {
+        composition = JSON.parse(match[0]);
+      } else {
+        throw new Error('No JSON object found in LLM response');
+      }
+    } catch (err) {
+      return res.status(500).json({ message: 'Failed to parse LLM response', raw: content });
+    }
+
+    res.json({ composition, raw: content });
+  } catch (err: any) {
+    console.error('LLM waste detection error:', err.response?.data || err.message);
+    res.status(500).json({ message: 'LLM waste detection failed', error: err.response?.data || err.message });
   }
 };
 

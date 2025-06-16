@@ -144,7 +144,7 @@ export interface WasteSite {
     organic: number;
   };
   lastUpdated?: string;
-}
+} 
 
 export interface WasteDetectionResult {
   plastic: number;

@@ -80,12 +80,12 @@ export default function RecyclerNotifications() {
                             </ul>
                           </div>
                         )}
-                        <button
-                          onClick={() => handleNotificationClick(notification.id, notification.metadata?.siteId)}
+                          <button
+                            onClick={() => handleNotificationClick(notification.id, notification.metadata?.siteId)}
                           className={`text-sm font-medium text-blue-600 hover:text-blue-800 ${!notification.read && isDarkMode ? 'dark:text-black' : ''}`}
-                        >
-                          View Full Details →
-                        </button>
+                          >
+                            View Full Details →
+                          </button>
                       </div>
                       <span className={`text-xs ${!notification.read && isDarkMode ? 'dark:text-black' : 'text-gray-500'}`}>
                         {new Date(notification.timestamp).toLocaleTimeString()}

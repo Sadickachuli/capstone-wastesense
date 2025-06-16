@@ -211,7 +211,7 @@ export default function Insights() {
             ))}
           </select>
         </div>
-      </div>
+          </div>
       {/* Trend Line Chart below selection */}
       {trendData.length > 0 && (
         <div className="bg-white shadow rounded-lg p-6 mb-6">
@@ -293,7 +293,7 @@ export default function Insights() {
               <div className="mb-2">
                 <span className="font-semibold text-gray-900">
                   {totalWeight ? `${totalWeight} kg` : ''} of waste was generated {selectedSite === 'all' ? 'across all sites' : 'at this site'}
-                </span>
+                  </span>
               </div>
               <ul>
                 {Object.entries(composition).map(([type, percent]) => (

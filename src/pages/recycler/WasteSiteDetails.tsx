@@ -61,7 +61,7 @@ export default function WasteSiteDetails() {
           </div>
 
           <div className="mt-8 grid grid-cols-2 gap-6">
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Capacity Status</h2>
               <div className="space-y-4">
                 <div>
@@ -97,7 +97,7 @@ export default function WasteSiteDetails() {
               </div>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Waste Composition</h2>
               <div className="space-y-4">
                 {Object.entries(site.composition).map(([type, percentage]) => (

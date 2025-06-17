@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTheme } from '../context/ThemeContext';
 
 const features = [
   {
@@ -59,16 +60,20 @@ const faqs = [
 
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = React.useState<number | null>(null);
+  const { isDarkMode, toggleDarkMode } = useTheme();
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 flex flex-col">
+    <div className={"min-h-screen flex flex-col " + (isDarkMode ? "bg-gradient-to-br from-green-900 to-blue-900" : "bg-gradient-to-br from-green-50 to-blue-100") }>
       {/* Navbar */}
-      <nav className="flex items-center justify-between px-6 py-4 bg-white/80 shadow-sm sticky top-0 z-10">
+      <nav className={"flex items-center justify-between px-6 py-4 sticky top-0 z-10 " + (isDarkMode ? "bg-gray-900/80" : "bg-white/80 shadow-sm") }>
         <div className="flex items-center space-x-2">
-          <span className="text-2xl font-extrabold text-green-700">WasteSense</span>
+          <span className={"text-2xl font-extrabold " + (isDarkMode ? "text-green-300" : "text-green-700")}>WasteSense</span>
         </div>
         <div className="flex items-center space-x-4">
-          <Link to="/auth/signup" className="px-5 py-2 rounded-full bg-green-600 text-white font-semibold shadow hover:bg-green-700 transition">Sign Up</Link>
-          <Link to="/auth/signin" className="px-5 py-2 rounded-full bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition">Sign In</Link>
+          <button onClick={toggleDarkMode} className="px-3 py-2 rounded-full bg-gradient-to-r from-green-600 to-blue-600 text-white font-bold shadow hover:from-green-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-green-400 transition-all duration-200">
+            {isDarkMode ? '☀️ Light' : '🌙 Dark'}
+          </button>
+          <Link to="/auth/signup" className="px-6 py-2 rounded-full bg-gradient-to-r from-green-600 to-blue-600 text-white font-bold shadow-md hover:from-green-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-green-400 transition-all duration-200">Sign Up</Link>
+          <Link to="/auth/signin" className="px-6 py-2 rounded-full bg-gradient-to-r from-blue-600 to-green-600 text-white font-bold shadow-md hover:from-blue-700 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200">Sign In</Link>
         </div>
       </nav>
       {/* Hero Section */}
@@ -76,19 +81,19 @@ export default function LandingPage() {
         <div className="flex-1 mb-8 md:mb-0">
           <h1 className="text-4xl md:text-5xl font-extrabold text-green-800 mb-4">Stay Up to Date with Waste Collection</h1>
           <p className="text-xl text-blue-900 mb-6">Receive notifications, view schedules, and help keep your community clean and green.</p>
-          <Link to="/auth/signup" className="inline-block px-8 py-3 rounded-full bg-green-600 text-white font-bold text-lg shadow-lg hover:bg-green-700 transition">Get Started</Link>
+          <Link to="/auth/signup" className="inline-block px-10 py-3 rounded-full bg-gradient-to-r from-green-600 to-blue-600 text-white font-extrabold text-lg shadow-xl hover:from-green-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-green-400 transition-all duration-200">Get Started</Link>
         </div>
         <div className="flex-1 flex justify-center">
-          <img src="/waste-hero-illustration.svg" alt="Waste management illustration" className="w-80 h-80 object-contain" />
+          <img src="/waste-bg3.jpg" alt="Waste management illustration" className="w-80 h-80 object-contain" />
         </div>
       </header>
       {/* Features Section */}
       <section className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-8">
         {features.map((f, i) => (
-          <div key={i} className="bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center hover:scale-105 transition-transform">
-            <span className="text-5xl mb-3">{f.icon}</span>
-            <h3 className="text-lg font-bold text-green-800 mb-2">{f.title}</h3>
-            <p className="text-gray-600 text-center">{f.desc}</p>
+          <div key={i} className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 flex flex-col items-center hover:scale-[1.03] hover:shadow-2xl transition-all duration-200 group">
+            <span className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-200">{f.icon}</span>
+            <h3 className="text-xl font-bold text-green-800 mb-2">{f.title}</h3>
+            <p className="text-gray-600 text-center text-base">{f.desc}</p>
           </div>
         ))}
       </section>
@@ -107,12 +112,12 @@ export default function LandingPage() {
         <h2 className="text-2xl font-bold text-blue-800 mb-6 text-center">Frequently Asked Questions</h2>
         <div className="space-y-4">
           {faqs.map((faq, i) => (
-            <div key={i} className="bg-white rounded-xl shadow p-4 cursor-pointer" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
+            <div key={i} className="bg-white rounded-2xl shadow-lg border border-gray-100 p-5 cursor-pointer hover:shadow-2xl hover:-translate-y-1 transition-all duration-200">
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-green-800">{faq.q}</span>
+                <span className="font-semibold text-green-800 text-base">{faq.q}</span>
                 <span className="text-xl">{openFaq === i ? '−' : '+'}</span>
               </div>
-              {openFaq === i && <p className="mt-2 text-gray-700 text-left">{faq.a}</p>}
+              {openFaq === i && <p className="mt-2 text-gray-700 text-left text-base">{faq.a}</p>}
             </div>
           ))}
         </div>

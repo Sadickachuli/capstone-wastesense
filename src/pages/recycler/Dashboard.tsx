@@ -188,29 +188,22 @@ export default function RecyclerDashboard() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold text-gray-900">
-          Recycling Facility Dashboard
-        </h1>
-        <div className="flex items-center space-x-4">
-          <Link
-            to="/recycler/notifications"
-            className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-          >
-            <span>Notifications</span>
-            {wasteUpdateNotifications.length > 0 && (
-              <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                {wasteUpdateNotifications.length}
-              </span>
-            )}
-          </Link>
-          <div className="text-sm text-gray-600">
-            Facility: {user?.facility || 'Not assigned'}
-          </div>
+    <div className="space-y-8 max-w-6xl mx-auto py-8 px-4">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">Recycling Facility Dashboard</h1>
+        <div className="flex items-center gap-2">
+          <span className="inline-block w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-blue-400 dark:from-green-700 dark:to-blue-700 flex items-center justify-center text-white text-xl font-bold shadow-lg">
+            {user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : 'U'}
+          </span>
         </div>
       </div>
-
+      {/* 1. Cut the JSX for the following sections from their current position:
+      // - Forecast for Tomorrow (both loading and loaded states)
+      // - Total Waste Composition (All Sites)
+      // - North Dumping Site Composition
+      // - South Dumping Site Composition
+      // 2. Paste them at the very top of the dashboard, right after the dashboard header, before any stat cards or other divs. */}
+      {/* Forecast for Tomorrow */}
       {!forecast && (
         <div className="card bg-white shadow dark:shadow-white animate-pulse">
           <h2 className="text-lg font-bold text-gray-900 mb-2">Forecast for Tomorrow</h2>
@@ -382,87 +375,67 @@ export default function RecyclerDashboard() {
           </div>
         )}
       </div>
-
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="card bg-green-50">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Total Processed Today
-          </h3>
-          <p className="text-3xl font-bold text-green-600">{totalWeight} kg</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)] flex flex-col items-center">
+          <h3 className="text-lg font-bold text-green-800 dark:text-green-300 mb-2">Total Processed Today</h3>
+          <p className="text-3xl font-extrabold text-green-600 dark:text-green-300">{totalWeight} kg</p>
         </div>
-        <div className="card bg-blue-50">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Recycling Rate
-          </h3>
-          <p className="text-3xl font-bold text-blue-600">{recyclingRate}%</p>
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)] flex flex-col items-center">
+          <h3 className="text-lg font-bold text-blue-800 dark:text-blue-300 mb-2">Recycling Rate</h3>
+          <p className="text-3xl font-extrabold text-blue-600 dark:text-blue-300">{recyclingRate}%</p>
         </div>
-        <div className="card bg-purple-50">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Energy Saved</h3>
-          <p className="text-3xl font-bold text-purple-600">{energySaved} kWh</p>
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)] flex flex-col items-center">
+          <h3 className="text-lg font-bold text-purple-800 dark:text-purple-300 mb-2">Energy Saved</h3>
+          <p className="text-3xl font-extrabold text-purple-600 dark:text-purple-300">{energySaved} kWh</p>
         </div>
       </div>
-
-      {/* Incoming Deliveries */}
-      <div className="card">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">
-          Incoming Deliveries
-        </h2>
+      <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)] mb-8">
+        <h2 className="text-xl font-bold text-blue-800 dark:text-blue-300 mb-4 flex items-center gap-2"><span>🚚</span> Incoming Deliveries</h2>
         <div className="space-y-4">
           {mockDeliveries.map((delivery) => (
             <div
               key={delivery.id}
-              className="flex items-center justify-between p-4 border rounded-lg"
+              className="flex justify-between items-center p-4 rounded-xl bg-white/80 dark:bg-gray-900/80 shadow-none border border-gray-100 dark:border-gray-800"
             >
               <div>
-                <p className="font-medium text-gray-900">
-                  Delivery {delivery.id}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Truck: {delivery.truckId}
-                </p>
-                <p className="text-sm text-gray-600">
-                  ETA:{' '}
-                  {new Date(delivery.estimatedArrival).toLocaleTimeString()}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Weight: {delivery.weight} kg
-                </p>
+                <p className="font-medium text-gray-900 dark:text-white">Delivery {delivery.id}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Truck: {delivery.truckId}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">ETA: {new Date(delivery.estimatedArrival).toLocaleTimeString()}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Weight: {delivery.weight} kg</p>
               </div>
               <div className="flex items-center space-x-4">
                 <span className={`ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                   delivery.status === 'completed'
-                    ? 'bg-green-100 text-green-800'
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
                     : delivery.status === 'in-transit'
-                    ? 'bg-yellow-100 text-black dark:text-black'
-                    : 'bg-blue-100 text-black dark:text-black'
+                    ? 'bg-yellow-100 text-black dark:bg-yellow-900 dark:text-yellow-300'
+                    : 'bg-blue-100 text-black dark:bg-blue-900 dark:text-blue-300'
                 }`}>
                   {delivery.status.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                 </span>
-                <button className="btn btn-secondary">View Details</button>
+                <button className="px-4 py-2 rounded-full bg-gradient-to-r from-green-600 to-blue-600 text-white font-bold shadow-md hover:from-green-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-green-400 transition-all duration-200">View Details</button>
               </div>
             </div>
           ))}
         </div>
       </div>
-
       {/* Environmental Impact */}
-      <div className="card bg-green-50">
+      <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
         <h2 className="text-lg font-medium text-gray-900 mb-4">
           Environmental Impact
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="text-center">
-            <p className="text-2xl font-bold text-green-600">2.5</p>
-            <p className="text-sm text-gray-600">Tons CO₂ Avoided</p>
+            <p className="text-2xl font-bold text-green-600 dark:text-green-300">2.5</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">Tons CO₂ Avoided</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-green-600">1,200</p>
-            <p className="text-sm text-gray-600">Trees Saved</p>
+            <p className="text-2xl font-bold text-green-600 dark:text-green-300">1,200</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">Trees Saved</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-green-600">45,000</p>
-            <p className="text-sm text-gray-600">Liters Water Saved</p>
+            <p className="text-2xl font-bold text-green-600 dark:text-green-300">45,000</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">Liters Water Saved</p>
           </div>
         </div>
       </div>

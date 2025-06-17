@@ -340,9 +340,10 @@ export default function DispatcherDashboard() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Stat Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6 border border-gray-200 flex flex-col items-start">
+          <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
             <span className="text-sm text-gray-500 mb-1">Bin Full Reports</span>
             <span className="text-3xl font-bold text-blue-700 mb-1">{thresholdStatus ? `${thresholdStatus.reportedCount} / ${thresholdStatus.total}` : '--'}</span>
+            <br />
             <span className={
               thresholdStatus && thresholdStatus.reportedCount >= thresholdStatus.threshold
                 ? 'text-green-700 font-semibold'
@@ -355,11 +356,11 @@ export default function DispatcherDashboard() {
                 : ''}
             </span>
           </div>
-          <div className="bg-white rounded-lg shadow p-6 border border-gray-200 flex flex-col items-start">
+          <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
             <span className="text-sm text-gray-500 mb-1">Active Routes</span>
             <span className="text-3xl font-bold text-green-700 mb-1">3</span>
           </div>
-          <div className="bg-white rounded-lg shadow p-6 border border-gray-200 flex flex-col items-start">
+          <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
             <span className="text-sm text-gray-500 mb-1">Available Trucks</span>
             <span className="text-3xl font-bold text-gray-700 mb-1">5</span>
           </div>
@@ -367,7 +368,7 @@ export default function DispatcherDashboard() {
 
         {/* Notifications & ML Recommendation */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
+          <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
             <div className="flex justify-between items-center mb-2">
               <h2 className="text-lg font-semibold text-gray-900">Notifications</h2>
               <button
@@ -408,7 +409,7 @@ export default function DispatcherDashboard() {
               ))}
             </ul>
           </div>
-          <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
+          <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
             <h2 className="text-lg font-semibold text-gray-900 mb-2">ML Recommendation</h2>
             {mlLoading ? (
               <p>Loading recommendation...</p>
@@ -426,7 +427,7 @@ export default function DispatcherDashboard() {
         </div>
 
         {/* Waste Detection Section */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8 border border-gray-200">
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Image-based Waste Detection</h2>
           <div className="mb-2 flex items-center space-x-4">
             <label className="font-medium text-gray-700">Detection Method:</label>
@@ -551,7 +552,7 @@ export default function DispatcherDashboard() {
         </div>
 
         {/* Active Reports Table */}
-        <div className="bg-white rounded-lg shadow p-6 border border-gray-200 mt-8">
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)] mt-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Active Reports</h2>
           {activeReportsLoading ? (
             <p>Loading reports...</p>
@@ -623,9 +624,9 @@ export default function DispatcherDashboard() {
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-gray-700">Total Percentage:</span>
                   <span className={`text-sm font-medium ${
-                    totalPercentage === 100
-                      ? 'text-green-600'
-                      : totalPercentage > 100
+                    totalPercentage === 100 
+                      ? 'text-green-600' 
+                      : totalPercentage > 100 
                         ? 'text-red-600'
                         : 'text-yellow-600'
                   }`}>
@@ -635,9 +636,9 @@ export default function DispatcherDashboard() {
                 <div className="mt-1 w-full bg-gray-200 rounded-full h-2">
                   <div
                     className={`h-2 rounded-full ${
-                      totalPercentage === 100
-                        ? 'bg-green-600'
-                        : totalPercentage > 100
+                      totalPercentage === 100 
+                        ? 'bg-green-600' 
+                        : totalPercentage > 100 
                           ? 'bg-red-600'
                           : 'bg-yellow-600'
                     }`}
@@ -648,8 +649,8 @@ export default function DispatcherDashboard() {
                   <p className={`mt-1 text-sm ${
                     totalPercentage > 100 ? 'text-red-600' : 'text-yellow-600'
                   }`}>
-                    {totalPercentage > 100
-                      ? 'Total percentage exceeds 100%'
+                    {totalPercentage > 100 
+                      ? 'Total percentage exceeds 100%' 
                       : 'Total percentage must equal 100%'}
                   </p>
                 )}

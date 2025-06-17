@@ -21,7 +21,7 @@ export default function Reports() {
         <button className="btn btn-primary">New Report</button>
       </div>
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
+      <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
         <ul className="divide-y divide-gray-200">
           {reports.map((report) => (
             <li key={report.id}>

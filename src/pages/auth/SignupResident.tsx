@@ -48,8 +48,8 @@ export default function SignupResident() {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 relative">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 relative bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-8">
         <button
           type="button"
           onClick={toggleDarkMode}
@@ -59,17 +59,17 @@ export default function SignupResident() {
           {isDarkMode ? '☀️ Light' : '🌙 Dark'}
         </button>
         <div>
-          <h1 className="text-center text-3xl font-bold text-primary-600">
+          <h1 className="text-center text-3xl font-bold text-primary-600 dark:text-green-300">
             WasteSense
           </h1>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
             Create your resident account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-300">
             Or{' '}
             <Link
               to="/login"
-              className="font-medium text-primary-600 hover:text-primary-500"
+              className="font-medium text-primary-600 hover:text-primary-500 dark:text-green-300"
             >
               sign in to your existing account
             </Link>
@@ -88,7 +88,7 @@ export default function SignupResident() {
                 type="email"
                 autoComplete="email"
                 required
-                className={`input rounded-t-md ${
+                className={`input rounded-t-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700 focus:ring-green-500 focus:border-green-500 ${
                   formik.touched.email && formik.errors.email
                     ? 'border-red-500'
                     : ''
@@ -110,7 +110,7 @@ export default function SignupResident() {
                 type="password"
                 autoComplete="new-password"
                 required
-                className={`input ${
+                className={`input bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700 focus:ring-green-500 focus:border-green-500 ${
                   formik.touched.password && formik.errors.password
                     ? 'border-red-500'
                     : ''
@@ -134,7 +134,7 @@ export default function SignupResident() {
                 type="text"
                 autoComplete="name"
                 required
-                className={`input ${
+                className={`input bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700 focus:ring-green-500 focus:border-green-500 ${
                   formik.touched.name && formik.errors.name
                     ? 'border-red-500'
                     : ''
@@ -155,7 +155,7 @@ export default function SignupResident() {
                 name="phone"
                 type="tel"
                 autoComplete="tel"
-                className={`input ${
+                className={`input bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700 focus:ring-green-500 focus:border-green-500 ${
                   formik.touched.phone && formik.errors.phone
                     ? 'border-red-500'
                     : ''
@@ -175,7 +175,7 @@ export default function SignupResident() {
                 id="zone"
                 name="zone"
                 type="text"
-                className={`input rounded-b-md ${
+                className={`input rounded-b-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700 focus:ring-green-500 focus:border-green-500 ${
                   formik.touched.zone && formik.errors.zone
                     ? 'border-red-500'
                     : ''

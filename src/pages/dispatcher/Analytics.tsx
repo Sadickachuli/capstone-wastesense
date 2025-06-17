@@ -39,9 +39,9 @@ export default function Analytics() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="bg-white overflow-hidden shadow rounded-lg dark:shadow-white dark:border-white">
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
           <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-500 truncate">
+            <dt className="text-sm font-medium text-gray-900 truncate">
               Total Collections
             </dt>
             <dd className="mt-1 text-3xl font-semibold text-gray-900">
@@ -50,9 +50,9 @@ export default function Analytics() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg dark:shadow-white dark:border-white">
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
           <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-500 truncate">
+            <dt className="text-sm font-medium text-gray-900 truncate">
               Completed Routes
             </dt>
             <dd className="mt-1 text-3xl font-semibold text-gray-900">
@@ -61,9 +61,9 @@ export default function Analytics() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg dark:shadow-white dark:border-white">
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
           <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-500 truncate">
+            <dt className="text-sm font-medium text-gray-900 truncate">
               Active Routes
             </dt>
             <dd className="mt-1 text-3xl font-semibold text-gray-900">
@@ -72,9 +72,9 @@ export default function Analytics() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg dark:shadow-white dark:border-white">
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
           <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-500 truncate">
+            <dt className="text-sm font-medium text-gray-900 truncate">
               Total Distance (km)
             </dt>
             <dd className="mt-1 text-3xl font-semibold text-gray-900">
@@ -83,9 +83,9 @@ export default function Analytics() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg dark:shadow-white dark:border-white">
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
           <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-500 truncate">
+            <dt className="text-sm font-medium text-gray-900 truncate">
               Route Efficiency
             </dt>
             <dd className="mt-1 text-3xl font-semibold text-gray-900">
@@ -94,9 +94,9 @@ export default function Analytics() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg dark:shadow-white dark:border-white">
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
           <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-500 truncate">
+            <dt className="text-sm font-medium text-gray-900 truncate">
               Customer Complaints
             </dt>
             <dd className="mt-1 text-3xl font-semibold text-gray-900">
@@ -107,7 +107,7 @@ export default function Analytics() {
       </div>
 
       {/* Performance Insights */}
-      <div className="bg-white shadow sm:rounded-lg">
+      <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
         <div className="px-4 py-5 sm:p-6">
           <h3 className="text-lg leading-6 font-medium text-gray-900">
             Performance Insights
@@ -116,7 +116,7 @@ export default function Analytics() {
             <ul className="divide-y divide-gray-200">
               <li className="py-3">
                 <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-600 dark:text-gray-300">
                     Most efficient route: <span className="font-medium">R007</span>
                   </div>
                   <div className="text-sm text-green-600">92% efficiency</div>
@@ -124,18 +124,18 @@ export default function Analytics() {
               </li>
               <li className="py-3">
                 <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-600 dark:text-gray-300">
                     Busiest collection day: <span className="font-medium">Wednesday</span>
                   </div>
-                  <div className="text-sm text-gray-600">35 collections</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300">35 collections</div>
                 </div>
               </li>
               <li className="py-3">
                 <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-600 dark:text-gray-300">
                     Average route completion time:
                   </div>
-                  <div className="text-sm text-gray-600">45 minutes</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300">45 minutes</div>
                 </div>
               </li>
             </ul>

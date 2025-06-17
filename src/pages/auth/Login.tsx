@@ -49,8 +49,8 @@ export default function Login() {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 relative">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 relative bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-8">
         <button
           type="button"
           onClick={toggleDarkMode}
@@ -60,10 +60,10 @@ export default function Login() {
           {isDarkMode ? '☀️ Light' : '🌙 Dark'}
         </button>
         <div>
-          <h1 className="text-center text-3xl font-bold text-primary-600">
+          <h1 className="text-center text-3xl font-bold text-primary-600 dark:text-green-300">
             WasteSense
           </h1>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
             Sign in to your account
           </h2>
         </div>
@@ -78,7 +78,7 @@ export default function Login() {
                 type="text"
                 autoComplete="username"
                 required
-                className={`input rounded-t-md ${
+                className={`input rounded-t-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700 focus:ring-green-500 focus:border-green-500 ${
                   formik.touched.email && formik.errors.email
                     ? 'border-red-500'
                     : ''
@@ -99,7 +99,7 @@ export default function Login() {
                 type="password"
                 autoComplete="current-password"
                 required
-                className={`input rounded-b-md ${
+                className={`input rounded-b-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700 focus:ring-green-500 focus:border-green-500 ${
                   formik.touched.password && formik.errors.password
                     ? 'border-red-500'
                     : ''

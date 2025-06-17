@@ -75,7 +75,7 @@ export default function Deliveries() {
         <div className="border-t border-gray-200">
           <ul className="divide-y divide-gray-200">
             {mockDeliveries.map((delivery) => (
-              <li key={delivery.id} className="px-4 py-4 sm:px-6 card dark:shadow-white dark:border-white">
+              <li key={delivery.id} className="px-4 py-4 sm:px-6 card bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center">
@@ -97,7 +97,7 @@ export default function Deliveries() {
                       </span>
                     </div>
                     <div className="mt-2">
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-gray-600 dark:text-gray-300">
                         <span className="mr-4">Truck: {delivery.truckId}</span>
                         <span className="mr-4">
                           ETA: {new Date(delivery.estimatedArrival).toLocaleTimeString()}
@@ -112,21 +112,21 @@ export default function Deliveries() {
                   </div>
                 </div>
                 <div className="mt-4">
-                  <h4 className="text-sm font-medium text-gray-500">Composition</h4>
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-white">Composition</h4>
                   <div className="mt-2 flex space-x-4">
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-600 dark:text-gray-300">
                       Plastic: {delivery.composition.plastic}%
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-600 dark:text-gray-300">
                       Paper: {delivery.composition.paper}%
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-600 dark:text-gray-300">
                       Glass: {delivery.composition.glass}%
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-600 dark:text-gray-300">
                       Metal: {delivery.composition.metal}%
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-600 dark:text-gray-300">
                       Organic: {delivery.composition.organic}%
                     </div>
                   </div>

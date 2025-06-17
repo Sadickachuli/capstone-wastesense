@@ -217,7 +217,7 @@ export default function Insights() {
       </div>
       {/* Trend Line Chart below selection */}
       {trendData.length > 0 && (
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
           <h2 className="text-lg font-bold text-gray-900 mb-2">Forecasted Waste Composition Trends (Last 30 Days)</h2>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={trendData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
@@ -236,7 +236,7 @@ export default function Insights() {
       )}
       {/* Waste Detection Model Trends */}
       {detectionTrend.length > 0 && (
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
           <h2 className="text-lg font-bold text-gray-900 mb-2">Detected Waste Composition Trends (from Image Analysis)</h2>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={detectionTrend} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
@@ -255,13 +255,13 @@ export default function Insights() {
       )}
       {/* Show composition for selected day/site or no data message */}
       {selectedDate && !composition && (
-        <div className="bg-white shadow rounded-lg p-6 mb-6 text-center text-gray-500 dark:text-gray-300">
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
           <h2 className="text-lg font-bold text-gray-900 mb-2">No data available for this date and site.</h2>
           <p>Please select another date or site.</p>
         </div>
       )}
       {selectedDate && composition && (
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
           <h2 className="text-lg font-bold text-gray-900 mb-2">
             {selectedSite === 'all' ? 'Aggregate Composition' : 'Site Composition'} for {selectedDate.toISOString().slice(0, 10)}
           </h2>

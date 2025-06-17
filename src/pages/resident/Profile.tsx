@@ -14,18 +14,18 @@ export default function Profile() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+    <div className="max-w-2xl mx-auto py-8 px-4 space-y-8">
+      {/* Tabs */}
+      <div className="flex justify-center">
+        <nav className="flex rounded-full bg-gray-100 dark:bg-gray-800 shadow-inner p-1 w-fit" aria-label="Tabs">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`${
-                activeTab === tab.id
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+              className={`px-6 py-2 rounded-full font-semibold text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-400 shadow-sm
+                ${activeTab === tab.id
+                  ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]'
+                  : 'bg-transparent text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
             >
               {tab.name}
             </button>
@@ -34,56 +34,34 @@ export default function Profile() {
       </div>
 
       {activeTab === 'profile' ? (
-        <div className="space-y-6">
-          <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-            <div className="px-4 py-5 sm:px-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
-                Account Information
-              </h3>
-              <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                Personal details and preferences.
-              </p>
+        <div className="flex flex-col items-center">
+          <div className="w-full bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)] rounded-3xl p-8 flex flex-col items-center">
+            {/* Avatar */}
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-green-400 to-blue-400 dark:from-green-700 dark:to-blue-700 flex items-center justify-center text-white text-4xl font-bold shadow-lg mb-4">
+              {user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : 'U'}
             </div>
-            <div className="border-t border-gray-200">
-              <dl>
-                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Full name</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {user?.name}
-                  </dd>
-                </div>
-                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Email address</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {user?.email}
-                  </dd>
-                </div>
-                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Phone number</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {user?.phone}
-                  </dd>
-                </div>
-                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Zone</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {user?.zone}
-                  </dd>
-                </div>
-                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Role</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ''}
-                  </dd>
-                </div>
-                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Member since</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {new Date(user?.createdAt || '').toLocaleDateString()}
-                  </dd>
-                </div>
-              </dl>
-            </div>
+            <h3 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-1">{user?.name}</h3>
+            <p className="text-gray-500 dark:text-gray-300 mb-6">Resident Account</p>
+            <div className="w-full border-t border-gray-200 dark:border-gray-700 mb-6"></div>
+            {/* Details */}
+            <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 w-full">
+              <div>
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-300">Email address</dt>
+                <dd className="mt-1 text-base text-gray-900 dark:text-white font-semibold">{user?.email}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-300">Phone number</dt>
+                <dd className="mt-1 text-base text-gray-900 dark:text-white font-semibold">{user?.phone}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-300">Zone</dt>
+                <dd className="mt-1 text-base text-gray-900 dark:text-white font-semibold">{user?.zone}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-300">Member since</dt>
+                <dd className="mt-1 text-base text-gray-900 dark:text-white font-semibold">{new Date(user?.createdAt || '').toLocaleDateString()}</dd>
+              </div>
+            </dl>
           </div>
         </div>
       ) : (

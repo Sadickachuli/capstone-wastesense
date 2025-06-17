@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Layout from '../components/Layout/Layout';
+import LandingPage from '../pages/LandingPage';
 
 // Auth Pages
 import Login from '../pages/auth/Login';
@@ -56,6 +57,9 @@ export default function AppRoutes() {
   return (
     <Routes>
       {/* Public Routes */}
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/auth/signup" element={<SignupResident />} />
+      <Route path="/auth/signin" element={<Login />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup/resident" element={<SignupResident />} />
       {/* <Route path="/signup/recycler" element={<SignupRecycler />} />
@@ -178,10 +182,6 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-
-      {/* Default Route */}
-      <Route path="/" element={<Navigate to="/login" />} />
-      <Route path="*" element={<Navigate to="/login" />} />
     </Routes>
   );
 } 

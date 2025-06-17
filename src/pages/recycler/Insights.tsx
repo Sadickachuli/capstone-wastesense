@@ -3,6 +3,8 @@ import axios from 'axios';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts';
 import { useWasteSites } from '../../hooks/useWasteSites';
 import { useTheme } from '../../context/ThemeContext';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 const WASTE_COLORS: Record<string, string> = {
   plastic: '#2563eb', // blue
@@ -15,7 +17,7 @@ const WASTE_COLORS: Record<string, string> = {
 export default function Insights() {
   const { sites } = useWasteSites();
   const { isDarkMode } = useTheme();
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedSite, setSelectedSite] = useState('all');
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -48,7 +50,7 @@ export default function Insights() {
       return;
     }
     // Filter for the selected date
-    const dayRows = history.filter(row => row.date === selectedDate);
+    const dayRows = history.filter(row => row.date === selectedDate?.toISOString().slice(0, 10));
     if (selectedSite === 'all') {
       // Aggregate all sites for the day
       let total = 0;
@@ -173,8 +175,8 @@ export default function Insights() {
     URL.revokeObjectURL(url);
   };
 
-  // Get all available dates
-  const allDates = Array.from(new Set(history.map(row => row.date))).sort().reverse();
+  // Get all available dates as Date objects
+  const allDates = Array.from(new Set(history.map(row => row.date))).sort().reverse().map(date => new Date(date));
 
   return (
     <div className="space-y-6">
@@ -185,23 +187,24 @@ export default function Insights() {
       <div className="flex flex-col md:flex-row md:items-end md:space-x-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-          <select
-            className="form-select dark:bg-white dark:text-black"
-            style={{ backgroundColor: isDarkMode ? '#fff' : undefined, color: isDarkMode ? '#000' : undefined }}
-            value={selectedDate}
-            onChange={e => setSelectedDate(e.target.value)}
-          >
-            <option value="" className="dark:text-black">Select a date</option>
-            {allDates.map(date => (
-              <option key={date} value={date} className="dark:text-black">{date}</option>
-            ))}
-          </select>
+          <DatePicker
+            selected={selectedDate}
+            onChange={date => setSelectedDate(date)}
+            includeDates={allDates}
+            placeholderText="Select a date"
+            className={`form-input rounded-lg border-2 border-blue-300 focus:border-blue-500 focus:ring focus:ring-blue-200/50 shadow-sm text-center text-lg bg-pink-50 hover:bg-pink-100 transition-colors duration-200 ${isDarkMode ? 'bg-gray-900 text-white border-gray-700 placeholder-gray-400' : ''} cursor-pointer`}
+            calendarClassName={`rounded-lg shadow-lg p-2 border-2 ${isDarkMode ? 'bg-gray-900 text-white border-gray-700' : 'bg-white border-blue-200'}`}
+            dayClassName={date => 'rounded-full hover:bg-blue-200 cursor-pointer'}
+            popperPlacement="bottom"
+            dateFormat="yyyy-MM-dd"
+            popperClassName={isDarkMode ? 'dark-datepicker-popper' : ''}
+          />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Dumping Site</label>
           <select
-            className="form-select dark:bg-white dark:text-black"
-            style={{ backgroundColor: isDarkMode ? '#fff' : undefined, color: isDarkMode ? '#000' : undefined }}
+            className={`form-select ${isDarkMode ? 'bg-white text-black' : ''}`}
+            style={{ backgroundColor: isDarkMode ? '#fff' : undefined, color: isDarkMode ? '#000' : undefined, cursor: 'pointer' }}
             value={selectedSite}
             onChange={e => setSelectedSite(e.target.value)}
           >
@@ -211,7 +214,7 @@ export default function Insights() {
             ))}
           </select>
         </div>
-          </div>
+      </div>
       {/* Trend Line Chart below selection */}
       {trendData.length > 0 && (
         <div className="bg-white shadow rounded-lg p-6 mb-6">
@@ -250,11 +253,17 @@ export default function Insights() {
           </ResponsiveContainer>
         </div>
       )}
-      {/* Show composition for selected day/site */}
+      {/* Show composition for selected day/site or no data message */}
+      {selectedDate && !composition && (
+        <div className="bg-white shadow rounded-lg p-6 mb-6 text-center text-gray-500 dark:text-gray-300">
+          <h2 className="text-lg font-bold text-gray-900 mb-2">No data available for this date and site.</h2>
+          <p>Please select another date or site.</p>
+        </div>
+      )}
       {selectedDate && composition && (
         <div className="bg-white shadow rounded-lg p-6 mb-6">
           <h2 className="text-lg font-bold text-gray-900 mb-2">
-            {selectedSite === 'all' ? 'Aggregate Composition' : 'Site Composition'} for {selectedDate}
+            {selectedSite === 'all' ? 'Aggregate Composition' : 'Site Composition'} for {selectedDate.toISOString().slice(0, 10)}
           </h2>
           <div className="flex flex-col md:flex-row md:items-center md:space-x-8">
             <div className="flex-1 min-w-[220px] p-8">

@@ -8,13 +8,17 @@ import RecyclerDashboard from './pages/recycler/Dashboard';
 import RecyclerNotifications from './pages/recycler/Notifications';
 import WasteSiteDetails from './pages/recycler/WasteSiteDetails';
 import PrivateRoute from './components/PrivateRoute';
+import LandingPage from './pages/LandingPage';
+import SignupResident from './pages/auth/SignupResident';
 
 function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
-          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/auth/signup" element={<SignupResident />} />
+          <Route path="/auth/signin" element={<Login />} />
           
           {/* Resident Routes */}
           <Route

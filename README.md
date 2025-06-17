@@ -81,23 +81,23 @@ API: [https://github.com/Sadickachuli/waste-sense-api.git](https://github.com/Sa
 - (Optional) Docker for ML service
 
 ### 1. Clone the repository
-```bash
+   ```bash
 git clone https://github.com/Sadickachuli/capstone-wastesense.git
-cd wastesense-app
-```
+   cd wastesense-app
+   ```
 
 ### 2. Frontend Setup
-```bash
-npm install
+   ```bash
+   npm install
 npm run dev
 # App runs at http://localhost:5173
-```
+   ```
 
 ### 3. Backend Setup
-```bash
+   ```bash
 cd backend
 npm install
-npm run dev
+   npm run dev
 # Backend runs on port 3001
 ```
 ### 4. Machine Learning Service Setup
@@ -235,6 +235,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Headless UI](https://headlessui.dev)
 - [Heroicons](https://heroicons.com)
 - [React Leaflet](https://react-leaflet.js.org)
-- [Recharts](https://recharts.org)
+- [Recharts](https://recharts.org) 
 - [FastAPI](https://fastapi.tiangolo.com/)
 - [Ultralytics YOLO](https://docs.ultralytics.com/) 

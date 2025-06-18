@@ -14,6 +14,9 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+// Serve static files (avatars, etc.)
+app.use(express.static('public'));
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/forecast', forecastRoutes);

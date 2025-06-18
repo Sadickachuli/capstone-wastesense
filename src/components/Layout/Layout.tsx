@@ -38,6 +38,7 @@ const getNavItems = (role: string): NavItem[] => {
       return [
         { name: 'Dashboard', to: '/recycler/dashboard', icon: HomeIcon },
         { name: 'Notifications', to: '/recycler/notifications', icon: ClipboardDocumentListIcon },
+        { name: 'Forecasting', to: '/recycler/forecasting', icon: ChartBarIcon },
         { name: 'Deliveries', to: '/recycler/deliveries', icon: TruckIcon },
         { name: 'Insights', to: '/recycler/insights', icon: ChartBarIcon },
         { name: 'Profile', to: '/recycler/profile', icon: UserIcon },

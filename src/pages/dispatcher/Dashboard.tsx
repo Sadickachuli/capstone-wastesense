@@ -95,6 +95,8 @@ export default function DispatcherDashboard() {
   const [detectionError, setDetectionError] = useState('');
   const [selectedSiteForDetection, setSelectedSiteForDetection] = useState<string>('');
   const [detectionMethod, setDetectionMethod] = useState<'llm' | 'yolo'>('llm');
+  const [availableTrucks, setAvailableTrucks] = useState(2);
+  const [manualTotalWeight, setManualTotalWeight] = useState('');
 
   // Calculate total percentage
   const totalPercentage = Object.values(composition).reduce((sum, value) => sum + value, 0);
@@ -257,7 +259,7 @@ export default function DispatcherDashboard() {
       setMlLoading(true);
       setMlError('');
       try {
-        const res = await axios.get('/api/auth/dispatch/recommendation');
+        const res = await axios.get(`/api/auth/dispatch/recommendation?trucks=${availableTrucks}`);
         setMlRecommendation(res.data);
       } catch (err) {
         setMlError('Failed to fetch dispatch recommendation');
@@ -268,7 +270,7 @@ export default function DispatcherDashboard() {
     fetchRecommendation();
     interval = setInterval(fetchRecommendation, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [availableTrucks]);
 
   const handleWasteImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -308,15 +310,25 @@ export default function DispatcherDashboard() {
 
   const handleConfirmDetection = async () => {
     if (!detectionResult || !selectedSiteForDetection) return;
+    let totalWeight = detectionResult.total_weight;
+    // If LLM and no total_weight, use manual input
+    if (detectionMethod === 'llm' && (!totalWeight || totalWeight === 0)) {
+      totalWeight = Number(manualTotalWeight);
+    }
+    if (!totalWeight || isNaN(totalWeight) || totalWeight <= 0) {
+      alert('Please enter the total weight of the waste (kg) before updating.');
+      return;
+    }
     setIsSubmitting(true);
     try {
       await updateSiteComposition(selectedSiteForDetection, {
         ...detectionResult.result,
-        currentCapacity: detectionResult.total_weight,
+        currentCapacity: totalWeight,
       });
       setDetectionResult(null);
       setWasteImage(null);
       setSelectedSiteForDetection('');
+      setManualTotalWeight('');
       alert('Waste composition and weight updated successfully!');
     } catch (error) {
       alert('Failed to update waste site');
@@ -340,29 +352,56 @@ export default function DispatcherDashboard() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Stat Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
-            <span className="text-sm text-gray-500 mb-1">Bin Full Reports</span>
-            <span className="text-3xl font-bold text-blue-700 mb-1">{thresholdStatus ? `${thresholdStatus.reportedCount} / ${thresholdStatus.total}` : '--'}</span>
-            <br />
+          {/* North Zone Card */}
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-3xl p-8 shadow flex flex-col gap-2">
+            <span className="text-sm text-gray-500 dark:text-gray-300 mb-1">North Zone</span>
+            <span className="text-2xl font-bold text-blue-700 dark:text-blue-300 mb-1">
+              Reports: {mlRecommendation?.reportCounts?.North ?? '--'}
+            </span>
+            <span className="text-base text-gray-700 dark:text-gray-200">
+              Threshold: {thresholdStatus ? thresholdStatus.threshold : '--'}
+            </span>
             <span className={
-              thresholdStatus && thresholdStatus.reportedCount >= thresholdStatus.threshold
-                ? 'text-green-700 font-semibold'
-                : 'text-yellow-700 font-semibold'
+              mlRecommendation?.reportCounts?.North >= (thresholdStatus?.threshold ?? 0)
+                ? 'text-green-700 dark:text-green-300 font-semibold'
+                : 'text-yellow-700 dark:text-yellow-300 font-semibold'
             }>
-              {thresholdStatus
-                ? thresholdStatus.reportedCount >= thresholdStatus.threshold
-                  ? 'Threshold reached'
-                  : `${thresholdStatus.threshold - thresholdStatus.reportedCount} more needed`
-                : ''}
+              {mlRecommendation?.reportCounts?.North >= (thresholdStatus?.threshold ?? 0)
+                ? `Threshold reached${mlRecommendation?.allocation?.North ? `, Trucks Assigned: ${mlRecommendation.allocation.North}` : ''}`
+                : `${(thresholdStatus?.threshold ?? 0) - (mlRecommendation?.reportCounts?.North ?? 0)} more needed`}
             </span>
           </div>
-          <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
-            <span className="text-sm text-gray-500 mb-1">Active Routes</span>
-            <span className="text-3xl font-bold text-green-700 mb-1">3</span>
+          {/* South Zone Card */}
+          <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-3xl p-8 shadow flex flex-col gap-2">
+            <span className="text-sm text-gray-500 dark:text-gray-300 mb-1">South Zone</span>
+            <span className="text-2xl font-bold text-green-700 dark:text-green-300 mb-1">
+              Reports: {mlRecommendation?.reportCounts?.South ?? '--'}
+            </span>
+            <span className="text-base text-gray-700 dark:text-gray-200">
+              Threshold: {thresholdStatus ? thresholdStatus.threshold : '--'}
+            </span>
+            <span className={
+              mlRecommendation?.reportCounts?.South >= (thresholdStatus?.threshold ?? 0)
+                ? 'text-green-700 dark:text-green-300 font-semibold'
+                : 'text-yellow-700 dark:text-yellow-300 font-semibold'
+            }>
+              {mlRecommendation?.reportCounts?.South >= (thresholdStatus?.threshold ?? 0)
+                ? `Threshold reached${mlRecommendation?.allocation?.South ? `, Trucks Assigned: ${mlRecommendation.allocation.South}` : ''}`
+                : `${(thresholdStatus?.threshold ?? 0) - (mlRecommendation?.reportCounts?.South ?? 0)} more needed`}
+            </span>
           </div>
-          <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
-            <span className="text-sm text-gray-500 mb-1">Available Trucks</span>
-            <span className="text-3xl font-bold text-gray-700 mb-1">5</span>
+          {/* Available Trucks Card */}
+          <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-3xl p-8 shadow flex flex-col gap-2">
+            <span className="text-sm text-gray-500 dark:text-gray-300 mb-1">Available Trucks</span>
+            <span className="text-3xl font-bold text-gray-700 dark:text-white mb-1">{availableTrucks}</span>
+            <label className="font-medium text-gray-700 dark:text-gray-200 mt-2">Set Trucks:</label>
+            <input
+              type="number"
+              min={1}
+              value={availableTrucks}
+              onChange={e => setAvailableTrucks(Number(e.target.value) || 1)}
+              className="w-20 px-2 py-1 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700"
+            />
           </div>
         </div>
 
@@ -387,10 +426,10 @@ export default function DispatcherDashboard() {
                 ) : archivedNotifications.length > 0 ? (
                   <ul className="space-y-2">
                     {archivedNotifications.map((n) => (
-                      <li key={n.id} className="p-2 rounded bg-gray-100 shadow">
-                        <div className="font-semibold text-gray-800">{n.title}</div>
-                        <div className="text-sm text-gray-700">{n.message}</div>
-                        <div className="text-xs text-gray-500">{new Date(n.created_at).toLocaleString()}</div>
+                      <li key={n.id} className="p-2 rounded bg-gray-100 dark:bg-gray-800 shadow">
+                        <div className="font-semibold text-gray-800 dark:text-gray-100">{n.title}</div>
+                        <div className="text-sm text-gray-700 dark:text-gray-200">{n.message}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">{new Date(n.created_at).toLocaleString()}</div>
                       </li>
                     ))}
                   </ul>
@@ -410,17 +449,28 @@ export default function DispatcherDashboard() {
             </ul>
           </div>
           <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">ML Recommendation</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">Truck Allocation Recommendation</h2>
             {mlLoading ? (
               <p>Loading recommendation...</p>
             ) : mlError ? (
               <p className="text-red-600">{mlError}</p>
             ) : mlRecommendation ? (
               <div>
-                <p className="text-gray-900 font-semibold">{mlRecommendation.recommendation}</p>
-                <p className="text-sm text-gray-700">Confidence: {(mlRecommendation.confidence * 100).toFixed(1)}%</p>
-                <p className="text-sm text-gray-700">Next Collection: {new Date(mlRecommendation.nextCollectionTime).toLocaleString()}</p>
-                <p className="text-xs text-gray-500">Reason: {mlRecommendation.reason}</p>
+                <div className="mb-2">Available Trucks: <span className="font-bold">{mlRecommendation.availableTrucks}</span></div>
+                <div className="grid grid-cols-2 gap-4 mb-2">
+                  <div className="p-4 rounded bg-white shadow">
+                    <div className="font-semibold text-blue-700">North Zone</div>
+                    <div>Reports: <span className="font-bold">{mlRecommendation.reportCounts?.North ?? 0}</span></div>
+                    <div>Trucks Assigned: <span className="font-bold">{mlRecommendation.allocation?.North ?? 0}</span></div>
+                  </div>
+                  <div className="p-4 rounded bg-white shadow">
+                    <div className="font-semibold text-green-700">South Zone</div>
+                    <div>Reports: <span className="font-bold">{mlRecommendation.reportCounts?.South ?? 0}</span></div>
+                    <div>Trucks Assigned: <span className="font-bold">{mlRecommendation.allocation?.South ?? 0}</span></div>
+                  </div>
+                </div>
+                <div className="text-gray-900 font-semibold">{mlRecommendation.recommendation}</div>
+                <div className="text-sm text-gray-700">Next Collection: {new Date(mlRecommendation.nextCollectionTime).toLocaleString()}</div>
               </div>
             ) : null}
           </div>
@@ -478,17 +528,24 @@ export default function DispatcherDashboard() {
                   <ul className="space-y-1">
                     {Object.entries(detectionResult.result).map(([type, percent]) => (
                       <li key={type} className="flex items-center space-x-2">
-                        <span className="capitalize w-20">{type}</span>
-                        <div className="flex-1 bg-gray-200 rounded h-2 mx-2">
-                          <div
-                            className="h-2 rounded bg-blue-500"
-                            style={{ width: `${percent}%` }}
-                          />
-                        </div>
-                        <span className="w-10 text-right">{percent}%</span>
+                        <span className="capitalize font-medium">{type}:</span>
+                        <span>{percent}%</span>
                       </li>
                     ))}
                   </ul>
+                  {/* Prompt for total weight if missing */}
+                  {(!detectionResult.total_weight || detectionResult.total_weight === 0) && (
+                    <div className="mt-4">
+                      <label className="block font-medium text-gray-700 mb-1">Enter total weight (kg):</label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={manualTotalWeight}
+                        onChange={e => setManualTotalWeight(e.target.value)}
+                        className="w-32 px-2 py-1 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700"
+                      />
+                    </div>
+                  )}
                   {wasteImage && (
                     <div className="mt-4">
                       <h4 className="text-sm font-semibold mb-1">Uploaded Image:</h4>
@@ -529,9 +586,9 @@ export default function DispatcherDashboard() {
                 </>
               )}
               <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Select Dumping Site</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Select Dumping Site</label>
                 <select
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  className="block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                   value={selectedSiteForDetection}
                   onChange={e => setSelectedSiteForDetection(e.target.value)}
                 >

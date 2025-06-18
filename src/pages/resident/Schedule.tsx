@@ -85,10 +85,10 @@ export default function Schedule() {
                     <span
                       className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         item.status === 'completed'
-                          ? 'bg-green-100 text-green-800'
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
                           : item.status === 'missed'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-blue-100 text-black dark:text-black'
+                          ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                          : 'bg-blue-100 text-black dark:bg-blue-900 dark:text-blue-200'
                       }`}
                     >
                       {item.status.charAt(0).toUpperCase() + item.status.slice(1)}

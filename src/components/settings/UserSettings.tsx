@@ -59,10 +59,9 @@ const defaultNotifications: Record<string, NotificationSetting[]> = {
 };
 
 export default function UserSettings({ role }: UserSettingsProps) {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const [notifications, setNotifications] = useState(defaultNotifications[role]);
-  const [avatar, setAvatar] = useState<string | null>(null);
 
   const handleThemeToggle = () => {
     toggleDarkMode();
@@ -78,77 +77,8 @@ export default function UserSettings({ role }: UserSettingsProps) {
     );
   };
 
-  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatar(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   return (
     <div className="space-y-6">
-      {/* Profile Picture */}
-      <div className="bg-white shadow sm:rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
-            Profile Picture
-          </h3>
-          <div className="mt-4 flex items-center space-x-4">
-            <div className="flex-shrink-0">
-              <div className="relative">
-                <img
-                  className="h-16 w-16 rounded-full object-cover"
-                  src={avatar || 'https://via.placeholder.com/64?text=Avatar'}
-                  alt="Profile"
-                />
-                <label
-                  htmlFor="avatar-upload"
-                  className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow-lg cursor-pointer"
-                >
-                  <svg
-                    className="h-4 w-4 text-gray-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
-                </label>
-                <input
-                  id="avatar-upload"
-                  type="file"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleAvatarChange}
-                />
-              </div>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">
-                Click the camera icon to upload a new profile picture.
-                <br />
-                Maximum file size: 5MB. Supported formats: JPG, PNG.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Theme Settings */}
       <div className="bg-white shadow sm:rounded-lg">
         <div className="px-4 py-5 sm:p-6">
@@ -231,7 +161,6 @@ export default function UserSettings({ role }: UserSettingsProps) {
             console.log('Saving settings:', {
               darkMode: isDarkMode,
               notifications,
-              avatar,
             });
           }}
         >

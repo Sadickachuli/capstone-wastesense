@@ -57,6 +57,19 @@ export function useWasteSites() {
       const normalizedData = { ...data };
       keys.forEach((k, i) => { normalizedData[k] = values[i]; });
       await api.wasteSites.updateComposition(id, { ...normalizedData, updated_by: user?.id });
+      // Refetch sites after update
+      const dataAfter = await api.wasteSites.list();
+      const mapped = dataAfter.map((site: any) => ({
+        ...site,
+        composition: site.composition || {
+          plastic: Number(site.composition_plastic ?? site.composition?.plastic ?? 0),
+          paper: Number(site.composition_paper ?? site.composition?.paper ?? 0),
+          glass: Number(site.composition_glass ?? site.composition?.glass ?? 0),
+          metal: Number(site.composition_metal ?? site.composition?.metal ?? 0),
+          organic: Number(site.composition_organic ?? site.composition?.organic ?? 0),
+        },
+      }));
+      setSites(mapped);
       return true;
     } catch (err) {
       console.error(err);

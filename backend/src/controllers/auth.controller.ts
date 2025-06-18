@@ -370,11 +370,25 @@ export const getRecyclerNotifications = async (req: Request, res: Response) => {
 export const updateWasteComposition = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { plastic, paper, glass, metal, organic, updated_by, currentCapacity } = req.body;
-    // Validate input
-    const total = [plastic, paper, glass, metal, organic].reduce((a, b) => Number(a) + Number(b), 0);
-    if (total !== 100) {
-      return res.status(400).json({ message: 'Total percentage must equal 100' });
+    let { plastic, paper, glass, metal, organic, updated_by, currentCapacity } = req.body;
+    // Validate and normalize input
+    let values = [Number(plastic), Number(paper), Number(glass), Number(metal), Number(organic)];
+    let sum = values.reduce((a, b) => a + b, 0);
+    if (sum !== 100 && sum > 0) {
+      // Auto-normalize
+      values = values.map(v => Math.round((v / sum) * 100));
+      let newSum = values.reduce((a, b) => a + b, 0);
+      if (newSum !== 100) {
+        const diff = 100 - newSum;
+        const maxIdx = values.indexOf(Math.max(...values));
+        values[maxIdx] += diff;
+      }
+      [plastic, paper, glass, metal, organic] = values;
+      console.warn(`Auto-normalized composition for site ${id}:`, { plastic, paper, glass, metal, organic });
+    }
+    if (Number(currentCapacity) <= 0 || isNaN(Number(currentCapacity))) {
+      console.error('Missing or invalid currentCapacity for site', id);
+      return res.status(400).json({ message: 'Current capacity (total weight) is required and must be a positive number.' });
     }
     // Generate a unique id for the new composition
     const newId = uuidv4();
@@ -402,10 +416,8 @@ export const updateWasteComposition = async (req: Request, res: Response) => {
       'composition_glass': glass,
       'composition_metal': metal,
       'composition_organic': organic,
+      current_capacity: Number(currentCapacity),
     };
-    if (currentCapacity !== undefined) {
-      updateFields.current_capacity = currentCapacity;
-    }
     await db('waste_sites')
       .where({ id })
       .update(updateFields);
@@ -424,12 +436,14 @@ export const updateWasteComposition = async (req: Request, res: Response) => {
         siteName: site.name,
         updateType: 'composition',
         composition: { plastic, paper, glass, metal, organic },
+        currentCapacity: Number(currentCapacity),
       },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       archived: false,
     });
 
+    console.log('Waste composition updated for site', id, { plastic, paper, glass, metal, organic, currentCapacity });
     res.status(200).json({ message: 'Waste composition updated and recyclers notified', composition });
   } catch (err) {
     console.error('Update Waste Composition error:', err);

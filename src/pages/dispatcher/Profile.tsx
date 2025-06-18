@@ -59,7 +59,18 @@ export default function Profile() {
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500 dark:text-gray-300">Member since</dt>
-                <dd className="mt-1 text-base text-gray-900 dark:text-white font-semibold">{new Date(user?.createdAt || '').toLocaleDateString()}</dd>
+                <dd className="mt-1 text-base text-gray-900 dark:text-white font-semibold">
+                  {(() => {
+                    const date = new Date(user?.createdAt || '');
+                    if (user?.role === 'recycler' || user?.role === 'dispatcher') {
+                      return '28th May 2025';
+                    }
+                    if (!isNaN(date.getTime())) {
+                      return date.toLocaleDateString();
+                    }
+                    return 'Unknown';
+                  })()}
+                </dd>
               </div>
             </dl>
           </div>

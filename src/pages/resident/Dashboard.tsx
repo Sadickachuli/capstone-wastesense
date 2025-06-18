@@ -144,23 +144,23 @@ export default function ResidentDashboard() {
 
       {showReportModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Report Bin Full</h3>
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Report Bin Full</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Location</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Location</label>
                 <input
                   type="text"
-                  className="input w-full"
+                  className="input w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700"
                   value={location ? `${location.lat}, ${location.lng}` : ''}
                   readOnly
                   placeholder="Auto-detected or enter manually"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Description (optional)</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Description (optional)</label>
                 <textarea
-                  className="input w-full"
+                  className="input w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700"
                   value={description}
                   onChange={e => setDescription(e.target.value)}
                   placeholder="E.g. Bin is overflowing"

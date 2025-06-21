@@ -12,11 +12,19 @@ export async function seed(knex: Knex): Promise<void> {
   // Insert test users
   await knex('users').insert([
     {
-      email: 'resident@test.com',
+      email: 'resident.ablekuma@test.com',
       password_hash: password,
-      name: 'Test Resident',
+      name: 'Ablekuma Resident',
       phone: '1234567890',
-      zone: 'North',
+      zone: 'Ablekuma North',
+      role: 'resident'
+    },
+    {
+      email: 'resident.ayawaso@test.com',
+      password_hash: password,
+      name: 'Ayawaso Resident',
+      phone: '0987654321',
+      zone: 'Ayawaso West',
       role: 'resident'
     },
     {

@@ -8,6 +8,10 @@ export async function up(knex: Knex): Promise<void> {
     table.decimal('composition_metal').defaultTo(0);
     table.decimal('composition_organic').defaultTo(0);
   });
+
+  await knex.schema.alterTable('waste_compositions', (table) => {
+    table.text('annotated_image');
+  });
 }
 
 export async function down(knex: Knex): Promise<void> {
@@ -17,5 +21,9 @@ export async function down(knex: Knex): Promise<void> {
     table.dropColumn('composition_glass');
     table.dropColumn('composition_metal');
     table.dropColumn('composition_organic');
+  });
+
+  await knex.schema.alterTable('waste_compositions', (table) => {
+    table.dropColumn('annotated_image');
   });
 } 

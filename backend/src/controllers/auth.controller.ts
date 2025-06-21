@@ -370,12 +370,12 @@ export const getRecyclerNotifications = async (req: Request, res: Response) => {
 export const updateWasteComposition = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    let { plastic, paper, glass, metal, organic, updated_by, currentCapacity } = req.body;
-    // Validate and normalize input
-    let values = [Number(plastic), Number(paper), Number(glass), Number(metal), Number(organic)];
+    let { plastic, paper, glass, metal, organic, textile, other, updated_by, currentCapacity, annotated_image } = req.body;
+    // Normalize all 7 types
+    const allTypes = ['plastic', 'paper', 'glass', 'metal', 'organic', 'textile', 'other'];
+    let values = allTypes.map(type => Number(req.body[type]) || 0);
     let sum = values.reduce((a, b) => a + b, 0);
     if (sum !== 100 && sum > 0) {
-      // Auto-normalize
       values = values.map(v => Math.round((v / sum) * 100));
       let newSum = values.reduce((a, b) => a + b, 0);
       if (newSum !== 100) {
@@ -383,18 +383,59 @@ export const updateWasteComposition = async (req: Request, res: Response) => {
         const maxIdx = values.indexOf(Math.max(...values));
         values[maxIdx] += diff;
       }
-      [plastic, paper, glass, metal, organic] = values;
-      console.warn(`Auto-normalized composition for site ${id}:`, { plastic, paper, glass, metal, organic });
     }
+    // Assign normalized values
+    [plastic, paper, glass, metal, organic, textile, other] = values;
     if (Number(currentCapacity) <= 0 || isNaN(Number(currentCapacity))) {
       console.error('Missing or invalid currentCapacity for site', id);
       return res.status(400).json({ message: 'Current capacity (total weight) is required and must be a positive number.' });
     }
     // Generate a unique id for the new composition
     const newId = uuidv4();
-    // Insert into waste_compositions table
-    const [composition] = await db('waste_compositions')
-      .insert({
+    console.log('DEBUG: About to insert into waste_compositions', {
+      id: newId,
+      site_id: id,
+      updated_by: updated_by || null,
+      plastic_percent: plastic,
+      paper_percent: paper,
+      glass_percent: glass,
+      metal_percent: metal,
+      organic_percent: organic,
+      textile_percent: textile ?? null,
+      other_percent: other ?? null,
+      current_capacity: Number(currentCapacity),
+      annotated_image: annotated_image || null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+    let insertResult = null;
+    try {
+      insertResult = await db('waste_compositions')
+        .insert({
+          id: newId,
+          site_id: id,
+          updated_by: updated_by || null,
+          plastic_percent: plastic,
+          paper_percent: paper,
+          glass_percent: glass,
+          metal_percent: metal,
+          organic_percent: organic,
+          textile_percent: textile ?? null,
+          other_percent: other ?? null,
+          current_capacity: Number(currentCapacity),
+          annotated_image: annotated_image || null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .returning(['id', 'site_id', 'plastic_percent', 'paper_percent', 'glass_percent', 'metal_percent', 'organic_percent', 'textile_percent', 'other_percent', 'current_capacity', 'created_at', 'annotated_image']);
+      if (!insertResult || insertResult.length === 0) {
+        console.warn('WARNING: waste_compositions insert returned empty result for site', id);
+      } else {
+        console.log('DEBUG: Inserted waste_compositions record', insertResult[0]);
+      }
+    } catch (insertErr) {
+      console.error('ERROR: waste_compositions insert failed for site', id, insertErr);
+      console.error('Attempted insert data:', {
         id: newId,
         site_id: id,
         updated_by: updated_by || null,
@@ -403,10 +444,14 @@ export const updateWasteComposition = async (req: Request, res: Response) => {
         glass_percent: glass,
         metal_percent: metal,
         organic_percent: organic,
+        textile_percent: textile ?? null,
+        other_percent: other ?? null,
+        current_capacity: Number(currentCapacity),
+        annotated_image: annotated_image || null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      })
-      .returning(['id', 'site_id', 'plastic_percent', 'paper_percent', 'glass_percent', 'metal_percent', 'organic_percent', 'created_at']);
+      });
+    }
 
     // Update waste_sites table for current values and capacity
     const updateFields: any = {
@@ -444,7 +489,7 @@ export const updateWasteComposition = async (req: Request, res: Response) => {
     });
 
     console.log('Waste composition updated for site', id, { plastic, paper, glass, metal, organic, currentCapacity });
-    res.status(200).json({ message: 'Waste composition updated and recyclers notified', composition });
+    res.status(200).json({ message: 'Waste composition updated and recyclers notified', composition: insertResult });
   } catch (err) {
     console.error('Update Waste Composition error:', err);
     res.status(500).json({ message: 'Internal server error' });
@@ -618,7 +663,11 @@ export const getWasteCompositionHistory = async (req: Request, res: Response) =>
         'paper_percent',
         'glass_percent',
         'metal_percent',
-        'organic_percent'
+        'organic_percent',
+        'textile_percent',
+        'other_percent',
+        'current_capacity',
+        'annotated_image'
       );
     if (site_id) {
       query = query.where('site_id', site_id);
@@ -676,11 +725,17 @@ export const detectWasteFromImageLLM = async (req: any, res: Response) => {
 
     // Parse the response
     const content = openaiRes.data.choices[0].message.content;
-    // Try to extract JSON from the response
+    console.log('LLM raw response:', content);
     let composition = null;
     try {
-      // Find the first JSON object in the response
-      const match = content.match(/\{[\s\S]*\}/);
+      let match = content.match(/\{[\s\S]*\}/);
+      if (!match) {
+        // Try to fix common issues
+        let fixed = content
+          .replace(/'/g, '"') // single to double quotes
+          .replace(/,(\s*[}\]])/g, '$1'); // remove trailing commas
+        match = fixed.match(/\{[\s\S]*\}/);
+      }
       if (match) {
         composition = JSON.parse(match[0]);
       } else {

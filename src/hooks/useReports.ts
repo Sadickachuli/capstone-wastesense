@@ -24,9 +24,7 @@ export function useReports() {
 
   const createReport = useCallback(
     async (data: {
-      zone: string;
       description?: string;
-      location: { lat: number; lng: number };
     }) => {
       try {
         setLoading(true);
@@ -35,9 +33,7 @@ export function useReports() {
 
         const newReport = await api.reports.create({
           userId: user.id,
-          zone: data.zone,
           description: data.description,
-          location: data.location,
         });
 
         setReports((prev) => [newReport, ...prev]);

@@ -15,8 +15,8 @@ const validationSchema = Yup.object({
   name: Yup.string()
     .required('Name is required'),
   phone: Yup.string()
-    .matches(/^[+]?[\d\s-]+$/, 'Invalid phone number'),
-  zone: Yup.string().oneOf(['North', 'South'], 'Select a valid zone').required('Zone is required'),
+    .matches(/^[+]?\d[\d\s-]+$/, 'Invalid phone number'),
+  zone: Yup.string().oneOf(['Ablekuma North', 'Ayawaso West'], 'Select a valid zone').required('Zone is required'),
 });
 
 export default function SignupResident() {
@@ -31,7 +31,7 @@ export default function SignupResident() {
       password: '',
       name: '',
       phone: '',
-      zone: 'North',
+      zone: 'Ablekuma North',
     },
     validationSchema,
     onSubmit: async (values) => {
@@ -180,8 +180,8 @@ export default function SignupResident() {
                 }`}
                 {...formik.getFieldProps('zone')}
               >
-                <option value="North">North</option>
-                <option value="South">South</option>
+                <option value="Ablekuma North">Ablekuma North</option>
+                <option value="Ayawaso West">Ayawaso West</option>
               </select>
               {formik.touched.zone && formik.errors.zone && (
                 <p className="mt-1 text-sm text-red-600">{formik.errors.zone}</p>

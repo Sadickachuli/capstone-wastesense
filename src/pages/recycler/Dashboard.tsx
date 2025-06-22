@@ -69,6 +69,8 @@ const WASTE_COLORS: Record<string, string> = {
   organic: '#22c55e', // green
   paper: '#eab308',   // yellow
   glass: '#10b981',   // teal
+  textile: '#a21caf', // purple
+  other: '#f43f5e',   // pink/red
 };
 
 export default function RecyclerDashboard() {
@@ -86,6 +88,10 @@ export default function RecyclerDashboard() {
   const [detailsModal, setDetailsModal] = useState<{ open: boolean; district?: string }>({ open: false });
   const [details, setDetails] = useState<any[]>([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [annotatedImages, setAnnotatedImages] = useState<Record<string, string>>({});
+  const [siteCompositions, setSiteCompositions] = useState<Record<string, any>>({});
+  const [siteImages, setSiteImages] = useState<Record<string, string>>({});
+  const [allSitesImage, setAllSitesImage] = useState<string | null>(null);
 
   // Set initial selected site when data loads
   useEffect(() => {
@@ -123,30 +129,97 @@ export default function RecyclerDashboard() {
     axios.get('/api/forecast/next-day').then(res => setForecast(res.data));
   }, []);
 
+  // Fetch annotated images for each site on mount or when sites change
+  useEffect(() => {
+    async function fetchAnnotatedImages() {
+      const images: Record<string, string> = {};
+      for (const site of sites) {
+        try {
+          const res = await axios.get(`/api/auth/waste-compositions/history?site_id=${site.id}`);
+          if (res.data.history && res.data.history[0] && res.data.history[0].annotated_image) {
+            images[site.id] = res.data.history[0].annotated_image;
+          }
+        } catch {}
+      }
+      setAnnotatedImages(images);
+    }
+    if (sites.length > 0) fetchAnnotatedImages();
+  }, [sites]);
+
+  // Fetch latest composition and image for each site from backend
+  useEffect(() => {
+    async function fetchCompositions() {
+      const compositions: Record<string, any> = {};
+      const images: Record<string, string> = {};
+      let latestImage: { date: string, img: string } | null = null;
+      for (const site of sites) {
+        try {
+          const res = await axios.get(`/api/auth/waste-compositions/history?site_id=${site.id}`);
+          if (res.data.history && res.data.history.length > 0) {
+            const latest = res.data.history[0];
+            compositions[site.id] = latest;
+            if (latest.annotated_image) {
+              images[site.id] = latest.annotated_image;
+              if (!latestImage || latest.date > latestImage.date) {
+                latestImage = { date: latest.date, img: latest.annotated_image };
+              }
+            }
+          }
+        } catch {}
+      }
+      setSiteCompositions(compositions);
+      setSiteImages(images);
+      setAllSitesImage(latestImage ? latestImage.img : null);
+    }
+    if (sites.length > 0) fetchCompositions();
+  }, [sites]);
+
   const totalProcessed = 1250; // kg
   const recyclingRate = 85; // %
   const energySaved = 750; // kWh
 
-  // Aggregate today's waste composition and weight for all sites
-  let totalWeight = 0;
-  const totalComposition: Record<string, number> = { plastic: 0, paper: 0, glass: 0, metal: 0, organic: 0 };
-  sites.forEach(site => {
-    totalWeight += site.currentCapacity;
-    Object.entries(site.composition).forEach(([type, percent]) => {
-      // Weighted sum by site weight
-      totalComposition[type] += (percent / 100) * site.currentCapacity;
+  // Utility to get all present types from backend data
+  function getAllTypes(siteCompositions: Record<string, any>) {
+    const types = new Set<string>();
+    Object.values(siteCompositions).forEach(comp => {
+      if (comp) {
+        Object.keys(comp).forEach(key => {
+          if (key.endsWith('_percent')) {
+            types.add(key.replace('_percent', ''));
+          }
+        });
+      }
     });
+    return Array.from(types);
+  }
+
+  const allTypes = getAllTypes(siteCompositions);
+
+  // Aggregate total composition from backend data (all types)
+  let totalWeight = 0;
+  const totalComposition: Record<string, number> = {};
+  sites.forEach(site => {
+    const comp = siteCompositions[site.id];
+    if (comp) {
+      const siteWeight = comp.current_capacity || 0;
+      totalWeight += siteWeight;
+      allTypes.forEach(type => {
+        const percent = comp[`${type}_percent`] ?? 0;
+        totalComposition[type] = (totalComposition[type] || 0) + (Number(percent) / 100) * siteWeight;
+      });
+    }
   });
-  // Convert to percentages (ensure all keys are present)
-  let aggregateComposition: Record<string, number> = { plastic: 0, paper: 0, glass: 0, metal: 0, organic: 0 };
+  let aggregateComposition: Record<string, number> = {};
   if (totalWeight > 0) {
-    Object.entries(totalComposition).forEach(([type, weight]) => {
-      aggregateComposition[type] = Math.round((weight / totalWeight) * 100);
+    allTypes.forEach(type => {
+      aggregateComposition[type] = Math.round(((totalComposition[type] || 0) / totalWeight) * 100);
     });
   }
-  // Get North and South sites
+  // Get North and South sites from backend data
   const northSite = sites.find(s => s.name.toLowerCase().includes('north'));
   const southSite = sites.find(s => s.name.toLowerCase().includes('south'));
+  const northComp = northSite ? siteCompositions[northSite.id] : null;
+  const southComp = southSite ? siteCompositions[southSite.id] : null;
 
   const handleSiteSelect = (site: WasteSite) => {
     setSelectedSite(site);
@@ -205,7 +278,7 @@ export default function RecyclerDashboard() {
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie
-                  data={Object.entries(aggregateComposition).map(([type, percent]) => ({ name: type, value: percent }))}
+                  data={allTypes.map(type => ({ name: type, value: aggregateComposition[type] || 0 }))}
                   dataKey="value"
                   nameKey="name"
                   cx="50%"
@@ -213,12 +286,23 @@ export default function RecyclerDashboard() {
                   outerRadius={70}
                   label={({ name, value }) => `${name}: ${value}%`}
                 >
-                  {Object.keys(WASTE_COLORS).map((type) => (
-                    <Cell key={type} fill={WASTE_COLORS[type]} />
+                  {allTypes.map((type) => (
+                    <Cell key={type} fill={WASTE_COLORS[type] || '#8884d8'} />
                   ))}
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
+            {allSitesImage && (
+              <div className="mt-4">
+                <h4 className="text-sm font-semibold mb-1">Latest Annotated Image (All Sites):</h4>
+                <img
+                  src={`data:image/jpeg;base64,${allSitesImage}`}
+                  alt="Annotated waste detection"
+                  className="w-full max-w-md border rounded shadow"
+                  style={{ maxHeight: 400, objectFit: 'contain' }}
+                />
+              </div>
+            )}
           </div>
           <div className="flex-1 text-gray-600 text-sm">
             <div className="mb-2">
@@ -227,9 +311,9 @@ export default function RecyclerDashboard() {
               </span>
             </div>
             <ul>
-              {Object.entries(aggregateComposition).map(([type, percent]) => (
+              {allTypes.map((type) => (
                 <li key={type} className="mb-1">
-                  <span className="font-semibold text-gray-900 capitalize">{type}:</span> {percent}%
+                  <span className="font-semibold text-gray-900 capitalize">{type}:</span> {aggregateComposition[type]}%
                 </li>
               ))}
             </ul>
@@ -239,21 +323,32 @@ export default function RecyclerDashboard() {
 
       {/* Per-Site Bar Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {northSite && (
+        {northSite && northComp && (
           <div className="bg-white shadow rounded-lg p-6">
             <h2 className="text-lg font-bold text-gray-900 mb-2">North Dumping Site Composition</h2>
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={Object.entries(northSite.composition).map(([type, percent]) => ({ type, percent }))}>
+              <BarChart data={allTypes.map(type => ({ type, percent: northComp[`${type}_percent`] ?? 0 }))}>
                 <XAxis dataKey="type" />
-                <YAxis unit="%" />
+                <YAxis unit="%" domain={[0, 100]} />
                 <Tooltip />
-                {Object.keys(WASTE_COLORS).map(type => (
-                  <Bar key={type} dataKey={d => d.type === type ? d.percent : 0} name={type} fill={WASTE_COLORS[type]} />
+                {allTypes.map(type => (
+                  <Bar key={type} dataKey={d => d.type === type ? d.percent : 0} name={type} fill={WASTE_COLORS[type] || '#8884d8'} />
                 ))}
               </BarChart>
             </ResponsiveContainer>
+            {siteImages[northSite.id] && (
+              <div className="mt-4">
+                <h4 className="text-sm font-semibold mb-1">Latest Annotated Image:</h4>
+                <img
+                  src={`data:image/jpeg;base64,${siteImages[northSite.id]}`}
+                  alt="Annotated waste detection"
+                  className="w-full max-w-md border rounded shadow"
+                  style={{ maxHeight: 400, objectFit: 'contain' }}
+                />
+              </div>
+            )}
             <div className="mt-2 text-gray-600 text-sm">
-              <span className="font-semibold text-gray-900">{northSite.currentCapacity} kg</span> of waste{' '}
+              <span className="font-semibold text-gray-900">{Math.round(northComp.current_capacity)} kg</span> of waste{' '}
               {(() => {
                 if (!northSite.lastUpdated) return '';
                 const last = new Date(northSite.lastUpdated);
@@ -266,21 +361,32 @@ export default function RecyclerDashboard() {
             </div>
           </div>
         )}
-        {southSite && (
+        {southSite && southComp && (
           <div className="bg-white shadow rounded-lg p-6">
             <h2 className="text-lg font-bold text-gray-900 mb-2">South Dumping Site Composition</h2>
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={Object.entries(southSite.composition).map(([type, percent]) => ({ type, percent }))}>
+              <BarChart data={allTypes.map(type => ({ type, percent: southComp[`${type}_percent`] ?? 0 }))}>
                 <XAxis dataKey="type" />
-                <YAxis unit="%" />
+                <YAxis unit="%" domain={[0, 100]} />
                 <Tooltip />
-                {Object.keys(WASTE_COLORS).map(type => (
-                  <Bar key={type} dataKey={d => d.type === type ? d.percent : 0} name={type} fill={WASTE_COLORS[type]} />
+                {allTypes.map(type => (
+                  <Bar key={type} dataKey={d => d.type === type ? d.percent : 0} name={type} fill={WASTE_COLORS[type] || '#8884d8'} />
                 ))}
               </BarChart>
             </ResponsiveContainer>
+            {siteImages[southSite.id] && (
+              <div className="mt-4">
+                <h4 className="text-sm font-semibold mb-1">Latest Annotated Image:</h4>
+                <img
+                  src={`data:image/jpeg;base64,${siteImages[southSite.id]}`}
+                  alt="Annotated waste detection"
+                  className="w-full max-w-md border rounded shadow"
+                  style={{ maxHeight: 400, objectFit: 'contain' }}
+                />
+              </div>
+            )}
             <div className="mt-2 text-gray-600 text-sm">
-              <span className="font-semibold text-gray-900">{southSite.currentCapacity} kg</span> of waste{' '}
+              <span className="font-semibold text-gray-900">{Math.round(southComp.current_capacity)} kg</span> of waste{' '}
               {(() => {
                 if (!southSite.lastUpdated) return '';
                 const last = new Date(southSite.lastUpdated);
@@ -297,15 +403,15 @@ export default function RecyclerDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
         <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)] flex flex-col items-center">
           <h3 className="text-lg font-bold text-green-800 dark:text-green-300 mb-2">Total Processed Today</h3>
-          <p className="text-3xl font-extrabold text-green-600 dark:text-green-300">{totalWeight} kg</p>
+          <p className="text-3xl font-extrabold text-green-600 dark:text-green-300">{Math.round(totalWeight)} kg</p>
         </div>
         <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)] flex flex-col items-center">
           <h3 className="text-lg font-bold text-blue-800 dark:text-blue-300 mb-2">Recycling Rate</h3>
-          <p className="text-3xl font-extrabold text-blue-600 dark:text-blue-300">{recyclingRate}%</p>
+          <p className="text-3xl font-extrabold text-blue-600 dark:text-blue-300">{Math.round(recyclingRate)}%</p>
         </div>
         <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)] flex flex-col items-center">
           <h3 className="text-lg font-bold text-purple-800 dark:text-purple-300 mb-2">Energy Saved</h3>
-          <p className="text-3xl font-extrabold text-purple-600 dark:text-purple-300">{energySaved} kWh</p>
+          <p className="text-3xl font-extrabold text-purple-600 dark:text-purple-300">{Math.round(energySaved)} kWh</p>
         </div>
       </div>
       <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)] mb-8">
@@ -320,7 +426,7 @@ export default function RecyclerDashboard() {
                 <p className="font-medium text-gray-900 dark:text-white">Delivery {delivery.id}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-300">Truck: {delivery.truckId}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-300">ETA: {new Date(delivery.estimatedArrival).toLocaleTimeString()}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Weight: {delivery.weight} kg</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Weight: {Math.round(delivery.weight)} kg</p>
               </div>
               <div className="flex items-center space-x-4">
                 <span className={`ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${

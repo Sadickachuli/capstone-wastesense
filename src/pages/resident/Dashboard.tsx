@@ -7,7 +7,6 @@ export default function ResidentDashboard() {
   const { user } = useAuth();
   const { reports, loading } = useReports();
   const [showReportModal, setShowReportModal] = useState(false);
-  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -21,19 +20,12 @@ export default function ResidentDashboard() {
     setShowReportModal(true);
     setSuccess(false);
     setError('');
-    // Try to get geolocation
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => setLocation(null)
-      );
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !location) {
-      setError('Missing user or location');
+    if (!user) {
+      setError('Missing user');
       return;
     }
     setSubmitting(true);
@@ -41,7 +33,6 @@ export default function ResidentDashboard() {
     try {
       await axios.post('/api/auth/report-bin-full', {
         userId: user.id,
-        location,
         description,
       });
       setSuccess(true);
@@ -88,8 +79,7 @@ export default function ResidentDashboard() {
         <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)] flex flex-col gap-2">
           <h2 className="text-xl font-bold text-blue-800 dark:text-blue-300 mb-2 flex items-center gap-2"><span>📍</span> Your Zone</h2>
           <p className="text-gray-700 dark:text-gray-200">Zone: <span className="font-semibold">{user?.zone || 'Not assigned'}</span></p>
-          <p className="text-gray-700 dark:text-gray-200">Next Collection: <span className="font-semibold">Tomorrow at 9:00 AM</span></p>
-          <p className="text-gray-700 dark:text-gray-200">Collection Frequency: <span className="font-semibold">Twice a week</span></p>
+          <p className="text-gray-700 dark:text-gray-200">No collection info available</p>
         </div>
       </div>
 
@@ -143,18 +133,18 @@ export default function ResidentDashboard() {
       </div>
 
       {showReportModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-900 rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Report Bin Full</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Location</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Zone</label>
                 <input
                   type="text"
                   className="input w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700"
-                  value={location ? `${location.lat}, ${location.lng}` : ''}
+                  value={user?.zone || ''}
                   readOnly
-                  placeholder="Auto-detected or enter manually"
+                  placeholder="Zone"
                 />
               </div>
               <div>

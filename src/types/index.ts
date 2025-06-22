@@ -18,7 +18,7 @@ export interface Report {
   zone: string;
   status: 'new' | 'in-progress' | 'completed';
   description?: string;
-  location: {
+  location?: {
     lat: number;
     lng: number;
   };
@@ -48,6 +48,7 @@ export interface Delivery {
   id: string;
   truckId: string;
   facilityId: string;
+  zone?: string;
   estimatedArrival: string;
   status: 'pending' | 'in-transit' | 'completed';
   weight: number;

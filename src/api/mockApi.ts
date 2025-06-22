@@ -109,8 +109,9 @@ const mockDeliveries: Delivery[] = [
   {
     id: '1',
     truckId: 'T001',
-    facilityId: 'F001',
-    estimatedArrival: '2024-03-20T11:00:00Z',
+    facilityId: 'WS001', // North Dumping Site
+    zone: 'Ablekuma North',
+    estimatedArrival: '2024-03-21T04:00:00Z',
     status: 'in-transit',
     weight: 500,
     composition: {
@@ -118,6 +119,38 @@ const mockDeliveries: Delivery[] = [
       paper: 25,
       glass: 15,
       metal: 20,
+      organic: 10,
+    },
+  },
+  {
+    id: '2',
+    truckId: 'T002',
+    facilityId: 'WS002', // South Dumping Site
+    zone: 'Ayawaso West',
+    estimatedArrival: '2024-03-21T06:00:00Z',
+    status: 'pending',
+    weight: 450,
+    composition: {
+      plastic: 35,
+      paper: 20,
+      glass: 20,
+      metal: 15,
+      organic: 10,
+    },
+  },
+  {
+    id: '3',
+    truckId: 'T003',
+    facilityId: 'WS001',
+    zone: 'Ablekuma North',
+    estimatedArrival: '2024-03-21T08:00:00Z',
+    status: 'completed',
+    weight: 600,
+    composition: {
+      plastic: 25,
+      paper: 30,
+      glass: 20,
+      metal: 15,
       organic: 10,
     },
   },
@@ -163,6 +196,50 @@ let notificationCounter = loadPersistedData('notificationCounter', 1);
 const getUsersByRole = (role: 'resident' | 'dispatcher' | 'recycler') => {
   return mockUsers.filter(user => user.role === role);
 };
+
+// Add mock forecast history for composition data
+const mockForecastHistory = [
+  {
+    date: '2025-06-04',
+    district: 'Ablekuma North',
+    plastic_percent: 30,
+    paper_percent: 25,
+    glass_percent: 15,
+    metal_percent: 20,
+    organic_percent: 10,
+    total_waste_tonnes: 5.0,
+  },
+  {
+    date: '2025-06-04',
+    district: 'Ayawaso West',
+    plastic_percent: 35,
+    paper_percent: 20,
+    glass_percent: 20,
+    metal_percent: 15,
+    organic_percent: 10,
+    total_waste_tonnes: 4.5,
+  },
+  {
+    date: '2025-06-03',
+    district: 'Ablekuma North',
+    plastic_percent: 28,
+    paper_percent: 22,
+    glass_percent: 18,
+    metal_percent: 22,
+    organic_percent: 10,
+    total_waste_tonnes: 4.8,
+  },
+  {
+    date: '2025-06-03',
+    district: 'Ayawaso West',
+    plastic_percent: 32,
+    paper_percent: 18,
+    glass_percent: 25,
+    metal_percent: 15,
+    organic_percent: 10,
+    total_waste_tonnes: 4.2,
+  },
+];
 
 // Mock API functions
 export const api = {
@@ -255,12 +332,14 @@ export const api = {
         id: String(mockDeliveries.length + 1),
         truckId: data.truckId!,
         facilityId: data.facilityId!,
+        zone: data.zone || '',
         estimatedArrival: data.estimatedArrival!,
-        status: 'pending',
+        status: data.status as any || 'pending',
         weight: data.weight!,
         composition: data.composition!,
       };
       mockDeliveries.push(newDelivery);
+      persistData('mockDeliveries', mockDeliveries);
       return newDelivery;
     },
   },
@@ -335,6 +414,17 @@ export const api = {
       });
       persistData('mockNotifications', mockNotifications);
       return notifications[0];
+    },
+  },
+  forecast: {
+    history: async (params: { district?: string } = {}) => {
+      await delay(500);
+      // Filter by district if provided
+      let data = mockForecastHistory;
+      if (params.district) {
+        data = data.filter(row => row.district === params.district);
+      }
+      return data;
     },
   },
 }; 

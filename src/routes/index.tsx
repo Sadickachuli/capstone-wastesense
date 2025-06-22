@@ -24,7 +24,6 @@ import DispatcherProfile from '../pages/dispatcher/Profile';
 
 // Recycler Pages
 import RecyclerDashboard from '../pages/recycler/Dashboard';
-import RecyclerDeliveries from '../pages/recycler/Deliveries';
 import RecyclerInsights from '../pages/recycler/Insights';
 import RecyclerProfile from '../pages/recycler/Profile';
 import RecyclerNotifications from '../pages/recycler/Notifications';
@@ -140,14 +139,6 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={['recycler']}>
             <RecyclerDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/recycler/deliveries"
-        element={
-          <ProtectedRoute allowedRoles={['recycler']}>
-            <RecyclerDeliveries />
           </ProtectedRoute>
         }
       />

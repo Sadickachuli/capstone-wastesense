@@ -38,15 +38,22 @@ export function useWasteSites() {
 
   const updateSiteComposition = async (id: string, data: any) => {
     try {
-      // Normalize composition values to sum to 100
+      // Normalize composition values to sum to 100 (including textile and other if present)
       const keys = ['plastic', 'paper', 'glass', 'metal', 'organic'];
+      const extraKeys = ['textile', 'other'];
       let values = keys.map(k => Number(data[k]) || 0);
       let sum = values.reduce((a, b) => a + b, 0);
-      // Scale if sum is not 100
+      // Add extra types if present
+      extraKeys.forEach(k => {
+        if (typeof data[k] === 'number') {
+          values.push(Number(data[k]));
+          keys.push(k);
+        }
+      });
+      sum = values.reduce((a, b) => a + b, 0);
       if (sum !== 100 && sum > 0) {
         values = values.map(v => Math.round((v / sum) * 100));
         let newSum = values.reduce((a, b) => a + b, 0);
-        // If rounding caused sum to be off, adjust the largest value
         if (newSum !== 100) {
           const diff = 100 - newSum;
           const maxIdx = values.indexOf(Math.max(...values));
@@ -67,6 +74,8 @@ export function useWasteSites() {
           glass: Number(site.composition_glass ?? site.composition?.glass ?? 0),
           metal: Number(site.composition_metal ?? site.composition?.metal ?? 0),
           organic: Number(site.composition_organic ?? site.composition?.organic ?? 0),
+          textile: Number(site.composition_textile ?? site.composition?.textile ?? 0),
+          other: Number(site.composition_other ?? site.composition?.other ?? 0),
         },
       }));
       setSites(mapped);

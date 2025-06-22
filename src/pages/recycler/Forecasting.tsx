@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
 
 const WASTE_COLORS: Record<string, string> = {
   plastic: '#60A5FA',
@@ -60,19 +60,19 @@ export default function Forecasting() {
             Tomorrow's waste: <span className="font-semibold">{forecast.total_waste_tonnes.toFixed(1)} tonnes</span> from Ablekuma North and Ayawaso West. <br />
             Composition: {Object.entries(forecast.composition_percent).map(([type, percent]) => `${percent}% ${type}`).join(', ')}
           </p>
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={forecast.districts.map((d: any) => ({
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={forecast.districts.map((d: any) => ({
               name: d.district,
               ...d.composition_percent
-            }))} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-              <XAxis dataKey="name" />
-              <YAxis unit="%" />
-              <Tooltip />
-              <Legend />
+            }))} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+              <XAxis dataKey="name" stroke="#000" tick={{ fill: '#000' }} />
+              <YAxis unit="%" stroke="#000" tick={{ fill: '#000' }} />
+              <Tooltip contentStyle={{ color: '#000', background: '#fff' }} labelStyle={{ color: '#000' }} itemStyle={{ color: '#000' }} />
+              <Legend wrapperStyle={{ color: '#000' }} />
               {Object.keys(WASTE_COLORS).map(type => (
-                <Bar key={type} dataKey={type} stackId="a" fill={WASTE_COLORS[type]} />
+                <Line key={type} type="monotone" dataKey={type} stroke={WASTE_COLORS[type]} name={type.charAt(0).toUpperCase() + type.slice(1)} strokeWidth={3} dot={{ r: 5 }} activeDot={{ r: 8 }} />
               ))}
-            </BarChart>
+            </LineChart>
           </ResponsiveContainer>
           <div className="mt-4 flex flex-col md:flex-row md:items-center md:space-x-8">
             <div className="flex-1 min-w-[320px]" style={{ height: 200 }}>

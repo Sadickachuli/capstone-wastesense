@@ -4,6 +4,7 @@ import { api } from '../../api/mockApi';
 import { Route, WasteSite, WasteDetectionResult, WasteImageUploadResponse } from '../../types';
 import axios from 'axios';
 import { useWasteSites } from '../../hooks/useWasteSites';
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
 interface Alert {
   id: string;
@@ -19,6 +20,14 @@ interface CompositionUpdate {
   metal: number;
   organic: number;
 }
+
+const WASTE_COLORS: Record<string, string> = {
+  plastic: '#2563eb', // blue
+  metal: '#6b7280',   // gray
+  organic: '#22c55e', // green
+  paper: '#eab308',   // yellow
+  glass: '#10b981',   // teal
+};
 
 // Mock data for demonstration
 const mockRoutes: Route[] = [
@@ -61,12 +70,14 @@ export default function DispatcherDashboard() {
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
   const [showCompositionModal, setShowCompositionModal] = useState(false);
   const [selectedSite, setSelectedSite] = useState<string>('');
-  const [composition, setComposition] = useState<CompositionUpdate>({
+  const [composition, setComposition] = useState<CompositionUpdate & { textile?: number; other?: number }>({
     plastic: 0,
     paper: 0,
     glass: 0,
     metal: 0,
     organic: 0,
+    textile: 0,
+    other: 0,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [thresholdStatus, setThresholdStatus] = useState<{ reportedCount: number; total: number; threshold: number } | null>(null);
@@ -205,10 +216,9 @@ export default function DispatcherDashboard() {
     }
   };
 
-  const handleCompositionChange = (type: keyof CompositionUpdate, value: string) => {
+  const handleCompositionChange = (type: keyof CompositionUpdate | 'textile' | 'other', value: string) => {
     const numValue = Number(value);
     if (isNaN(numValue) || numValue < 0 || numValue > 100) return;
-
     setComposition(prev => ({
       ...prev,
       [type]: numValue
@@ -321,15 +331,40 @@ export default function DispatcherDashboard() {
     }
     setIsSubmitting(true);
     try {
+      // Always send all 7 types, defaulting to 0 if missing
+      const allTypes = ['plastic', 'paper', 'glass', 'metal', 'organic', 'textile', 'other'] as const;
+      type WasteComposition = { [K in typeof allTypes[number]]: number };
+      const normalizedResult: WasteComposition = allTypes.reduce((acc, type) => {
+        acc[type] = Number(detectionResult.result[type] ?? 0);
+        return acc;
+      }, {} as WasteComposition);
       await updateSiteComposition(selectedSiteForDetection, {
-        ...detectionResult.result,
+        ...normalizedResult,
         currentCapacity: totalWeight,
+        annotated_image: detectionResult.annotated_image || '',
       });
+      // AUTOMATICALLY CREATE/UPDATE DELIVERY
+      // Find the site and its zone
+      const siteObj = [
+        { id: 'WS001', name: 'North Dumping Site', zone: 'Ablekuma North' },
+        { id: 'WS002', name: 'South Dumping Site', zone: 'Ayawaso West' },
+      ].find(s => s.id === selectedSiteForDetection);
+      if (siteObj) {
+        await api.deliveries.create({
+          truckId: 'T001', // Or use a smarter assignment if available
+          facilityId: siteObj.id,
+          zone: siteObj.zone,
+          estimatedArrival: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour from now
+          status: 'in-transit',
+          weight: totalWeight,
+          composition: normalizedResult,
+        });
+      }
       setDetectionResult(null);
       setWasteImage(null);
       setSelectedSiteForDetection('');
       setManualTotalWeight('');
-      alert('Waste composition and weight updated successfully!');
+      alert('Waste composition and weight updated successfully! Delivery created.');
     } catch (error) {
       alert('Failed to update waste site');
     } finally {
@@ -523,6 +558,25 @@ export default function DispatcherDashboard() {
           {detectionResult && (
             <div className="mt-4">
               <h3 className="text-md font-semibold text-gray-900 mb-2">Detected Composition:</h3>
+              <div className="mb-4">
+                <ResponsiveContainer width="100%" height={180}>
+                  <PieChart>
+                    <Pie
+                      data={Object.entries(detectionResult.result).map(([type, percent]) => ({ name: type, value: percent }))}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={60}
+                      label={({ name, value }) => `${name}: ${value}%`}
+                    >
+                      {Object.keys(WASTE_COLORS).map((type) => (
+                        <Cell key={type} fill={WASTE_COLORS[type]} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
               {detectionMethod === 'llm' && detectionResult.result && (
                 <div className="mb-4">
                   <ul className="space-y-1">
@@ -722,7 +776,7 @@ export default function DispatcherDashboard() {
                     min="0"
                     max="100"
                     value={value}
-                    onChange={(e) => handleCompositionChange(type as keyof CompositionUpdate, e.target.value)}
+                    onChange={(e) => handleCompositionChange(type as keyof CompositionUpdate | 'textile' | 'other', e.target.value)}
                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                   />
                 </div>

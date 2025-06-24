@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../api/mockApi';
-import { Route, WasteSite, WasteDetectionResult, WasteImageUploadResponse } from '../../types';
-import axios from 'axios';
 import { useWasteSites } from '../../hooks/useWasteSites';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { useReports } from '../../hooks/useReports';
+import axios from 'axios';
 
 interface Alert {
   id: string;
@@ -21,6 +21,23 @@ interface CompositionUpdate {
   organic: number;
 }
 
+interface Toast {
+  id: string;
+  type: 'success' | 'error' | 'info' | 'warning';
+  title: string;
+  message: string;
+  timestamp: number;
+}
+
+interface TruckRoute {
+  id: string;
+  truckId: string;
+  zone: string;
+  status: 'pending' | 'in-progress' | 'completed';
+  timestamp: string;
+  estimatedCompletion?: string;
+}
+
 const WASTE_COLORS: Record<string, string> = {
   plastic: '#2563eb', // blue
   metal: '#6b7280',   // gray
@@ -30,22 +47,22 @@ const WASTE_COLORS: Record<string, string> = {
 };
 
 // Mock data for demonstration
-const mockRoutes: Route[] = [
+const mockRoutes: TruckRoute[] = [
   {
     id: 'R001',
     truckId: 'T001',
-    status: 'active',
-    estimatedTime: 45,
-    distance: 5.2,
-    bins: ['1', '2'],
+    zone: 'North',
+    status: 'in-progress',
+    timestamp: '2024-03-20T08:00:00Z',
+    estimatedCompletion: '2024-03-20T12:00:00Z',
   },
   {
     id: 'R002',
-    truckId: 'T002',
+    truckId: 'T003',
+    zone: 'South',
     status: 'pending',
-    estimatedTime: 30,
-    distance: 3.8,
-    bins: ['3', '4'],
+    timestamp: '2024-03-20T08:30:00Z',
+    estimatedCompletion: '2024-03-20T13:00:00Z',
   },
 ];
 
@@ -66,8 +83,10 @@ const mockAlerts: Alert[] = [
 
 export default function DispatcherDashboard() {
   const { user } = useAuth();
+  const { reports, loading: reportsLoading, error: reportsError } = useReports();
+  const { sites, loading: sitesLoading, error: sitesError } = useWasteSites();
   const { updateSiteComposition } = useWasteSites();
-  const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
+  const [selectedRoute, setSelectedRoute] = useState<TruckRoute | null>(null);
   const [showCompositionModal, setShowCompositionModal] = useState(false);
   const [selectedSite, setSelectedSite] = useState<string>('');
   const [composition, setComposition] = useState<CompositionUpdate & { textile?: number; other?: number }>({
@@ -80,7 +99,7 @@ export default function DispatcherDashboard() {
     other: 0,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [thresholdStatus, setThresholdStatus] = useState<{ reportedCount: number; total: number; threshold: number } | null>(null);
+  const [thresholdStatus, setThresholdStatus] = useState<any>(null);
   const [thresholdLoading, setThresholdLoading] = useState(true);
   const [thresholdError, setThresholdError] = useState('');
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -95,22 +114,42 @@ export default function DispatcherDashboard() {
   const [showArchived, setShowArchived] = useState(false);
   const [archivedNotifications, setArchivedNotifications] = useState<any[]>([]);
   const [archivedLoading, setArchivedLoading] = useState(false);
-  const [archivedError, setArchivedError] = useState('');
+  const [archivedError, setArchivedError] = useState<string | null>(null);
   const [mlRecommendation, setMlRecommendation] = useState<any>(null);
-  const [mlLoading, setMlLoading] = useState(true);
-  const [mlError, setMlError] = useState('');
+  const [mlLoading, setMlLoading] = useState(false);
+  const [mlError, setMlError] = useState<string | null>(null);
   const [currentCapacity, setCurrentCapacity] = useState<number | ''>('');
   const [wasteImage, setWasteImage] = useState<File | null>(null);
-  const [detectionResult, setDetectionResult] = useState<WasteImageUploadResponse | null>(null);
+  const [detectionResult, setDetectionResult] = useState<any>(null);
   const [detectionLoading, setDetectionLoading] = useState(false);
   const [detectionError, setDetectionError] = useState('');
-  const [selectedSiteForDetection, setSelectedSiteForDetection] = useState<string>('');
+  const [selectedSiteForDetection, setSelectedSiteForDetection] = useState('');
   const [detectionMethod, setDetectionMethod] = useState<'llm' | 'yolo'>('llm');
-  const [availableTrucks, setAvailableTrucks] = useState(2);
+  const [availableTrucks, setAvailableTrucks] = useState(5);
   const [manualTotalWeight, setManualTotalWeight] = useState('');
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
   // Calculate total percentage
   const totalPercentage = Object.values(composition).reduce((sum, value) => sum + value, 0);
+
+  // Toast functions
+  const addToast = (toast: Omit<Toast, 'id' | 'timestamp'>) => {
+    const newToast: Toast = {
+      ...toast,
+      id: Math.random().toString(36).substr(2, 9),
+      timestamp: Date.now()
+    };
+    setToasts(prev => [...prev, newToast]);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== newToast.id));
+    }, 5000);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
@@ -225,7 +264,7 @@ export default function DispatcherDashboard() {
     }));
   };
 
-  const handleRouteComplete = (route: Route) => {
+  const handleRouteComplete = (route: TruckRoute) => {
     setSelectedRoute(route);
     setShowCompositionModal(true);
   };
@@ -369,10 +408,18 @@ export default function DispatcherDashboard() {
       setWasteImage(null);
       setSelectedSiteForDetection('');
       setManualTotalWeight('');
-      alert('Waste composition and weight updated successfully! Delivery created.');
+      addToast({
+        type: 'success',
+        title: 'Success!',
+        message: 'Waste composition and weight updated successfully! Delivery created.'
+      });
     } catch (error) {
       console.error('Failed to update waste site:', error);
-      alert(`Failed to update waste site: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      addToast({
+        type: 'error',
+        title: 'Update Failed',
+        message: `Failed to update waste site: ${error instanceof Error ? error.message : 'Unknown error'}`
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -819,6 +866,63 @@ export default function DispatcherDashboard() {
           </div>
         </div>
       )}
+
+      {/* Toast Notifications */}
+      <div className="fixed top-4 right-4 z-50 space-y-2">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden transform transition-all duration-300 ease-in-out ${
+              toast.type === 'success' ? 'border-l-4 border-green-500' :
+              toast.type === 'error' ? 'border-l-4 border-red-500' :
+              toast.type === 'warning' ? 'border-l-4 border-yellow-500' :
+              'border-l-4 border-blue-500'
+            }`}
+          >
+            <div className="p-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  {toast.type === 'success' && (
+                    <svg className="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  )}
+                  {toast.type === 'error' && (
+                    <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  )}
+                  {toast.type === 'warning' && (
+                    <svg className="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  )}
+                  {toast.type === 'info' && (
+                    <svg className="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  )}
+                </div>
+                <div className="ml-3 w-0 flex-1 pt-0.5">
+                  <p className="text-sm font-medium text-gray-900">{toast.title}</p>
+                  <p className="mt-1 text-sm text-gray-500">{toast.message}</p>
+                </div>
+                <div className="ml-4 flex-shrink-0 flex">
+                  <button
+                    className="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    onClick={() => removeToast(toast.id)}
+                  >
+                    <span className="sr-only">Close</span>
+                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 } 

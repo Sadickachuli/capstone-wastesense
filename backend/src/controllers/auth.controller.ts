@@ -665,7 +665,7 @@ export const getWasteCompositionHistory = async (req: Request, res: Response) =>
     let query = db('waste_compositions')
       .select(
         'site_id',
-        db.raw('DATE(created_at) as date'),
+        db.raw('DATE(created_at) as date'), // Use local date without timezone conversion
         'plastic_percent',
         'paper_percent',
         'glass_percent',
@@ -674,13 +674,36 @@ export const getWasteCompositionHistory = async (req: Request, res: Response) =>
         'textile_percent',
         'other_percent',
         'current_capacity',
-        'annotated_image'
+        'annotated_image',
+        'created_at' // Also include full timestamp for debugging
       );
     if (site_id) {
       query = query.where('site_id', site_id);
     }
-    const rows = await query.orderBy('date', 'desc');
-    res.json({ history: rows });
+    const rows = await query.orderBy('created_at', 'desc'); // Order by full timestamp
+    
+    // Process dates to ensure consistent YYYY-MM-DD format
+    const processedRows = rows.map(row => {
+      // Extract date from the created_at timestamp preserving the local date
+      // Use substring to get YYYY-MM-DD directly from the timestamp string
+      let dateStr = row.date;
+      if (row.created_at) {
+        // If we have the full timestamp, extract date more reliably
+        const timestampStr = row.created_at.toString();
+        const dateMatch = timestampStr.match(/(\d{4}-\d{2}-\d{2})/);
+        if (dateMatch) {
+          dateStr = dateMatch[1];
+        }
+      }
+      
+      return {
+        ...row,
+        date: dateStr
+      };
+    });
+    
+    console.log('Waste composition history query result:', processedRows.slice(0, 2)); // Log first 2 records
+    res.json({ history: processedRows });
   } catch (err) {
     console.error('Get Waste Composition History error:', err);
     res.status(500).json({ message: 'Internal server error' });

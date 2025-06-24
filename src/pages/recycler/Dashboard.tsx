@@ -7,6 +7,9 @@ import { api } from '../../api/mockApi';
 import { Link, useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import axios from 'axios';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { useTheme } from '../../context/ThemeContext';
 
 interface Delivery {
   id: string;
@@ -81,6 +84,7 @@ export default function RecyclerDashboard() {
     markAsRead,
     loading: notificationsLoading 
   } = useNotifications();
+  const { isDarkMode } = useTheme();
   const [selectedSite, setSelectedSite] = useState<WasteSite | null>(null);
   const [hasCreatedTestNotification, setHasCreatedTestNotification] = useState(false);
   const navigate = useNavigate();
@@ -92,7 +96,7 @@ export default function RecyclerDashboard() {
   const [siteCompositions, setSiteCompositions] = useState<Record<string, any>>({});
   const [siteImages, setSiteImages] = useState<Record<string, string>>({});
   const [allSitesImage, setAllSitesImage] = useState<string | null>(null);
-
+  
   // Set initial selected site when data loads
   useEffect(() => {
     if (sites.length > 0 && !selectedSite) {
@@ -152,6 +156,8 @@ export default function RecyclerDashboard() {
       const compositions: Record<string, any> = {};
       const images: Record<string, string> = {};
       let latestImage: { date: string, img: string } | null = null;
+      const allDates = new Set<string>();
+      
       for (const site of sites) {
         try {
           const res = await axios.get(`/api/auth/waste-compositions/history?site_id=${site.id}`);
@@ -164,12 +170,20 @@ export default function RecyclerDashboard() {
                 latestImage = { date: latest.date, img: latest.annotated_image };
               }
             }
+            
+            // Collect all available dates
+            res.data.history.forEach((record: any) => {
+              allDates.add(record.date);
+            });
           }
         } catch {}
       }
       setSiteCompositions(compositions);
       setSiteImages(images);
       setAllSitesImage(latestImage ? latestImage.img : null);
+      
+      // Set available dates for historical viewing
+      const dates = Array.from(allDates).sort().reverse().map(date => new Date(date));
     }
     if (sites.length > 0) fetchCompositions();
   }, [sites]);
@@ -193,13 +207,16 @@ export default function RecyclerDashboard() {
     return Array.from(types);
   }
 
-  const allTypes = getAllTypes(siteCompositions);
+  // Use historical or current compositions based on mode
+  const currentCompositions = siteCompositions;
+  const currentImages = siteImages;
+  const allTypes = getAllTypes(currentCompositions);
 
   // Aggregate total composition from backend data (all types)
   let totalWeight = 0;
   const totalComposition: Record<string, number> = {};
   sites.forEach(site => {
-    const comp = siteCompositions[site.id];
+    const comp = currentCompositions[site.id];
     if (comp) {
       const siteWeight = comp.current_capacity || 0;
       totalWeight += siteWeight;
@@ -218,8 +235,8 @@ export default function RecyclerDashboard() {
   // Get North and South sites from backend data
   const northSite = sites.find(s => s.name.toLowerCase().includes('north'));
   const southSite = sites.find(s => s.name.toLowerCase().includes('south'));
-  const northComp = northSite ? siteCompositions[northSite.id] : null;
-  const southComp = southSite ? siteCompositions[southSite.id] : null;
+  const northComp = northSite ? currentCompositions[northSite.id] : null;
+  const southComp = southSite ? currentCompositions[southSite.id] : null;
 
   const handleSiteSelect = (site: WasteSite) => {
     setSelectedSite(site);
@@ -270,6 +287,7 @@ export default function RecyclerDashboard() {
           </span>
         </div>
       </div>
+
       {/* Aggregate Pie Chart */}
       <div className="card bg-white shadow mb-6 dark:shadow-white">
         <h2 className="text-lg font-bold text-gray-900 mb-2">Total Waste Composition (All Sites)</h2>
@@ -292,17 +310,6 @@ export default function RecyclerDashboard() {
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
-            {allSitesImage && (
-              <div className="mt-4">
-                <h4 className="text-sm font-semibold mb-1">Latest Annotated Image (All Sites):</h4>
-                <img
-                  src={`data:image/jpeg;base64,${allSitesImage}`}
-                  alt="Annotated waste detection"
-                  className="w-full max-w-md border rounded shadow"
-                  style={{ maxHeight: 400, objectFit: 'contain' }}
-                />
-              </div>
-            )}
           </div>
           <div className="flex-1 text-gray-600 text-sm">
             <div className="mb-2">
@@ -336,15 +343,18 @@ export default function RecyclerDashboard() {
                 ))}
               </BarChart>
             </ResponsiveContainer>
-            {siteImages[northSite.id] && (
+            {currentImages[northSite.id] && (
               <div className="mt-4">
                 <h4 className="text-sm font-semibold mb-1">Latest Annotated Image:</h4>
                 <img
-                  src={`data:image/jpeg;base64,${siteImages[northSite.id]}`}
+                  src={`data:image/jpeg;base64,${currentImages[northSite.id]}`}
                   alt="Annotated waste detection"
                   className="w-full max-w-md border rounded shadow"
                   style={{ maxHeight: 400, objectFit: 'contain' }}
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Updated: {new Date(northComp.date || northComp.created_at || Date.now()).toLocaleDateString()} at {new Date(northComp.date || northComp.created_at || Date.now()).toLocaleTimeString()}
+                </p>
               </div>
             )}
             <div className="mt-2 text-gray-600 text-sm">
@@ -374,15 +384,18 @@ export default function RecyclerDashboard() {
                 ))}
               </BarChart>
             </ResponsiveContainer>
-            {siteImages[southSite.id] && (
+            {currentImages[southSite.id] && (
               <div className="mt-4">
                 <h4 className="text-sm font-semibold mb-1">Latest Annotated Image:</h4>
                 <img
-                  src={`data:image/jpeg;base64,${siteImages[southSite.id]}`}
+                  src={`data:image/jpeg;base64,${currentImages[southSite.id]}`}
                   alt="Annotated waste detection"
                   className="w-full max-w-md border rounded shadow"
                   style={{ maxHeight: 400, objectFit: 'contain' }}
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Updated: {new Date(southComp.date || southComp.created_at || Date.now()).toLocaleDateString()} at {new Date(southComp.date || southComp.created_at || Date.now()).toLocaleTimeString()}
+                </p>
               </div>
             )}
             <div className="mt-2 text-gray-600 text-sm">

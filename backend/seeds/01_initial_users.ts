@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 
 export async function seed(knex: Knex): Promise<void> {
   // First, delete existing entries
+  await knex('waste_sites').del();
   await knex('users').del();
 
   // Create password hash
@@ -41,6 +42,40 @@ export async function seed(knex: Knex): Promise<void> {
       employee_id: 'REC001',
       facility: 'Main Recycling Center',
       role: 'recycler'
+    }
+  ]);
+
+  // Insert waste sites
+  await knex('waste_sites').insert([
+    {
+      id: 'WS001',
+      name: 'North Dumping Site',
+      location: 'Ablekuma North Industrial Area',
+      current_capacity: 750,
+      max_capacity: 1000,
+      composition_plastic: 40,
+      composition_paper: 25,
+      composition_glass: 15,
+      composition_metal: 10,
+      composition_organic: 10,
+      last_updated: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: 'WS002',
+      name: 'South Dumping Site',
+      location: 'Ayawaso West Industrial Zone',
+      current_capacity: 500,
+      max_capacity: 1000,
+      composition_plastic: 30,
+      composition_paper: 30,
+      composition_glass: 20,
+      composition_metal: 15,
+      composition_organic: 5,
+      last_updated: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     }
   ]);
 } 

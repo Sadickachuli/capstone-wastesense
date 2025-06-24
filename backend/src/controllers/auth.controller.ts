@@ -10,6 +10,7 @@ import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import FormData from 'form-data';
+import sharp from 'sharp';
 
 // Validation schemas
 const residentSignupSchema = z.object({
@@ -30,8 +31,14 @@ const residentLoginSchema = z.object({
   password: z.string(),
 });
 
-// Multer setup for image uploads (in-memory)
-const upload = multer({ storage: multer.memoryStorage() });
+// Multer setup for image uploads (in-memory) with increased limits
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB limit for image files
+    fieldSize: 50 * 1024 * 1024, // 50MB limit for field data
+  }
+});
 
 // Define WasteDetectionResult type for backend use
 // (should match frontend src/types/index.ts)
@@ -745,7 +752,30 @@ export const detectWasteFromImageLLM = async (req: any, res: Response) => {
       return res.status(500).json({ message: 'Failed to parse LLM response', raw: content });
     }
 
-    res.json({ composition, raw: content });
+    // Compress the image before returning as base64 to reduce payload size
+    // Create a smaller version for display (max 800px width while maintaining aspect ratio)
+    let compressedImageBuffer;
+    try {
+      compressedImageBuffer = await sharp(req.file.buffer)
+        .resize(800, null, { 
+          withoutEnlargement: true,
+          fit: 'inside'
+        })
+        .jpeg({ quality: 70 })
+        .toBuffer();
+    } catch (sharpError) {
+      // Fallback: use original image if sharp fails
+      console.warn('Sharp compression failed, using original image:', sharpError);
+      compressedImageBuffer = req.file.buffer;
+    }
+    
+    const annotatedImageBase64 = compressedImageBuffer.toString('base64');
+
+    res.json({ 
+      composition, 
+      raw: content,
+      annotated_image: annotatedImageBase64
+    });
   } catch (err: any) {
     console.error('LLM waste detection error:', err.response?.data || err.message);
     res.status(500).json({ message: 'LLM waste detection failed', error: err.response?.data || err.message });

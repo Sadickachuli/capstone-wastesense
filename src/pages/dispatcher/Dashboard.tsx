@@ -304,7 +304,12 @@ export default function DispatcherDashboard() {
         res = await axios.post('/api/auth/detect-waste-llm', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
-        setDetectionResult({ result: res.data.composition, total_weight: 0, annotated_image: '', raw: res.data.raw });
+        setDetectionResult({ 
+          result: res.data.composition, 
+          total_weight: 0, 
+          annotated_image: res.data.annotated_image || '', // Now using the actual image from LLM
+          raw: res.data.raw 
+        });
       } else {
         res = await axios.post('/api/auth/detect-waste-image', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
@@ -366,7 +371,8 @@ export default function DispatcherDashboard() {
       setManualTotalWeight('');
       alert('Waste composition and weight updated successfully! Delivery created.');
     } catch (error) {
-      alert('Failed to update waste site');
+      console.error('Failed to update waste site:', error);
+      alert(`Failed to update waste site: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -387,9 +393,9 @@ export default function DispatcherDashboard() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Stat Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {/* North Zone Card */}
+          {/* Ablekuma North Zone Card */}
           <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-3xl p-8 shadow flex flex-col gap-2">
-            <span className="text-sm text-gray-500 dark:text-gray-300 mb-1">North Zone</span>
+            <span className="text-sm text-gray-500 dark:text-gray-300 mb-1">Ablekuma North</span>
             <span className="text-2xl font-bold text-blue-700 dark:text-blue-300 mb-1">
               Reports: {mlRecommendation?.reportCounts?.North ?? '--'}
             </span>
@@ -406,9 +412,9 @@ export default function DispatcherDashboard() {
                 : `${(thresholdStatus?.threshold ?? 0) - (mlRecommendation?.reportCounts?.North ?? 0)} more needed`}
             </span>
           </div>
-          {/* South Zone Card */}
+          {/* Ayawaso West Zone Card */}
           <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-3xl p-8 shadow flex flex-col gap-2">
-            <span className="text-sm text-gray-500 dark:text-gray-300 mb-1">South Zone</span>
+            <span className="text-sm text-gray-500 dark:text-gray-300 mb-1">Ayawaso West</span>
             <span className="text-2xl font-bold text-green-700 dark:text-green-300 mb-1">
               Reports: {mlRecommendation?.reportCounts?.South ?? '--'}
             </span>
@@ -494,12 +500,12 @@ export default function DispatcherDashboard() {
                 <div className="mb-2">Available Trucks: <span className="font-bold">{mlRecommendation.availableTrucks}</span></div>
                 <div className="grid grid-cols-2 gap-4 mb-2">
                   <div className="p-4 rounded bg-white shadow">
-                    <div className="font-semibold text-blue-700">North Zone</div>
+                    <div className="font-semibold text-blue-700">Ablekuma North</div>
                     <div>Reports: <span className="font-bold">{mlRecommendation.reportCounts?.North ?? 0}</span></div>
                     <div>Trucks Assigned: <span className="font-bold">{mlRecommendation.allocation?.North ?? 0}</span></div>
                   </div>
                   <div className="p-4 rounded bg-white shadow">
-                    <div className="font-semibold text-green-700">South Zone</div>
+                    <div className="font-semibold text-green-700">Ayawaso West</div>
                     <div>Reports: <span className="font-bold">{mlRecommendation.reportCounts?.South ?? 0}</span></div>
                     <div>Trucks Assigned: <span className="font-bold">{mlRecommendation.allocation?.South ?? 0}</span></div>
                   </div>

@@ -76,6 +76,95 @@ const WASTE_COLORS: Record<string, string> = {
   other: '#f43f5e',   // pink/red
 };
 
+// Environmental impact calculation factors (based on EPA and recycling industry data)
+const ENVIRONMENTAL_FACTORS = {
+  // CO₂ emissions avoided (kg CO₂ per kg material recycled)
+  co2Avoided: {
+    paper: 3.3,     // Saves tree harvesting, pulping energy
+    plastic: 2.0,   // Avoids oil extraction, manufacturing
+    glass: 0.5,     // Energy savings from melting recycled vs raw materials
+    metal: 6.0,     // Aluminum/steel recycling hugely energy-efficient
+    organic: 0.3,   // Composting vs methane from landfills
+    textile: 1.8,   // Textile manufacturing energy savings
+    other: 1.0      // Average estimate
+  },
+  // Water savings (liters per kg recycled)
+  waterSaved: {
+    paper: 60,      // Paper production is water-intensive
+    plastic: 40,    // Oil refining and plastic production
+    glass: 20,      // Glass manufacturing process
+    metal: 95,      // Metal extraction and processing
+    organic: 5,     // Minimal water impact
+    textile: 70,    // Textile dyeing and processing
+    other: 30       // Average estimate
+  },
+  // Trees saved (trees per kg recycled) - mainly for paper
+  treesSaved: {
+    paper: 0.024,   // 1 tree ≈ 42kg paper
+    other: 0.002    // Indirect benefits for other materials
+  }
+};
+
+// Calculate environmental impact based on actual waste composition and weight
+const calculateEnvironmentalImpact = (compositions: Record<string, any>) => {
+  let totalCO2Avoided = 0;
+  let totalWaterSaved = 0;
+  let totalTreesSaved = 0;
+
+  Object.values(compositions).forEach((comp: any) => {
+    if (!comp) return;
+    
+    const weight = comp.current_capacity || 0;
+    
+    // Calculate impact for each waste type
+    Object.keys(ENVIRONMENTAL_FACTORS.co2Avoided).forEach(type => {
+      const percentage = comp[`${type}_percent`] || 0;
+      const typeWeight = (weight * percentage) / 100;
+      
+      // CO₂ avoided
+      totalCO2Avoided += typeWeight * ENVIRONMENTAL_FACTORS.co2Avoided[type as keyof typeof ENVIRONMENTAL_FACTORS.co2Avoided];
+      
+      // Water saved
+      totalWaterSaved += typeWeight * ENVIRONMENTAL_FACTORS.waterSaved[type as keyof typeof ENVIRONMENTAL_FACTORS.waterSaved];
+      
+      // Trees saved (mainly paper, small contribution from others)
+      if (type === 'paper') {
+        totalTreesSaved += typeWeight * ENVIRONMENTAL_FACTORS.treesSaved.paper;
+      } else {
+        totalTreesSaved += typeWeight * ENVIRONMENTAL_FACTORS.treesSaved.other;
+      }
+    });
+  });
+
+  return {
+    co2Avoided: totalCO2Avoided / 1000, // Convert to tons
+    waterSaved: totalWaterSaved,
+    treesSaved: Math.round(totalTreesSaved)
+  };
+};
+
+// Calculate recycling rate based on actual composition (excluding organic waste)
+const calculateRecyclingRate = (compositions: Record<string, any>) => {
+  let totalWeight = 0;
+  let recyclableWeight = 0;
+  
+  Object.values(compositions).forEach((comp: any) => {
+    if (!comp) return;
+    
+    const weight = comp.current_capacity || 0;
+    totalWeight += weight;
+    
+    // Calculate recyclable materials (excluding organic which goes to composting)
+    const recyclableTypes = ['plastic', 'paper', 'glass', 'metal', 'textile'];
+    recyclableTypes.forEach(type => {
+      const percentage = comp[`${type}_percent`] || 0;
+      recyclableWeight += (weight * percentage) / 100;
+    });
+  });
+  
+  return totalWeight > 0 ? Math.round((recyclableWeight / totalWeight) * 100) : 0;
+};
+
 export default function RecyclerDashboard() {
   const { user } = useAuth();
   const { sites, loading: sitesLoading, error: sitesError } = useWasteSites();
@@ -188,9 +277,14 @@ export default function RecyclerDashboard() {
     if (sites.length > 0) fetchCompositions();
   }, [sites]);
 
-  const totalProcessed = 1250; // kg
-  const recyclingRate = 85; // %
-  const energySaved = 750; // kWh
+  // Use historical or current compositions based on mode
+  const currentCompositions = siteCompositions;
+  const currentImages = siteImages;
+  const allTypes = getAllTypes(currentCompositions);
+
+  // Calculate real-time metrics based on actual composition data
+  const recyclingRate = Object.keys(currentCompositions).length > 0 ? calculateRecyclingRate(currentCompositions) : 0;
+  const energySaved = Object.keys(currentCompositions).length > 0 ? Math.round(calculateEnvironmentalImpact(currentCompositions).co2Avoided * 500) : 0; // Estimate: 500 kWh per ton CO2 avoided
 
   // Utility to get all present types from backend data
   function getAllTypes(siteCompositions: Record<string, any>) {
@@ -206,11 +300,6 @@ export default function RecyclerDashboard() {
     });
     return Array.from(types);
   }
-
-  // Use historical or current compositions based on mode
-  const currentCompositions = siteCompositions;
-  const currentImages = siteImages;
-  const allTypes = getAllTypes(currentCompositions);
 
   // Aggregate total composition from backend data (all types)
   let totalWeight = 0;
@@ -460,21 +549,71 @@ export default function RecyclerDashboard() {
       {/* Environmental Impact */}
       <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
         <h2 className="text-lg font-medium text-gray-900 mb-4">
-          Environmental Impact
+          🌍 Environmental Impact Today
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-green-600 dark:text-green-300">2.5</p>
-            <p className="text-sm text-gray-600 dark:text-gray-300">Tons CO₂ Avoided</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="text-center bg-white/80 dark:bg-gray-800/80 rounded-xl p-4">
+            <div className="text-3xl mb-2">🌱</div>
+            <p className="text-3xl font-bold text-green-600 dark:text-green-300">
+              {Object.keys(currentCompositions).length > 0 ? calculateEnvironmentalImpact(currentCompositions).co2Avoided.toFixed(1) : '0.0'}
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">Tons CO₂ Avoided</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Equivalent to {Object.keys(currentCompositions).length > 0 ? Math.round(calculateEnvironmentalImpact(currentCompositions).co2Avoided * 2174) : 0} miles driven
+            </p>
           </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-green-600 dark:text-green-300">1,200</p>
-            <p className="text-sm text-gray-600 dark:text-gray-300">Trees Saved</p>
+          <div className="text-center bg-white/80 dark:bg-gray-800/80 rounded-xl p-4">
+            <div className="text-3xl mb-2">🌳</div>
+            <p className="text-3xl font-bold text-green-600 dark:text-green-300">
+              {Object.keys(currentCompositions).length > 0 ? calculateEnvironmentalImpact(currentCompositions).treesSaved : 0}
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">Trees Saved</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Through paper recycling
+            </p>
           </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-green-600 dark:text-green-300">45,000</p>
-            <p className="text-sm text-gray-600 dark:text-gray-300">Liters Water Saved</p>
+          <div className="text-center bg-white/80 dark:bg-gray-800/80 rounded-xl p-4">
+            <div className="text-3xl mb-2">💧</div>
+            <p className="text-3xl font-bold text-green-600 dark:text-green-300">
+              {Object.keys(currentCompositions).length > 0 ? Math.round(calculateEnvironmentalImpact(currentCompositions).waterSaved).toLocaleString() : '0'}
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">Liters Water Saved</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Enough for {Object.keys(currentCompositions).length > 0 ? Math.round(calculateEnvironmentalImpact(currentCompositions).waterSaved / 150) : 0} people/day
+            </p>
           </div>
+        </div>
+        
+        {/* Impact Breakdown */}
+        <div className="bg-white/60 dark:bg-gray-800/60 rounded-xl p-4">
+          <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">
+            💡 Impact Calculation Based on Real Data
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div className="text-center">
+              <div className="font-medium text-blue-600">Paper</div>
+              <div className="text-gray-600">3.3kg CO₂/kg</div>
+              <div className="text-gray-600">60L H₂O/kg</div>
+            </div>
+            <div className="text-center">
+              <div className="font-medium text-purple-600">Plastic</div>
+              <div className="text-gray-600">2.0kg CO₂/kg</div>
+              <div className="text-gray-600">40L H₂O/kg</div>
+            </div>
+            <div className="text-center">
+              <div className="font-medium text-gray-600">Metal</div>
+              <div className="text-gray-600">6.0kg CO₂/kg</div>
+              <div className="text-gray-600">95L H₂O/kg</div>
+            </div>
+            <div className="text-center">
+              <div className="font-medium text-green-600">Glass</div>
+              <div className="text-gray-600">0.5kg CO₂/kg</div>
+              <div className="text-gray-600">20L H₂O/kg</div>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
+            * Based on EPA and recycling industry research data
+          </p>
         </div>
       </div>
     </div>

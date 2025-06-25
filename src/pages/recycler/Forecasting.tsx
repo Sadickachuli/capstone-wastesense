@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
+import { useTheme } from '../../context/ThemeContext';
 
 const WASTE_COLORS: Record<string, string> = {
   plastic: '#60A5FA',
@@ -13,6 +14,7 @@ const WASTE_COLORS: Record<string, string> = {
 export default function Forecasting() {
   const [forecast, setForecast] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { isDarkMode } = useTheme();
 
   useEffect(() => {
     const fetchForecast = async () => {
@@ -29,33 +31,38 @@ export default function Forecasting() {
     fetchForecast();
   }, []);
 
+  // Theme-aware colors
+  const axisColor = isDarkMode ? '#E5E7EB' : '#374151';
+  const tooltipBg = isDarkMode ? '#1F2937' : '#FFFFFF';
+  const tooltipTextColor = isDarkMode ? '#F9FAFB' : '#111827';
+
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
       <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Forecast for Tomorrow</h1>
       {loading && (
-        <div className="card bg-white shadow dark:shadow-white animate-pulse mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-2">Forecast for Tomorrow</h2>
-          <div className="mb-4 text-gray-700">
-            <div className="h-4 w-1/2 bg-gray-200 rounded mb-2" />
-            <div className="h-4 w-1/3 bg-gray-200 rounded mb-2" />
+        <div className="card bg-white dark:bg-gray-900 shadow dark:shadow-white animate-pulse mb-6">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Forecast for Tomorrow</h2>
+          <div className="mb-4 text-gray-700 dark:text-gray-300">
+            <div className="h-4 w-1/2 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+            <div className="h-4 w-1/3 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
           </div>
           <div className="flex items-end space-x-2 h-48 mb-4">
             {[1,2,3,4,5].map(i => (
               <div key={i} className="flex-1 flex flex-col items-center">
-                <div className="w-8 bg-gray-200 rounded-t" style={{ height: `${40 + i*20}px` }} />
-                <div className="h-4 w-8 bg-gray-100 rounded mt-2" />
+                <div className="w-8 bg-gray-200 dark:bg-gray-700 rounded-t" style={{ height: `${40 + i*20}px` }} />
+                <div className="h-4 w-8 bg-gray-100 dark:bg-gray-600 rounded mt-2" />
               </div>
             ))}
           </div>
           <div className="flex flex-row space-x-4 mt-4">
-            <div className="h-8 w-32 bg-gray-200 rounded" />
-            <div className="h-8 w-32 bg-gray-100 rounded" />
+            <div className="h-8 w-32 bg-gray-200 dark:bg-gray-700 rounded" />
+            <div className="h-8 w-32 bg-gray-100 dark:bg-gray-600 rounded" />
           </div>
         </div>
       )}
       {forecast && (
-        <div className="card bg-white shadow dark:shadow-white mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-2">Forecast for Tomorrow</h2>
+        <div className="card bg-white dark:bg-gray-900 shadow dark:shadow-white mb-6">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Forecast for Tomorrow</h2>
           <p className="mb-4 text-gray-700 dark:text-gray-200">
             Tomorrow's waste: <span className="font-semibold">{forecast.total_waste_tonnes.toFixed(1)} tonnes</span> from Ablekuma North and Ayawaso West. <br />
             Composition: {Object.entries(forecast.composition_percent).map(([type, percent]) => `${percent}% ${type}`).join(', ')}
@@ -65,12 +72,30 @@ export default function Forecasting() {
               name: d.district,
               ...d.composition_percent
             }))} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-              <XAxis dataKey="name" stroke="#000" tick={{ fill: '#000' }} />
-              <YAxis unit="%" stroke="#000" tick={{ fill: '#000' }} />
-              <Tooltip contentStyle={{ color: '#000', background: '#fff' }} labelStyle={{ color: '#000' }} itemStyle={{ color: '#000' }} />
-              <Legend wrapperStyle={{ color: '#000' }} />
+              <XAxis dataKey="name" stroke={axisColor} tick={{ fill: axisColor }} />
+              <YAxis unit="%" stroke={axisColor} tick={{ fill: axisColor }} />
+              <Tooltip 
+                contentStyle={{ 
+                  color: tooltipTextColor, 
+                  backgroundColor: tooltipBg,
+                  border: `1px solid ${isDarkMode ? '#374151' : '#E5E7EB'}`,
+                  borderRadius: '8px'
+                }} 
+                labelStyle={{ color: tooltipTextColor }} 
+                itemStyle={{ color: tooltipTextColor }} 
+              />
+              <Legend wrapperStyle={{ color: axisColor }} />
               {Object.keys(WASTE_COLORS).map(type => (
-                <Line key={type} type="monotone" dataKey={type} stroke={WASTE_COLORS[type]} name={type.charAt(0).toUpperCase() + type.slice(1)} strokeWidth={3} dot={{ r: 5 }} activeDot={{ r: 8 }} />
+                <Line 
+                  key={type} 
+                  type="monotone" 
+                  dataKey={type} 
+                  stroke={WASTE_COLORS[type]} 
+                  name={type.charAt(0).toUpperCase() + type.slice(1)} 
+                  strokeWidth={3} 
+                  dot={{ r: 5, fill: WASTE_COLORS[type] }} 
+                  activeDot={{ r: 8, fill: WASTE_COLORS[type] }} 
+                />
               ))}
             </LineChart>
           </ResponsiveContainer>

@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Report } from '../types';
-import { api } from '../api/mockApi';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 
 export function useReports() {
   const [reports, setReports] = useState<Report[]>([]);
@@ -10,17 +10,24 @@ export function useReports() {
   const { user } = useAuth();
 
   const fetchReports = useCallback(async () => {
+    if (!user?.id) return;
+    
     try {
       setLoading(true);
       setError(null);
-      const data = await api.reports.list(user?.id);
-      setReports(data);
+      const response = await axios.get(`/api/auth/reports/user/${user.id}`);
+      setReports(response.data.reports || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch reports');
     } finally {
       setLoading(false);
     }
   }, [user?.id]);
+
+  // Automatically fetch reports when user is available
+  useEffect(() => {
+    fetchReports();
+  }, [fetchReports]);
 
   const createReport = useCallback(
     async (data: {
@@ -31,13 +38,14 @@ export function useReports() {
         setError(null);
         if (!user) throw new Error('User not authenticated');
 
-        const newReport = await api.reports.create({
+        const response = await axios.post('/api/auth/report-bin-full', {
           userId: user.id,
           description: data.description,
         });
 
-        setReports((prev) => [newReport, ...prev]);
-        return newReport;
+        // Refetch reports after successful creation
+        await fetchReports();
+        return response.data.report;
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to create report');
         throw err;
@@ -45,7 +53,7 @@ export function useReports() {
         setLoading(false);
       }
     },
-    [user]
+    [user, fetchReports]
   );
 
   return {

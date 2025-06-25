@@ -50,7 +50,7 @@ export interface Delivery {
   facilityId: string;
   zone?: string;
   estimatedArrival: string;
-  status: 'pending' | 'in-transit' | 'completed';
+  status: 'pending' | 'in-transit' | 'completed' | 'arrived';
   weight: number;
   composition: {
     plastic: number;
@@ -59,6 +59,9 @@ export interface Delivery {
     metal: number;
     organic: number;
   };
+  createdBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Facility {

@@ -128,6 +128,9 @@ export default function DispatcherDashboard() {
   const [availableTrucks, setAvailableTrucks] = useState(5);
   const [manualTotalWeight, setManualTotalWeight] = useState('');
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [showDumpingSiteModal, setShowDumpingSiteModal] = useState(false);
+  const [selectedDumpingSite, setSelectedDumpingSite] = useState('');
+  const [selectedTruckId, setSelectedTruckId] = useState('T001');
 
   // Calculate total percentage
   const totalPercentage = Object.values(composition).reduce((sum, value) => sum + value, 0);
@@ -286,14 +289,28 @@ export default function DispatcherDashboard() {
 
   // Handler to mark all reports as collected
   const handleMarkAllCollected = async () => {
+    setShowDumpingSiteModal(true);
+  };
+
+  const handleConfirmCollection = async () => {
+    if (!selectedDumpingSite) {
+      alert('Please select a dumping site');
+      return;
+    }
+
     setMarkAllLoading(true);
     setMarkAllMessage('');
     try {
-      const res = await axios.patch('/api/auth/reports/mark-all-collected');
-      setMarkAllMessage(`Marked ${res.data.updatedCount} reports as collected.`);
+      const res = await axios.patch('/api/auth/reports/mark-all-collected', {
+        dumpingSiteId: selectedDumpingSite,
+        truckId: selectedTruckId
+      });
+      setMarkAllMessage(`Marked ${res.data.updatedCount} reports as collected and created delivery to ${selectedDumpingSite === 'WS001' ? 'North Dumping Site' : 'South Dumping Site'}.`);
       // Refresh active reports
       const refreshed = await axios.get('/api/auth/reports/active');
       setActiveReports(refreshed.data.reports);
+      setShowDumpingSiteModal(false);
+      setSelectedDumpingSite('');
     } catch (err) {
       setMarkAllMessage('Failed to mark all as collected');
     } finally {
@@ -863,6 +880,81 @@ export default function DispatcherDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Dumping Site Selection Modal */}
+      {showDumpingSiteModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-8 w-full max-w-md shadow-xl animate-fade-in">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Select Dumping Site</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Where are you taking the collected waste?
+                </label>
+                <div className="space-y-2">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="dumpingSite"
+                      value="WS001"
+                      checked={selectedDumpingSite === 'WS001'}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSelectedDumpingSite(e.target.value)}
+                      className="mr-3"
+                    />
+                    <span className="text-gray-900 dark:text-white">North Dumping Site (WS001)</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="dumpingSite"
+                      value="WS002"
+                      checked={selectedDumpingSite === 'WS002'}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSelectedDumpingSite(e.target.value)}
+                      className="mr-3"
+                    />
+                    <span className="text-gray-900 dark:text-white">South Dumping Site (WS002)</span>
+                  </label>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Truck ID
+                </label>
+                <select
+                  value={selectedTruckId}
+                  onChange={(e) => setSelectedTruckId(e.target.value)}
+                  className="block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                >
+                  <option value="T001">Truck T001</option>
+                  <option value="T002">Truck T002</option>
+                  <option value="T003">Truck T003</option>
+                  <option value="T004">Truck T004</option>
+                  <option value="T005">Truck T005</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={() => setShowDumpingSiteModal(false)}
+                className="btn btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmCollection}
+                disabled={markAllLoading || !selectedDumpingSite}
+                className={`btn ${selectedDumpingSite ? 'btn-primary' : 'btn-disabled'}`}
+              >
+                {markAllLoading ? 'Creating Delivery...' : 'Confirm Collection'}
+              </button>
+            </div>
           </div>
         </div>
       )}

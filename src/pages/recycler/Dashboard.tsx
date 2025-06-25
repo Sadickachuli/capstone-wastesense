@@ -396,7 +396,10 @@ export default function RecyclerDashboard() {
                   style={{ maxHeight: 400, objectFit: 'contain' }}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Updated: {new Date(northComp.date || northComp.created_at || Date.now()).toLocaleDateString()} at {new Date(northComp.date || northComp.created_at || Date.now()).toLocaleTimeString()}
+                  Updated: {northComp.created_at ? (() => {
+                    const date = new Date(northComp.created_at);
+                    return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
+                  })() : 'Unknown time'}
                 </p>
               </div>
             )}
@@ -437,7 +440,10 @@ export default function RecyclerDashboard() {
                   style={{ maxHeight: 400, objectFit: 'contain' }}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Updated: {new Date(southComp.date || southComp.created_at || Date.now()).toLocaleDateString()} at {new Date(southComp.date || southComp.created_at || Date.now()).toLocaleTimeString()}
+                  Updated: {southComp.created_at ? (() => {
+                    const date = new Date(southComp.created_at);
+                    return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
+                  })() : 'Unknown time'}
                 </p>
               </div>
             )}

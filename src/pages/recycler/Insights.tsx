@@ -84,8 +84,8 @@ export default function Insights() {
 
   const fetchDeliveries = async () => {
     try {
-      const deliveriesData = await api.deliveries.list();
-      setDeliveries(deliveriesData);
+      const response = await axios.get('/api/auth/deliveries');
+      setDeliveries(response.data.deliveries);
     } catch (error) {
       console.error('Failed to fetch deliveries:', error);
     }
@@ -409,7 +409,7 @@ export default function Insights() {
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        {siteDeliveries.map((delivery) => (
+                        {siteDeliveries.map((delivery, index) => (
                           <div
                             key={delivery.id}
                             className="flex justify-between items-center p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
@@ -417,20 +417,22 @@ export default function Insights() {
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-2">
                                 <p className="font-medium text-gray-900 dark:text-white">
-                                  Delivery {delivery.id}
+                                  Delivery #{index + 1} - {new Date(delivery.estimatedArrival).toLocaleDateString()}
                                 </p>
                                 <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                                  delivery.status === 'completed'
+                                  delivery.status === 'completed' || delivery.status === 'arrived'
                                     ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
                                     : delivery.status === 'in-transit'
                                     ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
                                     : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
                                 }`}>
-                                  {delivery.status.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                                  {delivery.status === 'in-transit' ? 'In Transit' : 
+                                   delivery.status === 'arrived' ? 'Arrived' :
+                                   delivery.status.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                                 </span>
                               </div>
                               
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                              <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div>
                                   <span className="text-gray-500 dark:text-gray-400">Truck:</span>
                                   <div className="font-medium text-gray-900 dark:text-white">{delivery.truckId}</div>
@@ -439,44 +441,7 @@ export default function Insights() {
                                   <span className="text-gray-500 dark:text-gray-400">Zone:</span>
                                   <div className="font-medium text-gray-900 dark:text-white">{delivery.zone}</div>
                                 </div>
-                                <div>
-                                  <span className="text-gray-500 dark:text-gray-400">Weight:</span>
-                                  <div className="font-medium text-gray-900 dark:text-white">{delivery.weight} kg</div>
-                                </div>
-                                <div>
-                                  <span className="text-gray-500 dark:text-gray-400">ETA:</span>
-                                  <div className="font-medium text-gray-900 dark:text-white">
-                                    {new Date(delivery.estimatedArrival).toLocaleTimeString([], { 
-                                      hour: '2-digit', 
-                                      minute: '2-digit' 
-                                    })}
-                                  </div>
-                                </div>
                               </div>
-                              
-                              {/* Composition Preview */}
-                              <div className="mt-3 flex flex-wrap gap-2">
-                                {Object.entries(delivery.composition).map(([type, percent]) => (
-                                  percent > 0 && (
-                                    <span
-                                      key={type}
-                                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                                      style={{ 
-                                        backgroundColor: `${WASTE_COLORS[type]}20`,
-                                        color: WASTE_COLORS[type] 
-                                      }}
-                                    >
-                                      {type}: {percent}%
-                                    </span>
-                                  )
-                                ))}
-                              </div>
-                            </div>
-                            
-                            <div className="ml-4">
-                              <button className="px-4 py-2 rounded-lg bg-gradient-to-r from-green-600 to-blue-600 text-white font-medium shadow hover:from-green-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-green-400 transition-all duration-200">
-                                View Details
-                              </button>
                             </div>
                           </div>
                         ))}

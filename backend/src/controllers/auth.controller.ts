@@ -75,7 +75,7 @@ export const signup = async (req: Request, res: Response) => {
         zone: data.zone,
         role: 'resident',
       })
-      .returning(['id', 'email', 'name', 'role']);
+      .returning(['id', 'email', 'name', 'role', 'phone', 'zone']);
 
     // Generate JWT token
     const token = jwt.sign(
@@ -90,6 +90,8 @@ export const signup = async (req: Request, res: Response) => {
         email: user.email,
         name: user.name,
         role: user.role,
+        phone: user.phone,
+        zone: user.zone,
       },
       token,
     });
@@ -153,6 +155,9 @@ export const login = async (req: Request, res: Response) => {
         name: user.name,
         role: user.role,
         employee_id: user.employee_id,
+        phone: user.phone,
+        zone: user.zone,
+        facility: user.facility,
       },
       token,
     });
@@ -184,7 +189,7 @@ async function notifyDispatchers(message: string) {
 export const reportBinFull = async (req: Request, res: Response) => {
   try {
     const { userId, location, description } = req.body;
-    if (!userId || !location) {
+    if (!userId) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
     // Prevent duplicate report in the same cycle
@@ -198,30 +203,36 @@ export const reportBinFull = async (req: Request, res: Response) => {
     const [report] = await db('reports')
       .insert({
         user_id: userId,
-        location: JSON.stringify(location),
+        location: location ? JSON.stringify(location) : null,
         description,
         status: 'new',
         timestamp: new Date().toISOString(),
       })
       .returning(['id', 'user_id', 'location', 'description', 'status', 'timestamp']);
 
-    // Count total residents in North
-    const totalResidents = await db('users').where({ role: 'resident', zone: 'North' }).count('id as count');
+    // Get user's zone to count reports in their zone
+    const user = await db('users').where('id', userId).first();
+    const userZone = user?.zone;
+
+    // Count total residents in user's zone
+    const totalResidents = await db('users').where({ role: 'resident', zone: userZone }).count('id as count');
     const residentCount = parseInt(String(totalResidents[0].count), 10) || 0;
     const total = 3;
     const threshold = 3;
-    // Count unique residents who have reported
+    
+    // Count unique residents who have reported in the same zone
     const reported = await db('reports')
       .join('users', 'reports.user_id', 'users.id')
-      .where('users.zone', 'North')
+      .where('users.zone', userZone)
       .whereIn('reports.status', ['new', 'in-progress'])
       .countDistinct('reports.user_id as count');
     const reportedCount = parseInt(String(reported[0].count), 10) || 0;
+    
     // If threshold reached, notify dispatchers
     if (reportedCount >= threshold) {
-      await notifyDispatchers(`Threshold reached: ${reportedCount}/${total} residents have reported their bins full in North.`);
+      await notifyDispatchers(`Threshold reached: ${reportedCount}/${total} residents have reported their bins full in ${userZone}.`);
     }
-    console.log('DEBUG: reportedCount =', reportedCount, 'threshold =', threshold);
+    console.log('DEBUG: reportedCount =', reportedCount, 'threshold =', threshold, 'zone =', userZone);
     res.status(201).json({ report, total, threshold, reportedCount });
   } catch (err) {
     console.error('Report Bin Full error:', err);
@@ -231,18 +242,32 @@ export const reportBinFull = async (req: Request, res: Response) => {
 
 export const getThresholdStatus = async (req: Request, res: Response) => {
   try {
-    // Count total residents in North
-    const totalResidents = await db('users').where({ role: 'resident', zone: 'North' }).count('id as count');
-    const total = 3;
-    const threshold = 3;
-    // Count unique residents who have reported
-    const reported = await db('reports')
-      .join('users', 'reports.user_id', 'users.id')
-      .where('users.zone', 'North')
-      .whereIn('reports.status', ['new', 'in-progress'])
-      .countDistinct('reports.user_id as count');
-    const reportedCount = parseInt(String(reported[0].count), 10) || 0;
-    res.json({ total, threshold, reportedCount });
+    // Count reports for both zones
+    const zones = ['Ablekuma North', 'Ayawaso West'];
+    const zoneData: any = {};
+    
+    for (const zone of zones) {
+      // Count total residents in zone
+      const totalResidents = await db('users').where({ role: 'resident', zone }).count('id as count');
+      const total = parseInt(String(totalResidents[0].count), 10) || 0;
+      
+      // Count unique residents who have reported in this zone
+      const reported = await db('reports')
+        .join('users', 'reports.user_id', 'users.id')
+        .where('users.zone', zone)
+        .whereIn('reports.status', ['new', 'in-progress'])
+        .countDistinct('reports.user_id as count');
+      const reportedCount = parseInt(String(reported[0].count), 10) || 0;
+      
+      zoneData[zone] = { total, reportedCount, threshold: 3 };
+    }
+    
+    res.json({ 
+      total: 3,
+      threshold: 3,
+      reportedCount: zoneData['Ablekuma North']?.reportedCount || 0, // For backward compatibility
+      zones: zoneData
+    });
   } catch (err) {
     console.error('Get Threshold Status error:', err);
     res.status(500).json({ message: 'Internal server error' });
@@ -313,20 +338,142 @@ export const getActiveReports = async (req: Request, res: Response) => {
 // Mark all active reports as collected
 export const markAllReportsCollected = async (req: Request, res: Response) => {
   try {
+    const { dumpingSiteId, truckId } = req.body;
+    
+    if (!dumpingSiteId || !truckId) {
+      return res.status(400).json({ message: 'Dumping site ID and truck ID are required' });
+    }
+
+    // Get zone information based on collected reports
+    const reportsToUpdate = await db('reports')
+      .join('users', 'reports.user_id', 'users.id')
+      .select('users.zone')
+      .whereIn('reports.status', ['new', 'in-progress'])
+      .groupBy('users.zone');
+
     const reportsUpdated = await db('reports')
       .whereIn('status', ['new', 'in-progress'])
       .update({ status: 'collected', updated_at: new Date().toISOString() });
+    
     console.log('DEBUG: Reports marked as collected:', reportsUpdated);
+    
     // Archive all threshold notifications for dispatchers
     const notificationsUpdated = await db('notifications')
       .where('for_role', 'dispatcher')
       .andWhere('title', 'Bin Full Threshold Reached')
       .andWhere('archived', false)
       .update({ archived: true, updated_at: new Date().toISOString() });
+    
     console.log('DEBUG: Notifications archived:', notificationsUpdated);
+
+    // Only create delivery if there were actually reports to collect
+    if (reportsUpdated > 0 && reportsToUpdate.length > 0) {
+      const zone = reportsToUpdate[0].zone;
+      const estimatedArrival = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+      
+      // Calculate estimated weight and composition (mock values for now)
+      const estimatedWeight = 450 + Math.random() * 200; // 450-650 kg
+      const mockComposition = {
+        plastic: Math.floor(25 + Math.random() * 15), // 25-40%
+        paper: Math.floor(20 + Math.random() * 15),   // 20-35%
+        glass: Math.floor(10 + Math.random() * 15),   // 10-25%
+        metal: Math.floor(10 + Math.random() * 10),   // 10-20%
+        organic: Math.floor(5 + Math.random() * 10),  // 5-15%
+      };
+      
+      // Ensure percentages add up to 100
+      const total = Object.values(mockComposition).reduce((sum, val) => sum + val, 0);
+      if (total !== 100) {
+        const diff = 100 - total;
+        mockComposition.plastic += diff;
+      }
+
+      const [delivery] = await db('deliveries').insert({
+        truck_id: truckId,
+        facility_id: dumpingSiteId,
+        zone: zone,
+        estimated_arrival: estimatedArrival.toISOString(),
+        status: 'in-transit',
+        weight: estimatedWeight,
+        composition: JSON.stringify(mockComposition),
+        created_by: (req as any).user?.id || null,
+      }).returning('*');
+
+      console.log('DEBUG: Delivery created:', delivery);
+    }
+
     res.json({ updatedCount: reportsUpdated });
   } catch (err) {
     console.error('Mark All Reports Collected error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Get all deliveries
+export const getDeliveries = async (req: Request, res: Response) => {
+  try {
+    const deliveries = await db('deliveries')
+      .select('*')
+      .orderBy('created_at', 'desc');
+
+    // Parse composition JSON and map database fields to frontend field names
+    const formattedDeliveries = deliveries.map(delivery => ({
+      id: delivery.id,
+      truckId: delivery.truck_id,
+      facilityId: delivery.facility_id,
+      zone: delivery.zone,
+      estimatedArrival: delivery.estimated_arrival,
+      status: delivery.status,
+      weight: delivery.weight,
+      composition: typeof delivery.composition === 'string' 
+        ? JSON.parse(delivery.composition) 
+        : delivery.composition,
+      createdBy: delivery.created_by,
+      createdAt: delivery.created_at,
+      updatedAt: delivery.updated_at,
+    }));
+
+    res.json({ deliveries: formattedDeliveries });
+  } catch (err) {
+    console.error('Get Deliveries error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Update delivery status
+export const updateDeliveryStatus = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    const validStatuses = ['pending', 'in-transit', 'completed'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const [updated] = await db('deliveries')
+      .where({ id })
+      .update({ 
+        status, 
+        updated_at: new Date().toISOString() 
+      })
+      .returning('*');
+
+    if (!updated) {
+      return res.status(404).json({ message: 'Delivery not found' });
+    }
+
+    // Parse composition JSON
+    const formattedDelivery = {
+      ...updated,
+      composition: typeof updated.composition === 'string' 
+        ? JSON.parse(updated.composition) 
+        : updated.composition
+    };
+
+    res.json({ delivery: formattedDelivery });
+  } catch (err) {
+    console.error('Update Delivery Status error:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -348,13 +495,59 @@ export const getArchivedDispatcherNotifications = async (req: Request, res: Resp
 
 // ML Model Placeholder: Get dispatch recommendation
 export const getDispatchRecommendation = async (req: Request, res: Response) => {
-  // TODO: Replace with real ML model logic
-  res.json({
-    recommendation: 'Dispatch trucks to North zone. 3/3 bins reported full.',
-    confidence: 0.95,
-    nextCollectionTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
-    reason: 'Threshold reached based on current reports.'
-  });
+  try {
+    // Get actual report counts for both zones
+    const zones = ['Ablekuma North', 'Ayawaso West'];
+    const reportCounts: any = {};
+    const allocation: any = {};
+    
+    for (const zone of zones) {
+      // Count unique residents who have reported in this zone
+      const reported = await db('reports')
+        .join('users', 'reports.user_id', 'users.id')
+        .where('users.zone', zone)
+        .whereIn('reports.status', ['new', 'in-progress'])
+        .countDistinct('reports.user_id as count');
+      const reportedCount = parseInt(String(reported[0].count), 10) || 0;
+      
+      // Map zone names to frontend keys
+      const zoneKey = zone === 'Ablekuma North' ? 'North' : 'South';
+      reportCounts[zoneKey] = reportedCount;
+      
+      // Simple allocation logic: assign trucks if threshold reached
+      allocation[zoneKey] = reportedCount >= 3 ? Math.ceil(reportedCount / 3) : 0;
+    }
+    
+    // Determine recommendation message
+    const northReports = reportCounts.North || 0;
+    const southReports = reportCounts.South || 0;
+    
+    let recommendation = 'No action needed at this time.';
+    let reason = 'No zones have reached the threshold yet.';
+    
+    if (northReports >= 3 && southReports >= 3) {
+      recommendation = 'Dispatch trucks to both Ablekuma North and Ayawaso West zones.';
+      reason = 'Both zones have reached the threshold.';
+    } else if (northReports >= 3) {
+      recommendation = 'Dispatch trucks to Ablekuma North zone.';
+      reason = `Ablekuma North has reached threshold with ${northReports}/3 bins reported full.`;
+    } else if (southReports >= 3) {
+      recommendation = 'Dispatch trucks to Ayawaso West zone.';
+      reason = `Ayawaso West has reached threshold with ${southReports}/3 bins reported full.`;
+    }
+    
+    res.json({
+      recommendation,
+      confidence: 0.95,
+      nextCollectionTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
+      reason,
+      reportCounts,
+      allocation
+    });
+  } catch (err) {
+    console.error('Get Dispatch Recommendation error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 };
 
 // Get notifications for recycler
@@ -473,6 +666,19 @@ export const updateWasteComposition = async (req: Request, res: Response) => {
     await db('waste_sites')
       .where({ id })
       .update(updateFields);
+
+    // If annotated image is provided, update any in-transit deliveries to arrived for this site
+    if (annotated_image) {
+      const deliveriesUpdated = await db('deliveries')
+        .where('facility_id', id)
+        .where('status', 'in-transit')
+        .update({ 
+          status: 'arrived',
+          updated_at: new Date().toISOString()
+        });
+      
+      console.log(`DEBUG: Updated ${deliveriesUpdated} deliveries from 'in-transit' to 'arrived' for site ${id}`);
+    }
 
     // Get site info for notification
     const site = await db('waste_sites').where({ id }).first();
@@ -806,4 +1012,46 @@ export const detectWasteFromImageLLM = async (req: any, res: Response) => {
 };
 
 // Export multer upload for use in routes
-export { upload }; 
+export { upload };
+
+// Get reports for a specific user (for resident dashboard)
+export const getUserReports = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+
+    const reports = await db('reports')
+      .join('users', 'reports.user_id', 'users.id')
+      .select(
+        'reports.id',
+        'reports.user_id',
+        'reports.timestamp',
+        'reports.status',
+        'reports.description',
+        'reports.location',
+        'users.zone'
+      )
+      .where('reports.user_id', userId)
+      .orderBy('reports.timestamp', 'desc')
+      .limit(10); // Limit to last 10 reports
+
+    // Format the reports for frontend
+    const formattedReports = reports.map(report => ({
+      id: report.id,
+      userId: report.user_id,
+      timestamp: report.timestamp,
+      status: report.status,
+      description: report.description,
+      location: report.location ? JSON.parse(report.location) : null,
+      zone: report.zone,
+    }));
+
+    res.json({ reports: formattedReports });
+  } catch (err) {
+    console.error('Get User Reports error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}; 

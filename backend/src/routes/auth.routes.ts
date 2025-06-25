@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { signup, login, reportBinFull, getThresholdStatus, getDispatcherNotifications, updateReportStatus, getActiveReports, markAllReportsCollected, getArchivedDispatcherNotifications, getDispatchRecommendation, getRecyclerNotifications, updateWasteComposition, getWasteSites, detectWasteFromImage, getWasteCompositionHistory, detectWasteFromImageLLM, upload } from '../controllers/auth.controller';
+import { signup, login, reportBinFull, getThresholdStatus, getDispatcherNotifications, updateReportStatus, getActiveReports, getUserReports, markAllReportsCollected, getArchivedDispatcherNotifications, getDispatchRecommendation, getRecyclerNotifications, updateWasteComposition, getWasteSites, detectWasteFromImage, getWasteCompositionHistory, detectWasteFromImageLLM, upload, getDeliveries, updateDeliveryStatus } from '../controllers/auth.controller';
 
 const router = Router();
 
@@ -8,6 +8,7 @@ router.post('/signup', signup); // Only for residents
 router.post('/login', login);   // For both residents and staff
 router.post('/report-bin-full', reportBinFull);
 router.get('/reports/threshold-status', getThresholdStatus);
+router.get('/reports/user/:userId', getUserReports);
 router.get('/notifications/dispatcher', getDispatcherNotifications);
 router.get('/notifications/dispatcher/archived', getArchivedDispatcherNotifications);
 router.patch('/reports/:id/status', updateReportStatus);
@@ -20,5 +21,9 @@ router.get('/waste-sites', getWasteSites);
 router.post('/detect-waste-image', upload.single('file'), detectWasteFromImage);
 router.post('/detect-waste-llm', upload.single('file'), detectWasteFromImageLLM);
 router.get('/waste-compositions/history', getWasteCompositionHistory);
+
+// Delivery routes
+router.get('/deliveries', getDeliveries);
+router.patch('/deliveries/:id/status', updateDeliveryStatus);
 
 export default router; 

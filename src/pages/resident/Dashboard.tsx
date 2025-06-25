@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useReports } from '../../hooks/useReports';
-import axios from 'axios';
 
 export default function ResidentDashboard() {
   const { user } = useAuth();
-  const { reports, loading } = useReports();
+  const { reports, loading, createReport } = useReports();
   const [showReportModal, setShowReportModal] = useState(false);
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -31,8 +30,7 @@ export default function ResidentDashboard() {
     setSubmitting(true);
     setError('');
     try {
-      await axios.post('/api/auth/report-bin-full', {
-        userId: user.id,
+      await createReport({
         description,
       });
       setSuccess(true);
@@ -97,8 +95,10 @@ export default function ResidentDashboard() {
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white">Report #{report.id}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">{new Date(report.timestamp).toLocaleDateString()}</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      Report - {new Date(report.timestamp).toLocaleDateString()} {new Date(report.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">{report.zone || 'Zone not specified'}</p>
                     <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{report.description || 'No description provided'}</p>
                   </div>
                   <span

@@ -75,7 +75,7 @@ export const signup = async (req: Request, res: Response) => {
         zone: data.zone,
         role: 'resident',
       })
-      .returning(['id', 'email', 'name', 'role', 'phone', 'zone']);
+      .returning(['id', 'email', 'name', 'role', 'phone', 'zone', 'created_at']);
 
     // Generate JWT token
     const token = jwt.sign(
@@ -92,6 +92,7 @@ export const signup = async (req: Request, res: Response) => {
         role: user.role,
         phone: user.phone,
         zone: user.zone,
+        createdAt: user.created_at,
       },
       token,
     });
@@ -158,6 +159,7 @@ export const login = async (req: Request, res: Response) => {
         phone: user.phone,
         zone: user.zone,
         facility: user.facility,
+        createdAt: user.created_at,
       },
       token,
     });

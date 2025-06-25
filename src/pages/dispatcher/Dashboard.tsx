@@ -513,8 +513,8 @@ export default function DispatcherDashboard() {
         {/* Notifications & ML Recommendation */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-lg font-semibold text-gray-900">Notifications</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Notifications</h2>
               <button
                 className="btn btn-secondary btn-xs"
                 onClick={handleToggleArchived}
@@ -522,36 +522,56 @@ export default function DispatcherDashboard() {
                 {showArchived ? 'Hide Archived' : 'Show Archived'}
               </button>
             </div>
-            {showArchived && (
-              <div className="mb-2">
-                {archivedLoading ? (
-                  <p>Loading archived notifications...</p>
-                ) : archivedError ? (
-                  <p className="text-red-600">{archivedError}</p>
-                ) : archivedNotifications.length > 0 ? (
+            
+            {/* Fixed height scrollable container */}
+            <div className="h-64 overflow-y-auto space-y-3">
+              {showArchived && (
+                <div className="pb-3 border-b border-gray-200 dark:border-gray-600">
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Archived</h3>
+                  {archivedLoading ? (
+                    <p className="text-gray-600 dark:text-gray-400">Loading archived notifications...</p>
+                  ) : archivedError ? (
+                    <p className="text-red-600">{archivedError}</p>
+                  ) : archivedNotifications.length > 0 ? (
+                    <ul className="space-y-2">
+                      {archivedNotifications.map((n: any) => (
+                        <li key={n.id} className="p-3 rounded bg-gray-100 dark:bg-gray-800 shadow-sm">
+                          <div className="font-semibold text-gray-800 dark:text-gray-100">{n.title}</div>
+                          <div className="text-sm text-gray-700 dark:text-gray-200 mt-1">{n.message}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">{new Date(n.created_at).toLocaleString()}</div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-600 dark:text-gray-400">No archived notifications.</p>
+                  )}
+                </div>
+              )}
+              
+              {/* Current notifications */}
+              <div>
+                {!showArchived && (
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Recent</h3>
+                )}
+                {notificationsLoading ? (
+                  <p className="text-gray-600 dark:text-gray-400">Loading notifications...</p>
+                ) : notificationsError ? (
+                  <p className="text-red-600">{notificationsError}</p>
+                ) : notifications.length > 0 ? (
                   <ul className="space-y-2">
-                    {archivedNotifications.map((n) => (
-                      <li key={n.id} className="p-2 rounded bg-gray-100 dark:bg-gray-800 shadow">
+                    {notifications.map((n: any) => (
+                      <li key={n.id} className="p-3 rounded bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 shadow-sm">
                         <div className="font-semibold text-gray-800 dark:text-gray-100">{n.title}</div>
-                        <div className="text-sm text-gray-700 dark:text-gray-200">{n.message}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">{new Date(n.created_at).toLocaleString()}</div>
+                        <div className="text-sm text-gray-700 dark:text-gray-200 mt-1">{n.message}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">{new Date(n.timestamp).toLocaleString()}</div>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-gray-600">No archived notifications.</p>
+                  <p className="text-gray-600 dark:text-gray-400">No new notifications.</p>
                 )}
               </div>
-            )}
-            <ul className="space-y-2">
-              {notifications.map((n) => (
-                <li key={n.id} className="p-2 rounded bg-gray-50 border border-gray-100">
-                  <div className="font-semibold text-gray-800">{n.title}</div>
-                  <div className="text-sm text-gray-700">{n.message}</div>
-                  <div className="text-xs text-gray-500">{new Date(n.timestamp).toLocaleString()}</div>
-                </li>
-              ))}
-            </ul>
+            </div>
           </div>
           <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
             <h2 className="text-lg font-semibold text-gray-900 mb-2">Truck Allocation Recommendation</h2>

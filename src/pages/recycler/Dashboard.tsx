@@ -11,21 +11,6 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useTheme } from '../../context/ThemeContext';
 
-interface Delivery {
-  id: string;
-  truckId: string;
-  estimatedArrival: string;
-  status: 'pending' | 'in-transit' | 'completed';
-  weight: number;
-  composition: {
-    plastic: number;
-    paper: number;
-    glass: number;
-    metal: number;
-    organic: number;
-  };
-}
-
 interface WasteUpdateNotification {
   id: string;
   siteId: string;
@@ -35,37 +20,6 @@ interface WasteUpdateNotification {
 }
 
 // Mock data for demonstration
-const mockDeliveries: Delivery[] = [
-  {
-    id: 'D001',
-    truckId: 'T001',
-    estimatedArrival: '2024-03-20T14:30:00Z',
-    status: 'in-transit',
-    weight: 500,
-    composition: {
-      plastic: 30,
-      paper: 25,
-      glass: 15,
-      metal: 20,
-      organic: 10,
-    },
-  },
-  {
-    id: 'D002',
-    truckId: 'T003',
-    estimatedArrival: '2024-03-20T16:00:00Z',
-    status: 'pending',
-    weight: 450,
-    composition: {
-      plastic: 35,
-      paper: 20,
-      glass: 20,
-      metal: 15,
-      organic: 10,
-    },
-  },
-];
-
 const WASTE_COLORS: Record<string, string> = {
   plastic: '#2563eb', // blue
   metal: '#6b7280',   // gray
@@ -516,36 +470,7 @@ export default function RecyclerDashboard() {
           <p className="text-3xl font-extrabold text-purple-600 dark:text-purple-300">{Math.round(energySaved)} kWh</p>
         </div>
       </div>
-      <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)] mb-8">
-        <h2 className="text-xl font-bold text-blue-800 dark:text-blue-300 mb-4 flex items-center gap-2"><span>🚚</span> Incoming Deliveries</h2>
-        <div className="space-y-4">
-          {mockDeliveries.map((delivery) => (
-            <div
-              key={delivery.id}
-              className="flex justify-between items-center p-4 rounded-xl bg-white/80 dark:bg-gray-900/80 shadow-none border border-gray-100 dark:border-gray-800"
-            >
-              <div>
-                <p className="font-medium text-gray-900 dark:text-white">Delivery {delivery.id}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Truck: {delivery.truckId}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">ETA: {new Date(delivery.estimatedArrival).toLocaleTimeString()}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Weight: {Math.round(delivery.weight)} kg</p>
-              </div>
-              <div className="flex items-center space-x-4">
-                <span className={`ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                  delivery.status === 'completed'
-                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                    : delivery.status === 'in-transit'
-                    ? 'bg-yellow-100 text-black dark:bg-yellow-900 dark:text-yellow-300'
-                    : 'bg-blue-100 text-black dark:bg-blue-900 dark:text-blue-300'
-                }`}>
-                  {delivery.status.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                </span>
-                <button className="px-4 py-2 rounded-full bg-gradient-to-r from-green-600 to-blue-600 text-white font-bold shadow-md hover:from-green-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-green-400 transition-all duration-200">View Details</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+
       {/* Environmental Impact */}
       <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
         <h2 className="text-lg font-medium text-gray-900 mb-4">

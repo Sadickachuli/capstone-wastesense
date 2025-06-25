@@ -3,6 +3,8 @@ import axios from 'axios';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts';
 import { useWasteSites } from '../../hooks/useWasteSites';
 import { useTheme } from '../../context/ThemeContext';
+import { api } from '../../api/mockApi';
+import { Delivery } from '../../types';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
@@ -30,6 +32,11 @@ export default function Insights() {
   const [trendData, setTrendData] = useState<any[]>([]);
   const [trendLoading, setTrendLoading] = useState(false);
   const [allSiteImages, setAllSiteImages] = useState<Record<string, string>>({});
+  
+  // New states for deliveries
+  const [deliveries, setDeliveries] = useState<Delivery[]>([]);
+  const [selectedSiteForDeliveries, setSelectedSiteForDeliveries] = useState<string | null>(null);
+  const [loadingDeliveries, setLoadingDeliveries] = useState(false);
 
   // Fetch detection history to get available dates
   useEffect(() => {
@@ -69,6 +76,28 @@ export default function Insights() {
   useEffect(() => {
     fetchTrendData();
   }, [selectedSite, sites]);
+
+  // Fetch deliveries
+  useEffect(() => {
+    fetchDeliveries();
+  }, []);
+
+  const fetchDeliveries = async () => {
+    try {
+      const deliveriesData = await api.deliveries.list();
+      setDeliveries(deliveriesData);
+    } catch (error) {
+      console.error('Failed to fetch deliveries:', error);
+    }
+  };
+
+  const handleSiteCardClick = (siteId: string) => {
+    setSelectedSiteForDeliveries(selectedSiteForDeliveries === siteId ? null : siteId);
+  };
+
+  const getDeliveriesForSite = (siteId: string) => {
+    return deliveries.filter(delivery => delivery.facilityId === siteId);
+  };
 
   const fetchCompositionForDate = async () => {
     try {
@@ -295,6 +324,170 @@ export default function Insights() {
     <div className="space-y-6 max-w-6xl mx-auto py-8 px-4">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">Waste Composition Insights</h1>
+      </div>
+
+      {/* Waste Site Cards with Deliveries */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {sites.map((site) => {
+          const siteDeliveries = getDeliveriesForSite(site.id);
+          const isSelected = selectedSiteForDeliveries === site.id;
+          
+          return (
+            <div key={site.id} className="relative group">
+              {/* Site Card */}
+              <div
+                onClick={() => handleSiteCardClick(site.id)}
+                className={`relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 transform hover:scale-105 hover:shadow-2xl ${
+                  isSelected ? 'ring-4 ring-blue-500 shadow-2xl scale-105' : 'shadow-lg'
+                }`}
+                style={{ height: '300px' }}
+              >
+                {/* Background Image */}
+                <div 
+                  className="absolute inset-0 bg-cover bg-center"
+                  style={{
+                    backgroundImage: site.id === 'WS001' 
+                      ? 'url(/north-ds.webp)' 
+                      : 'url(/south-ds.jpg)',
+                  }}
+                />
+                
+                {/* Dark Overlay */}
+                <div className="absolute inset-0 bg-black/60" />
+                
+                {/* Card Content */}
+                <div className="relative z-10 p-6 h-full flex flex-col justify-between text-white">
+                  <div>
+                    <h2 className="text-2xl font-bold mb-2">{site.name}</h2>
+                    <p className="text-gray-300 mb-4">{site.location}</p>
+                    
+                    {/* Quick Stats */}
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3">
+                        <div className="text-sm text-gray-300">Current Capacity</div>
+                        <div className="text-lg font-bold">{site.currentCapacity} kg</div>
+                      </div>
+                      <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3">
+                        <div className="text-sm text-gray-300">Incoming Deliveries</div>
+                        <div className="text-lg font-bold text-yellow-400">{siteDeliveries.length}</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Click Indicator */}
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-300">
+                      Click to view deliveries
+                    </div>
+                    <div className={`transform transition-transform duration-300 ${isSelected ? 'rotate-180' : ''}`}>
+                      ↓
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Deliveries Panel */}
+              {isSelected && (
+                <div className="mt-4 bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden animate-fadeIn">
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        🚚 Incoming Deliveries to {site.name}
+                      </h3>
+                      <button
+                        onClick={() => setSelectedSiteForDeliveries(null)}
+                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    
+                    {siteDeliveries.length === 0 ? (
+                      <div className="text-center py-8">
+                        <div className="text-4xl mb-2">📦</div>
+                        <p className="text-gray-600 dark:text-gray-400">No deliveries scheduled for this site</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {siteDeliveries.map((delivery) => (
+                          <div
+                            key={delivery.id}
+                            className="flex justify-between items-center p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
+                          >
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <p className="font-medium text-gray-900 dark:text-white">
+                                  Delivery {delivery.id}
+                                </p>
+                                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                  delivery.status === 'completed'
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                                    : delivery.status === 'in-transit'
+                                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
+                                    : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+                                }`}>
+                                  {delivery.status.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                                </span>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                  <span className="text-gray-500 dark:text-gray-400">Truck:</span>
+                                  <div className="font-medium text-gray-900 dark:text-white">{delivery.truckId}</div>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500 dark:text-gray-400">Zone:</span>
+                                  <div className="font-medium text-gray-900 dark:text-white">{delivery.zone}</div>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500 dark:text-gray-400">Weight:</span>
+                                  <div className="font-medium text-gray-900 dark:text-white">{delivery.weight} kg</div>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500 dark:text-gray-400">ETA:</span>
+                                  <div className="font-medium text-gray-900 dark:text-white">
+                                    {new Date(delivery.estimatedArrival).toLocaleTimeString([], { 
+                                      hour: '2-digit', 
+                                      minute: '2-digit' 
+                                    })}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Composition Preview */}
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {Object.entries(delivery.composition).map(([type, percent]) => (
+                                  percent > 0 && (
+                                    <span
+                                      key={type}
+                                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                                      style={{ 
+                                        backgroundColor: `${WASTE_COLORS[type]}20`,
+                                        color: WASTE_COLORS[type] 
+                                      }}
+                                    >
+                                      {type}: {percent}%
+                                    </span>
+                                  )
+                                ))}
+                              </div>
+                            </div>
+                            
+                            <div className="ml-4">
+                              <button className="px-4 py-2 rounded-lg bg-gradient-to-r from-green-600 to-blue-600 text-white font-medium shadow hover:from-green-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-green-400 transition-all duration-200">
+                                View Details
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Date and Site Selection */}

@@ -405,7 +405,9 @@ export default function DispatcherDashboard() {
       setMlLoading(true);
       setMlError('');
       try {
-        const res = await axios.get(`/api/auth/dispatch/recommendation?trucks=${availableTrucks}`);
+        // Use actual vehicle count instead of arbitrary number
+        const availableVehicleCount = vehicles.filter(v => v.status === 'available' && !v.needs_refuel).length;
+        const res = await axios.get(`/api/auth/dispatch/recommendation?trucks=${availableVehicleCount}`);
         setMlRecommendation(res.data);
       } catch (err) {
         setMlError('Failed to fetch dispatch recommendation');
@@ -416,7 +418,7 @@ export default function DispatcherDashboard() {
     fetchRecommendation();
     interval = setInterval(fetchRecommendation, 30000);
     return () => clearInterval(interval);
-  }, [availableTrucks]);
+  }, [vehicles]); // Depend on vehicles instead of availableTrucks
 
   const handleWasteImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -690,8 +692,22 @@ export default function DispatcherDashboard() {
 
   const handleSaveConfiguration = async () => {
     try {
-      // Save to localStorage for now (could be API later)
+      // Map frontend structure to backend structure
+      const backendConfig = {
+        zone_customers: configData.zoneCustomers,
+        dumping_sites: configData.dumpingSites,
+        fuel_prices: {
+          diesel: configData.fuelPricePerLiter,
+          petrol: configData.fuelPricePerLiter + 2.5 // Petrol is typically more expensive
+        }
+      };
+      
+      // Save to backend API
+      await axios.post('/api/auth/config', { config: backendConfig });
+      
+      // Also save to localStorage as backup
       localStorage.setItem('wastesense_config', JSON.stringify(configData));
+      
       addToast({
         type: 'success',
         title: 'Success',
@@ -699,6 +715,7 @@ export default function DispatcherDashboard() {
       });
       setShowConfigModal(false);
     } catch (error) {
+      console.error('Failed to save configuration:', error);
       addToast({
         type: 'error',
         title: 'Error',
@@ -709,15 +726,38 @@ export default function DispatcherDashboard() {
 
   // Load configuration on component mount
   useEffect(() => {
-    const savedConfig = localStorage.getItem('wastesense_config');
-    if (savedConfig) {
+    const loadConfiguration = async () => {
       try {
-        const config = JSON.parse(savedConfig);
-        setConfigData(config);
+        // Try to load from backend first
+        const response = await axios.get('/api/auth/config');
+        const backendConfig = response.data.config;
+        
+        // Map backend structure to frontend structure
+        const mappedConfig = {
+          dumpingSites: backendConfig.dumping_sites || configData.dumpingSites,
+          zoneDistances: configData.zoneDistances, // Keep existing structure
+          zoneCustomers: backendConfig.zone_customers || configData.zoneCustomers,
+          fuelPricePerLiter: backendConfig.fuel_prices?.diesel || configData.fuelPricePerLiter
+        };
+        
+        setConfigData(mappedConfig);
       } catch (error) {
-        console.error('Failed to load configuration:', error);
+        console.error('Failed to load configuration from backend:', error);
+        
+        // Fallback to localStorage
+        const savedConfig = localStorage.getItem('wastesense_config');
+        if (savedConfig) {
+          try {
+            const config = JSON.parse(savedConfig);
+            setConfigData(config);
+          } catch (parseError) {
+            console.error('Failed to parse localStorage configuration:', parseError);
+          }
+        }
       }
-    }
+    };
+
+    loadConfiguration();
   }, []);
 
   // Fetch vehicles function
@@ -892,28 +932,88 @@ export default function DispatcherDashboard() {
             </div>
           </div>
           <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Truck Allocation Recommendation</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Smart Collection Scheduler</h2>
             {mlLoading ? (
-              <p>Loading recommendation...</p>
+              <p className="text-gray-600 dark:text-gray-400">Loading recommendation...</p>
             ) : mlError ? (
               <p className="text-red-600">{mlError}</p>
             ) : mlRecommendation ? (
               <div>
-                <div className="mb-2">Available Trucks: <span className="font-bold">{mlRecommendation.availableTrucks}</span></div>
-                <div className="grid grid-cols-2 gap-4 mb-2">
-                  <div className="p-4 rounded bg-white shadow">
-                    <div className="font-semibold text-blue-700">Ablekuma North</div>
-                    <div>Reports: <span className="font-bold">{mlRecommendation.reportCounts?.North ?? 0}</span></div>
-                    <div>Trucks Assigned: <span className="font-bold">{mlRecommendation.allocation?.North ?? 0}</span></div>
+                <div className="mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-medium text-gray-700 dark:text-gray-300">Available Vehicles:</span>
+                    <span className="font-bold text-blue-600 dark:text-blue-400">{mlRecommendation.availableVehicles}</span>
                   </div>
-                  <div className="p-4 rounded bg-white shadow">
-                    <div className="font-semibold text-green-700">Ayawaso West</div>
-                    <div>Reports: <span className="font-bold">{mlRecommendation.reportCounts?.South ?? 0}</span></div>
-                    <div>Trucks Assigned: <span className="font-bold">{mlRecommendation.allocation?.South ?? 0}</span></div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{mlRecommendation.reason}</div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="p-4 rounded-lg bg-white dark:bg-gray-800 shadow">
+                    <div className="font-semibold text-blue-700 dark:text-blue-400">Ablekuma North</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Reports: <span className="font-bold text-gray-900 dark:text-white">{mlRecommendation.reportCounts?.North ?? 0}</span></div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Trucks Assigned: <span className="font-bold text-gray-900 dark:text-white">{mlRecommendation.allocation?.North ?? 0}</span></div>
+                  </div>
+                  <div className="p-4 rounded-lg bg-white dark:bg-gray-800 shadow">
+                    <div className="font-semibold text-green-700 dark:text-green-400">Ayawaso West</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Reports: <span className="font-bold text-gray-900 dark:text-white">{mlRecommendation.reportCounts?.South ?? 0}</span></div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Trucks Assigned: <span className="font-bold text-gray-900 dark:text-white">{mlRecommendation.allocation?.South ?? 0}</span></div>
                   </div>
                 </div>
-                <div className="text-gray-900 font-semibold">{mlRecommendation.recommendation}</div>
-                <div className="text-sm text-gray-700">Next Collection: {new Date(mlRecommendation.nextCollectionTime).toLocaleString()}</div>
+                
+                <div className="mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                  <div className="font-semibold text-gray-900 dark:text-white text-lg">{mlRecommendation.recommendation}</div>
+                </div>
+
+                {/* Collection Schedules */}
+                {mlRecommendation.schedules && mlRecommendation.schedules.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-gray-900 dark:text-white">Scheduled Collections:</h3>
+                    {mlRecommendation.schedules.map((schedule: any, index: number) => (
+                      <div key={index} className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow border-l-4 border-blue-500">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="font-semibold text-gray-900 dark:text-white">{schedule.zone}</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                              Vehicle: <span className="font-medium">{schedule.vehicleInfo}</span>
+                            </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                              Driver: <span className="font-medium">{schedule.driverName}</span>
+                              {schedule.driverContact && (
+                                <span className="ml-2">({schedule.driverContact})</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm text-gray-600 dark:text-gray-400">Fuel: {schedule.fuelLevel}%</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">Est. Distance: {schedule.estimatedDistance}km</div>
+                          </div>
+                        </div>
+                        <div className="mt-3 grid grid-cols-2 gap-4">
+                          <div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Scheduled Start</div>
+                            <div className="font-medium text-gray-900 dark:text-white">
+                              {new Date(schedule.scheduledStart).toLocaleString()}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Est. Completion</div>
+                            <div className="font-medium text-gray-900 dark:text-white">
+                              {new Date(schedule.estimatedCompletion).toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-2 text-sm">
+                          <span className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded text-xs">
+                            {schedule.reportsCount} reports
+                          </span>
+                          <span className="ml-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded text-xs">
+                            {schedule.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ) : null}
           </div>
@@ -970,7 +1070,7 @@ export default function DispatcherDashboard() {
                 <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
                     <Pie
-                      data={Object.entries(detectionResult.result).map(([type, percent]) => ({ name: type, value: percent }))}
+                      data={Object.entries(detectionResult.result).map(([type, percent]) => ({ name: type, value: percent as number }))}
                       dataKey="value"
                       nameKey="name"
                       cx="50%"
@@ -991,7 +1091,7 @@ export default function DispatcherDashboard() {
                     {Object.entries(detectionResult.result).map(([type, percent]) => (
                       <li key={type} className="flex items-center space-x-2">
                         <span className="capitalize font-medium">{type}:</span>
-                        <span>{percent}%</span>
+                        <span>{percent as number}%</span>
                       </li>
                     ))}
                   </ul>
@@ -1027,7 +1127,7 @@ export default function DispatcherDashboard() {
                     {Object.entries(detectionResult.result).map(([type, percent]) => (
                       <li key={type} className="flex justify-between">
                         <span className="capitalize">{type}</span>
-                        <span>{percent}%</span>
+                        <span>{percent as number}%</span>
                       </li>
                     ))}
                   </ul>

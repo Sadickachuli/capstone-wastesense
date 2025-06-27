@@ -1,19 +1,78 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useReports } from '../../hooks/useReports';
+import axios from 'axios';
+
+interface CollectionSchedule {
+  id: string;
+  zone: string;
+  scheduledStart: string;
+  estimatedCompletion: string;
+  status: string;
+  reportsCount: number;
+  driverName: string;
+  driverContact: string;
+  vehicle: {
+    make: string;
+    model: string;
+    registrationNumber: string;
+    type: string;
+  };
+}
 
 export default function ResidentDashboard() {
   const { user } = useAuth();
-  const { reports, loading, createReport } = useReports();
+  const { reports, loading } = useReports();
   const [showReportModal, setShowReportModal] = useState(false);
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [schedules, setSchedules] = useState<CollectionSchedule[]>([]);
+  const [schedulesLoading, setSchedulesLoading] = useState(true);
 
   const hasActiveReport = reports.some(
     (r) => r.status === 'new' || r.status === 'in-progress'
   );
+
+  // Fetch collection schedules for the user's zone
+  useEffect(() => {
+    const fetchSchedules = async () => {
+      if (!user?.zone) return;
+      
+      setSchedulesLoading(true);
+      try {
+        const response = await axios.get(`/api/auth/schedules?zone=${encodeURIComponent(user.zone)}`);
+        setSchedules(response.data.schedules);
+      } catch (err) {
+        console.error('Failed to fetch schedules:', err);
+      } finally {
+        setSchedulesLoading(false);
+      }
+    };
+
+    fetchSchedules();
+    // Refresh schedules every 30 seconds
+    const interval = setInterval(fetchSchedules, 30000);
+    return () => clearInterval(interval);
+  }, [user?.zone]);
+
+  const getNextSchedule = (): CollectionSchedule | null => {
+    const now = new Date();
+    const upcomingSchedules = schedules
+      .filter(schedule => new Date(schedule.scheduledStart) > now)
+      .sort((a, b) => new Date(a.scheduledStart).getTime() - new Date(b.scheduledStart).getTime());
+    
+    return upcomingSchedules[0] || null;
+  };
+
+  const getActiveSchedule = (): CollectionSchedule | null => {
+    const now = new Date();
+    return schedules.find(schedule => 
+      schedule.status === 'in-progress' || 
+      (new Date(schedule.scheduledStart) <= now && new Date(schedule.estimatedCompletion) >= now)
+    ) || null;
+  };
 
   const handleOpenModal = () => {
     setShowReportModal(true);
@@ -30,7 +89,8 @@ export default function ResidentDashboard() {
     setSubmitting(true);
     setError('');
     try {
-      await createReport({
+      await axios.post('/api/auth/report-bin-full', {
+        userId: user.id,
         description,
       });
       setSuccess(true);
@@ -44,6 +104,9 @@ export default function ResidentDashboard() {
       setSubmitting(false);
     }
   };
+
+  const nextSchedule = getNextSchedule();
+  const activeSchedule = getActiveSchedule();
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto py-8 px-4">
@@ -74,10 +137,50 @@ export default function ResidentDashboard() {
             View Collection Schedule
           </button>
         </div>
+        
         <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)] flex flex-col gap-2">
           <h2 className="text-xl font-bold text-blue-800 dark:text-blue-300 mb-2 flex items-center gap-2"><span>📍</span> Your Zone</h2>
           <p className="text-gray-700 dark:text-gray-200">Zone: <span className="font-semibold">{user?.zone || 'Not assigned'}</span></p>
-          <p className="text-gray-700 dark:text-gray-200">No collection info available</p>
+          
+          {schedulesLoading ? (
+            <p className="text-gray-500 dark:text-gray-400">Loading collection info...</p>
+          ) : activeSchedule ? (
+            <div className="mt-3 p-3 bg-green-50 dark:bg-green-900 rounded-lg border-l-4 border-green-500">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                <span className="font-semibold text-green-800 dark:text-green-200">Collection in Progress</span>
+              </div>
+              <p className="text-sm text-green-700 dark:text-green-300">
+                Vehicle: {activeSchedule.vehicle.make} {activeSchedule.vehicle.model}
+              </p>
+              <p className="text-sm text-green-700 dark:text-green-300">
+                Expected completion: {new Date(activeSchedule.estimatedCompletion).toLocaleString()}
+              </p>
+            </div>
+          ) : nextSchedule ? (
+            <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900 rounded-lg border-l-4 border-blue-500">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-blue-600 dark:text-blue-400">🚛</span>
+                <span className="font-semibold text-blue-800 dark:text-blue-200">Next Collection</span>
+              </div>
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                Scheduled: {new Date(nextSchedule.scheduledStart).toLocaleString()}
+              </p>
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                Vehicle: {nextSchedule.vehicle.make} {nextSchedule.vehicle.model}
+              </p>
+              {nextSchedule.driverName && (
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  Driver: {nextSchedule.driverName}
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border-l-4 border-gray-400">
+              <p className="text-sm text-gray-600 dark:text-gray-400">No upcoming collections scheduled</p>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Collections will be scheduled when enough reports are received in your zone</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -95,10 +198,8 @@ export default function ResidentDashboard() {
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      Report - {new Date(report.timestamp).toLocaleDateString()} {new Date(report.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">{report.zone || 'Zone not specified'}</p>
+                    <p className="font-medium text-gray-900 dark:text-white">Report #{report.id}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">{new Date(report.timestamp).toLocaleDateString()}</p>
                     <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{report.description || 'No description provided'}</p>
                   </div>
                   <span

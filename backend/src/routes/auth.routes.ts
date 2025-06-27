@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { signup, login, reportBinFull, getThresholdStatus, getDispatcherNotifications, updateReportStatus, getActiveReports, getUserReports, markAllReportsCollected, getArchivedDispatcherNotifications, getDispatchRecommendation, getRecyclerNotifications, updateWasteComposition, getWasteSites, detectWasteFromImage, getWasteCompositionHistory, detectWasteFromImageLLM, upload, getDeliveries, updateDeliveryStatus } from '../controllers/auth.controller';
+import { signup, login, reportBinFull, getThresholdStatus, getDispatcherNotifications, updateReportStatus, getActiveReports, getUserReports, markAllReportsCollected, getArchivedDispatcherNotifications, getDispatchRecommendation, getRecyclerNotifications, updateWasteComposition, getWasteSites, detectWasteFromImage, getWasteCompositionHistory, detectWasteFromImageLLM, upload, getDeliveries, updateDeliveryStatus, getCollectionSchedules, getSystemConfig, updateSystemConfig } from '../controllers/auth.controller';
 
 const router = Router();
 
@@ -25,5 +25,12 @@ router.get('/waste-compositions/history', getWasteCompositionHistory);
 // Delivery routes
 router.get('/deliveries', getDeliveries);
 router.patch('/deliveries/:id/status', updateDeliveryStatus);
+
+// Schedule routes
+router.get('/schedules', getCollectionSchedules);
+
+// Configuration routes
+router.get('/config', getSystemConfig);
+router.post('/config', updateSystemConfig);
 
 export default router; 

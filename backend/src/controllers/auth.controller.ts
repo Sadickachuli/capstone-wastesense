@@ -603,57 +603,169 @@ export const getArchivedDispatcherNotifications = async (req: Request, res: Resp
   }
 };
 
-// ML Model Placeholder: Get dispatch recommendation
+// Get intelligent dispatch recommendation based on real fleet
 export const getDispatchRecommendation = async (req: Request, res: Response) => {
   try {
-    // Get actual report counts for both zones
-    const zones = ['Ablekuma North', 'Ayawaso West'];
-    const reportCounts: any = {};
-    const allocation: any = {};
-    
-    for (const zone of zones) {
-      // Count unique residents who have reported in this zone
-      const reported = await db('reports')
-        .join('users', 'reports.user_id', 'users.id')
-        .where('users.zone', zone)
-        .whereIn('reports.status', ['new', 'in-progress'])
-        .countDistinct('reports.user_id as count');
-      const reportedCount = parseInt(String(reported[0].count), 10) || 0;
-      
-      // Map zone names to frontend keys
-      const zoneKey = zone === 'Ablekuma North' ? 'North' : 'South';
-      reportCounts[zoneKey] = reportedCount;
-      
-      // Simple allocation logic: assign trucks if threshold reached
-      allocation[zoneKey] = reportedCount >= 3 ? Math.ceil(reportedCount / 3) : 0;
+    // Get available vehicles from the fleet
+    const availableVehicles = await db('vehicles')
+      .where('status', 'available')
+      .where('needs_refuel', false)
+      .orderBy('fuel_percentage', 'desc'); // Prioritize vehicles with more fuel
+
+    if (availableVehicles.length === 0) {
+      return res.json({
+        recommendation: 'No vehicles available',
+        reportCounts: { North: 0, South: 0 },
+        allocation: { North: 0, South: 0 },
+        schedules: [],
+        availableVehicles: availableVehicles.length,
+        reason: 'All vehicles are either busy or need refueling'
+      });
     }
-    
-    // Determine recommendation message
-    const northReports = reportCounts.North || 0;
-    const southReports = reportCounts.South || 0;
-    
-    let recommendation = 'No action needed at this time.';
-    let reason = 'No zones have reached the threshold yet.';
-    
-    if (northReports >= 3 && southReports >= 3) {
-      recommendation = 'Dispatch trucks to both Ablekuma North and Ayawaso West zones.';
-      reason = 'Both zones have reached the threshold.';
-    } else if (northReports >= 3) {
-      recommendation = 'Dispatch trucks to Ablekuma North zone.';
-      reason = `Ablekuma North has reached threshold with ${northReports}/3 bins reported full.`;
-    } else if (southReports >= 3) {
-      recommendation = 'Dispatch trucks to Ayawaso West zone.';
-      reason = `Ayawaso West has reached threshold with ${southReports}/3 bins reported full.`;
-    }
-    
-    res.json({
-      recommendation,
-      confidence: 0.95,
-      nextCollectionTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
-      reason,
-      reportCounts,
-      allocation
+
+    // Get current reports by zone
+    const reportCounts = await db('reports')
+      .select('zone')
+      .count('* as count')
+      .where('status', 'pending')
+      .groupBy('zone');
+
+    const counts = {
+      North: 0,
+      South: 0
+    };
+
+    reportCounts.forEach((row: any) => {
+      if (row.zone === 'Ablekuma North') counts.North = Number(row.count);
+      if (row.zone === 'Ayawaso West') counts.South = Number(row.count);
     });
+
+    // Get zone customer configuration from database
+    const zoneConfigRow = await db('system_config').where('key', 'zone_customers').first();
+    let zoneConfig;
+    
+    if (zoneConfigRow) {
+      try {
+        zoneConfig = JSON.parse(zoneConfigRow.value);
+      } catch (err) {
+        console.error('Failed to parse zone configuration:', err);
+        // Fallback to defaults
+        zoneConfig = {
+          'Ablekuma North': { totalCustomers: 145 },
+          'Ayawaso West': { totalCustomers: 82 }
+        };
+      }
+    } else {
+      // Fallback to defaults if no config found
+      zoneConfig = {
+        'Ablekuma North': { totalCustomers: 145 },
+        'Ayawaso West': { totalCustomers: 82 }
+      };
+    }
+
+    // Determine which zones need collection
+    const northReady = counts.North >= zoneConfig['Ablekuma North'].totalCustomers;
+    const southReady = counts.South >= zoneConfig['Ayawaso West'].totalCustomers;
+
+    if (!northReady && !southReady) {
+      return res.json({
+        recommendation: 'No zones ready for collection',
+        reportCounts: { North: counts.North, South: counts.South },
+        allocation: { North: 0, South: 0 },
+        schedules: [],
+        availableVehicles: availableVehicles.length,
+        reason: `Ablekuma North: ${zoneConfig['Ablekuma North'].totalCustomers - counts.North} more needed, Ayawaso West: ${zoneConfig['Ayawaso West'].totalCustomers - counts.South} more needed`
+      });
+    }
+
+    // Smart vehicle allocation based on priority and efficiency
+    const schedules = [];
+    let vehicleIndex = 0;
+    const allocation = { North: 0, South: 0 };
+
+    // Prioritize zone with higher percentage completion
+    const northPriority = counts.North / zoneConfig['Ablekuma North'].totalCustomers;
+    const southPriority = counts.South / zoneConfig['Ayawaso West'].totalCustomers;
+
+    const zones = [
+      { name: 'Ablekuma North', key: 'North', ready: northReady, priority: northPriority, reports: counts.North },
+      { name: 'Ayawaso West', key: 'South', ready: southReady, priority: southPriority, reports: counts.South }
+    ].sort((a, b) => b.priority - a.priority);
+
+    // Schedule collections for ready zones
+    for (const zone of zones) {
+      if (zone.ready && vehicleIndex < availableVehicles.length) {
+        const vehicle = availableVehicles[vehicleIndex];
+        const now = new Date();
+        
+        // Schedule collection 30 minutes from now for first zone, 2 hours for second
+        const collectionTime = new Date(now.getTime() + (vehicleIndex === 0 ? 30 : 120) * 60 * 1000);
+        
+        // Estimate completion time based on zone size (larger zones take longer)
+        const estimatedDuration = zone.reports > 100 ? 4 : 3; // hours
+        const completionTime = new Date(collectionTime.getTime() + estimatedDuration * 60 * 60 * 1000);
+
+        const estimatedDistance = zone.name === 'Ablekuma North' ? 25 : 18; // km to dumping sites
+        const estimatedFuelConsumption = Math.round((estimatedDistance) / vehicle.fuel_efficiency_kmpl * 10) / 10;
+
+        // Generate unique schedule ID
+        const scheduleId = `SCH-${Date.now()}-${vehicleIndex}`;
+
+        // Create schedule entry
+        const schedule = {
+          id: scheduleId,
+          vehicleId: vehicle.id,
+          vehicleInfo: `${vehicle.make} ${vehicle.model} (${vehicle.registration_number || vehicle.id})`,
+          driverName: vehicle.driver_name || 'Unassigned',
+          driverContact: vehicle.driver_contact || '',
+          zone: zone.name,
+          zoneKey: zone.key,
+          reportsCount: zone.reports,
+          scheduledStart: collectionTime.toISOString(),
+          estimatedCompletion: completionTime.toISOString(),
+          status: 'scheduled',
+          fuelLevel: vehicle.fuel_percentage,
+          estimatedDistance: estimatedDistance,
+          estimatedFuelConsumption: estimatedFuelConsumption
+        };
+
+        schedules.push(schedule);
+        allocation[zone.key as keyof typeof allocation] = 1;
+
+        // Save schedule to database
+        await db('schedules').insert({
+          id: scheduleId,
+          vehicle_id: vehicle.id,
+          zone: zone.name,
+          scheduled_start: collectionTime.toISOString(),
+          estimated_completion: completionTime.toISOString(),
+          status: 'scheduled',
+          reports_count: zone.reports,
+          estimated_distance_km: estimatedDistance,
+          estimated_fuel_consumption: estimatedFuelConsumption,
+          driver_name: vehicle.driver_name || null,
+          driver_contact: vehicle.driver_contact || null,
+          created_by: (req as any).user?.id || 'system'
+        });
+
+        // Update vehicle status to 'scheduled'
+        await db('vehicles')
+          .where('id', vehicle.id)
+          .update({ status: 'scheduled' });
+
+        vehicleIndex++;
+      }
+    }
+
+    res.json({
+      recommendation: schedules.length > 0 ? 'Collection scheduled' : 'No vehicles available for ready zones',
+      reportCounts: { North: counts.North, South: counts.South },
+      allocation,
+      schedules,
+      availableVehicles: availableVehicles.length,
+      reason: schedules.length > 0 ? `${schedules.length} vehicle(s) scheduled for collection` : 'All available vehicles assigned'
+    });
+
   } catch (err) {
     console.error('Get Dispatch Recommendation error:', err);
     res.status(500).json({ message: 'Internal server error' });
@@ -1129,39 +1241,115 @@ export const getUserReports = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
     
-    if (!userId) {
-      return res.status(400).json({ message: 'User ID is required' });
-    }
-
     const reports = await db('reports')
-      .join('users', 'reports.user_id', 'users.id')
-      .select(
-        'reports.id',
-        'reports.user_id',
-        'reports.timestamp',
-        'reports.status',
-        'reports.description',
-        'reports.location',
-        'users.zone'
-      )
-      .where('reports.user_id', userId)
-      .orderBy('reports.timestamp', 'desc')
-      .limit(10); // Limit to last 10 reports
+      .where('user_id', userId)
+      .orderBy('created_at', 'desc');
 
-    // Format the reports for frontend
-    const formattedReports = reports.map(report => ({
-      id: report.id,
-      userId: report.user_id,
-      timestamp: report.timestamp,
-      status: report.status,
-      description: report.description,
-      location: report.location ? JSON.parse(report.location) : null,
-      zone: report.zone,
-    }));
-
-    res.json({ reports: formattedReports });
+    res.json({ reports });
   } catch (err) {
     console.error('Get User Reports error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Get collection schedules for residents
+export const getCollectionSchedules = async (req: Request, res: Response) => {
+  try {
+    const { zone } = req.query;
+    
+    let query = db('schedules')
+      .leftJoin('vehicles', 'schedules.vehicle_id', 'vehicles.id')
+      .select(
+        'schedules.*',
+        'vehicles.make',
+        'vehicles.model', 
+        'vehicles.registration_number',
+        'vehicles.type as vehicle_type'
+      )
+      .where('schedules.status', 'in', ['scheduled', 'in-progress'])
+      .orderBy('schedules.scheduled_start', 'asc');
+
+    // Filter by zone if specified (for residents)
+    if (zone) {
+      query = query.where('schedules.zone', zone);
+    }
+
+    const schedules = await query;
+
+    // Format the response
+    const formattedSchedules = schedules.map(schedule => ({
+      id: schedule.id,
+      zone: schedule.zone,
+      scheduledStart: schedule.scheduled_start,
+      estimatedCompletion: schedule.estimated_completion,
+      status: schedule.status,
+      reportsCount: schedule.reports_count,
+      estimatedDistance: schedule.estimated_distance_km,
+      estimatedFuelConsumption: schedule.estimated_fuel_consumption,
+      driverName: schedule.driver_name,
+      driverContact: schedule.driver_contact,
+      vehicle: {
+        id: schedule.vehicle_id,
+        make: schedule.make,
+        model: schedule.model,
+        registrationNumber: schedule.registration_number,
+        type: schedule.vehicle_type
+      }
+    }));
+
+    res.json({ schedules: formattedSchedules });
+  } catch (err) {
+    console.error('Get Collection Schedules error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Get system configuration
+export const getSystemConfig = async (req: Request, res: Response) => {
+  try {
+    const configs = await db('system_config').select('key', 'value');
+    
+    const configObject: { [key: string]: any } = {};
+    configs.forEach(config => {
+      try {
+        configObject[config.key] = JSON.parse(config.value);
+      } catch (err) {
+        configObject[config.key] = config.value;
+      }
+    });
+
+    res.json({ config: configObject });
+  } catch (err) {
+    console.error('Get System Config error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Update system configuration
+export const updateSystemConfig = async (req: Request, res: Response) => {
+  try {
+    const { config } = req.body;
+    
+    // Update each configuration key
+    for (const [key, value] of Object.entries(config)) {
+      const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+      
+      await db('system_config')
+        .insert({
+          key,
+          value: stringValue,
+          updated_at: new Date().toISOString()
+        })
+        .onConflict('key')
+        .merge({
+          value: stringValue,
+          updated_at: new Date().toISOString()
+        });
+    }
+
+    res.json({ message: 'Configuration updated successfully' });
+  } catch (err) {
+    console.error('Update System Config error:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
 }; 

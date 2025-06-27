@@ -201,9 +201,13 @@ export default function DispatcherDashboard() {
       'Ablekuma North': {},
       'Ayawaso West': {}
     },
-    collectionThresholds: {
-      'Ablekuma North': { threshold: 5, households: 0 },
-      'Ayawaso West': { threshold: 5, households: 0 }
+    zoneCustomers: {
+      'Ablekuma North': {
+        totalCustomers: 145
+      },
+      'Ayawaso West': {
+        totalCustomers: 82
+      }
     },
     fuelPricePerLiter: 10.0
   });
@@ -757,6 +761,12 @@ export default function DispatcherDashboard() {
         <h1 className="text-2xl font-bold text-gray-900">Dispatcher Dashboard</h1>
         <div className="flex items-center gap-4">
           <button className="px-4 py-2 rounded bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition text-base">Create New Route</button>
+          <button 
+            onClick={() => setShowConfigModal(true)}
+            className="px-4 py-2 rounded bg-gray-600 text-white font-semibold shadow hover:bg-gray-700 transition text-base"
+          >
+            Configure System
+          </button>
           {/* Placeholder for user avatar/profile */}
           <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold">D</div>
         </div>
@@ -769,38 +779,38 @@ export default function DispatcherDashboard() {
           <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-3xl p-8 shadow flex flex-col gap-2">
             <span className="text-sm text-gray-500 dark:text-gray-300 mb-1">Ablekuma North</span>
             <span className="text-2xl font-bold text-blue-700 dark:text-blue-300 mb-1">
-              Reports: {mlRecommendation?.reportCounts?.North ?? '--'}
+              Reports: {mlRecommendation?.reportCounts?.North ?? 0}/{configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145}
             </span>
             <span className="text-base text-gray-700 dark:text-gray-200">
-              Threshold: {thresholdStatus ? thresholdStatus.threshold : '--'}
+              Customers Served: {configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145}
             </span>
             <span className={
-              mlRecommendation?.reportCounts?.North >= (thresholdStatus?.threshold ?? 0)
+              (mlRecommendation?.reportCounts?.North ?? 0) >= (configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145)
                 ? 'text-green-700 dark:text-green-300 font-semibold'
                 : 'text-yellow-700 dark:text-yellow-300 font-semibold'
             }>
-              {mlRecommendation?.reportCounts?.North >= (thresholdStatus?.threshold ?? 0)
-                ? `Threshold reached${mlRecommendation?.allocation?.North ? `, Trucks Assigned: ${mlRecommendation.allocation.North}` : ''}`
-                : `${(thresholdStatus?.threshold ?? 0) - (mlRecommendation?.reportCounts?.North ?? 0)} more needed`}
+              {(mlRecommendation?.reportCounts?.North ?? 0) >= (configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145)
+                ? `✓ Threshold reached - Dispatch trucks${mlRecommendation?.allocation?.North ? ` (${mlRecommendation.allocation.North} trucks)` : ''}`
+                : `${(configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145) - (mlRecommendation?.reportCounts?.North ?? 0)} more reports needed`}
             </span>
           </div>
           {/* Ayawaso West Zone Card */}
           <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-3xl p-8 shadow flex flex-col gap-2">
             <span className="text-sm text-gray-500 dark:text-gray-300 mb-1">Ayawaso West</span>
             <span className="text-2xl font-bold text-green-700 dark:text-green-300 mb-1">
-              Reports: {mlRecommendation?.reportCounts?.South ?? '--'}
+              Reports: {mlRecommendation?.reportCounts?.South ?? 0}/{configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82}
             </span>
             <span className="text-base text-gray-700 dark:text-gray-200">
-              Threshold: {thresholdStatus ? thresholdStatus.threshold : '--'}
+              Customers Served: {configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82}
             </span>
             <span className={
-              mlRecommendation?.reportCounts?.South >= (thresholdStatus?.threshold ?? 0)
+              (mlRecommendation?.reportCounts?.South ?? 0) >= (configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82)
                 ? 'text-green-700 dark:text-green-300 font-semibold'
                 : 'text-yellow-700 dark:text-yellow-300 font-semibold'
             }>
-              {mlRecommendation?.reportCounts?.South >= (thresholdStatus?.threshold ?? 0)
-                ? `Threshold reached${mlRecommendation?.allocation?.South ? `, Trucks Assigned: ${mlRecommendation.allocation.South}` : ''}`
-                : `${(thresholdStatus?.threshold ?? 0) - (mlRecommendation?.reportCounts?.South ?? 0)} more needed`}
+              {(mlRecommendation?.reportCounts?.South ?? 0) >= (configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82)
+                ? `✓ Threshold reached - Dispatch trucks${mlRecommendation?.allocation?.South ? ` (${mlRecommendation.allocation.South} trucks)` : ''}`
+                : `${(configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82) - (mlRecommendation?.reportCounts?.South ?? 0)} more reports needed`}
             </span>
           </div>
           {/* Available Trucks Card */}
@@ -1694,56 +1704,72 @@ export default function DispatcherDashboard() {
                 </div>
               </div>
 
-              {/* Collection Thresholds */}
+              {/* Zone Customer Management */}
               <div>
-                <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4">Collection Thresholds by Zone</h4>
+                <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4">Zone Customer Management</h4>
+                <div className="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg mb-4">
+                  <h5 className="font-medium text-blue-900 dark:text-blue-100 mb-2">How it works:</h5>
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    Set the number of customers Zoomlion serves in each zone. 
+                    When all customers in a zone report bins full, trucks will be dispatched to that zone.
+                    <br />
+                    <strong>Example:</strong> If you serve 145 customers and 87 have reported, you need 58 more reports to reach the threshold.
+                  </p>
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      onClick={() => setConfigData(prev => ({
+                        ...prev,
+                        zoneCustomers: {
+                          'Ablekuma North': { totalCustomers: 200 },
+                          'Ayawaso West': { totalCustomers: 120 }
+                        }
+                      }))}
+                      className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      Large Scale
+                    </button>
+                    <button
+                      onClick={() => setConfigData(prev => ({
+                        ...prev,
+                        zoneCustomers: {
+                          'Ablekuma North': { totalCustomers: 50 },
+                          'Ayawaso West': { totalCustomers: 30 }
+                        }
+                      }))}
+                      className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      Small Scale
+                    </button>
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {Object.entries(configData.collectionThresholds).map(([zone, config]) => (
+                  {Object.entries(configData.zoneCustomers).map(([zone, config]) => (
                     <div key={zone} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                       <h5 className="font-medium text-gray-900 dark:text-white mb-3">{zone}</h5>
                       <div className="space-y-3">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Collection Threshold (reports) *
+                            Total Customers Served *
                           </label>
                           <input
                             type="number"
                             min="1"
                             className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                            value={config.threshold}
+                            value={config.totalCustomers}
                             onChange={e => setConfigData(prev => ({
                               ...prev,
-                              collectionThresholds: {
-                                ...prev.collectionThresholds,
+                              zoneCustomers: {
+                                ...prev.zoneCustomers,
                                 [zone]: {
-                                  ...prev.collectionThresholds[zone as keyof typeof prev.collectionThresholds],
-                                  threshold: parseInt(e.target.value) || 1
+                                  totalCustomers: parseInt(e.target.value) || 1
                                 }
                               }
                             }))}
+                            placeholder="e.g., 145"
                           />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Estimated Households
-                          </label>
-                          <input
-                            type="number"
-                            min="0"
-                            className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                            value={config.households}
-                            onChange={e => setConfigData(prev => ({
-                              ...prev,
-                              collectionThresholds: {
-                                ...prev.collectionThresholds,
-                                [zone]: {
-                                  ...prev.collectionThresholds[zone as keyof typeof prev.collectionThresholds],
-                                  households: parseInt(e.target.value) || 0
-                                }
-                              }
-                            }))}
-                            placeholder="e.g., 45000"
-                          />
+                          <small className="text-xs text-gray-500 dark:text-gray-400">
+                            Number of customers Zoomlion serves in {zone}
+                          </small>
                         </div>
                       </div>
                     </div>

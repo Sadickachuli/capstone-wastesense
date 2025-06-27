@@ -242,33 +242,52 @@ export const reportBinFull = async (req: Request, res: Response) => {
   }
 };
 
+// Get threshold status for dispatcher dashboard
 export const getThresholdStatus = async (req: Request, res: Response) => {
   try {
-    // Count reports for both zones
-    const zones = ['Ablekuma North', 'Ayawaso West'];
-    const zoneData: any = {};
-    
-    for (const zone of zones) {
-      // Count total residents in zone
-      const totalResidents = await db('users').where({ role: 'resident', zone }).count('id as count');
-      const total = parseInt(String(totalResidents[0].count), 10) || 0;
-      
-      // Count unique residents who have reported in this zone
-      const reported = await db('reports')
-        .join('users', 'reports.user_id', 'users.id')
-        .where('users.zone', zone)
-        .whereIn('reports.status', ['new', 'in-progress'])
-        .countDistinct('reports.user_id as count');
-      const reportedCount = parseInt(String(reported[0].count), 10) || 0;
-      
-      zoneData[zone] = { total, reportedCount, threshold: 3 };
+    // Get configuration from request or use defaults
+    const defaultConfig = {
+      zoneCustomers: {
+        'Ablekuma North': {
+          totalCustomers: 145
+        },
+        'Ayawaso West': {
+          totalCustomers: 82
+        }
+      }
+    };
+
+    // In a real implementation, this would come from a configuration table
+    const config = defaultConfig;
+
+    const thresholdStatus: any = {};
+
+    for (const [zone, zoneConfig] of Object.entries(config.zoneCustomers)) {
+      // Count current reports for this zone
+      const reportCount = await db('reports')
+        .where('zone', zone)
+        .where('status', 'pending')
+        .count('* as count')
+        .first();
+
+      const currentReports = Number(reportCount?.count || 0);
+      const requiredReports = zoneConfig.totalCustomers;
+      const thresholdReached = currentReports >= requiredReports;
+      const reportsNeeded = Math.max(0, requiredReports - currentReports);
+
+      thresholdStatus[zone] = {
+        currentReports,
+        requiredReports,
+        totalCustomers: zoneConfig.totalCustomers,
+        thresholdReached,
+        reportsNeeded
+      };
     }
-    
-    res.json({ 
-      total: 3,
-      threshold: 3,
-      reportedCount: zoneData['Ablekuma North']?.reportedCount || 0, // For backward compatibility
-      zones: zoneData
+
+    res.json({
+      status: 'success',
+      thresholdStatus,
+      timestamp: new Date().toISOString()
     });
   } catch (err) {
     console.error('Get Threshold Status error:', err);

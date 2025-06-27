@@ -2,10 +2,7 @@
 
 > **A comprehensive digital solution for optimizing waste collection, analysis, and recycling in Ghana using AI-powered detection and fuel-efficient algorithms.**
 
-[![Demo Video](https://img.shields.io/badge/📹_Demo_Video-Watch_Now-red?style=for-the-badge)](YOUR_VIDEO_LINK_HERE)
-[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-Try_Now-green?style=for-the-badge)](YOUR_DEPLOYMENT_LINK_HERE)
-
-> **🚨 IMPORTANT**: Replace `YOUR_VIDEO_LINK_HERE` and `YOUR_DEPLOYMENT_LINK_HERE` with your actual links before submission!
+[![Demo Video](https://img.shields.io/badge/📹_Demo_Video-Watch_Now-red?style=for-the-badge)]([https://youtu.be/6coD9JquYuQ?si=Zae1mGqY1wwySjjN])
 
 ## 📋 Table of Contents
 
@@ -97,7 +94,7 @@ graph TB
 
 ### 📥 **Step 1: Clone the Repository**
 ```bash
-git clone https://github.com/YOUR_USERNAME/wastesense-app.git
+git clone https://github.com/Sadickachuli/capstone-wastesense.git
 cd wastesense-app
 ```
 
@@ -166,9 +163,9 @@ python main.py
 1. Open `http://localhost:5173` in your browser
 2. You should see the WasteSense landing page
 3. Test login with provided credentials:
-   - **Resident**: `resident@example.com` / `password`
-   - **Dispatcher**: `dispatcher@example.com` / `password`
-   - **Recycler**: `recycler@example.com` / `password`
+   - **Resident**: `recyclerablekuma1@test.com` / `password123`
+   - **Dispatcher**: `DIS001` / `password123`
+   - **Recycler**: `REC001` / `password123`
 
 ---
 
@@ -252,12 +249,8 @@ python main.py
 ## 🌍 Deployment
 
 ### 🚀 **Live Application**
-**🌐 [Access WasteSense Live Demo](YOUR_DEPLOYMENT_LINK_HERE)**
+** To be updated soon
 
-### 🔐 **Test Credentials**
-- **Dispatcher**: `dispatcher@example.com` / `password`
-- **Recycler**: `recycler@example.com` / `password`
-- **Resident**: `resident@example.com` / `password`
 
 ### 🏗️ **Deployment Architecture**
 - **Frontend**: Deployed on Render Static Sites
@@ -383,15 +376,14 @@ wastesense-app/
 
 For technical support, feature requests, or deployment assistance:
 
-- **📧 Email**: [your-email@example.com]
-- **🐙 GitHub**: [Your GitHub Profile]
-- **💼 LinkedIn**: [Your LinkedIn Profile]
+- **📧 Email**: [m.achuli@alustudent.com]
+- **🐙 GitHub**: [Sadickachuli]
 
 ---
 
 ## 🎬 Demo Video
 
-**📹 [Watch 5-Minute Demo Video](YOUR_VIDEO_LINK_HERE)**
+**📹 [Watch 5-Minute Demo Video](https://youtu.be/6coD9JquYuQ?si=Zae1mGqY1wwySjjN)**
 
 The demo video showcases:
 - ✅ **Resident Workflow**: Waste reporting and schedule tracking
@@ -406,7 +398,6 @@ The demo video showcases:
 
 WasteSense is a **complete, production-ready solution** designed specifically for Ghana's waste management challenges. With comprehensive testing, fuel-efficient algorithms, and AI-powered analysis, it's ready to transform waste management across Ghanaian cities.
 
-**🚀 [Try the Live Demo Now](YOUR_DEPLOYMENT_LINK_HERE)**
 
 ---
 

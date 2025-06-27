@@ -38,6 +38,30 @@ interface TruckRoute {
   estimatedCompletion?: string;
 }
 
+interface Vehicle {
+  id: string;
+  type: string;
+  make: string;
+  model: string;
+  year: number;
+  fuel_efficiency_kmpl: number;
+  tank_capacity_liters: number;
+  current_fuel_level: number;
+  total_distance_km: number;
+  status: string;
+  fuel_percentage: number;
+  estimated_range_km: number;
+  needs_refuel: boolean;
+}
+
+interface FuelAnalytics {
+  total_distance: number;
+  total_fuel_consumed: number;
+  total_cost: number;
+  avg_cost_per_km: number;
+  total_trips: number;
+}
+
 const WASTE_COLORS: Record<string, string> = {
   plastic: '#2563eb', // blue
   metal: '#6b7280',   // gray
@@ -131,6 +155,58 @@ export default function DispatcherDashboard() {
   const [showDumpingSiteModal, setShowDumpingSiteModal] = useState(false);
   const [selectedDumpingSite, setSelectedDumpingSite] = useState('');
   const [selectedTruckId, setSelectedTruckId] = useState('T001');
+
+  // Fuel tracking state
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [vehiclesLoading, setVehiclesLoading] = useState(true);
+  const [vehiclesError, setVehiclesError] = useState('');
+  const [fuelAnalytics, setFuelAnalytics] = useState<FuelAnalytics | null>(null);
+  const [fuelAnalyticsLoading, setFuelAnalyticsLoading] = useState(true);
+  const [showFuelModal, setShowFuelModal] = useState(false);
+  const [selectedVehicleForFuel, setSelectedVehicleForFuel] = useState('');
+  const [tripData, setTripData] = useState({
+    distance_km: '',
+    trip_start: '',
+    trip_end: '',
+    fuel_cost: '',
+    route_description: ''
+  });
+
+  // Add vehicle management state
+  const [showVehicleModal, setShowVehicleModal] = useState(false);
+  const [vehicleFormData, setVehicleFormData] = useState({
+    id: '',
+    type: 'compressed_truck',
+    make: '',
+    model: '',
+    year: new Date().getFullYear(),
+    fuel_efficiency_kmpl: '',
+    tank_capacity_liters: '',
+    current_fuel_level: '',
+    registration_number: '',
+    driver_name: '',
+    driver_contact: ''
+  });
+  const [editingVehicle, setEditingVehicle] = useState<string | null>(null);
+  const [deletingVehicle, setDeletingVehicle] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Add configuration state
+  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [configData, setConfigData] = useState({
+    dumpingSites: [
+      { id: '', name: '', location: '', coordinates: { lat: '', lng: '' } }
+    ],
+    zoneDistances: {
+      'Ablekuma North': {},
+      'Ayawaso West': {}
+    },
+    collectionThresholds: {
+      'Ablekuma North': { threshold: 5, households: 0 },
+      'Ayawaso West': { threshold: 5, households: 0 }
+    },
+    fuelPricePerLiter: 10.0
+  });
 
   // Calculate total percentage
   const totalPercentage = Object.values(composition).reduce((sum, value) => sum + value, 0);
@@ -441,6 +517,238 @@ export default function DispatcherDashboard() {
       setIsSubmitting(false);
     }
   };
+
+  // Vehicle management functions
+  const handleAddVehicle = () => {
+    setEditingVehicle(null);
+    setVehicleFormData({
+      id: '',
+      type: 'compressed_truck',
+      make: '',
+      model: '',
+      year: new Date().getFullYear(),
+      fuel_efficiency_kmpl: '',
+      tank_capacity_liters: '',
+      current_fuel_level: '',
+      registration_number: '',
+      driver_name: '',
+      driver_contact: ''
+    });
+    setShowVehicleModal(true);
+  };
+
+  const handleEditVehicle = (vehicle: Vehicle) => {
+    setEditingVehicle(vehicle.id);
+    setVehicleFormData({
+      id: vehicle.id,
+      type: vehicle.type,
+      make: (vehicle as any).make || '',
+      model: (vehicle as any).model || '',
+      year: (vehicle as any).year || new Date().getFullYear(),
+      fuel_efficiency_kmpl: (vehicle as any).fuel_efficiency_kmpl?.toString() || '',
+      tank_capacity_liters: (vehicle as any).tank_capacity_liters?.toString() || '',
+      current_fuel_level: (vehicle as any).current_fuel_level?.toString() || '',
+      registration_number: (vehicle as any).registration_number || '',
+      driver_name: (vehicle as any).driver_name || '',
+      driver_contact: (vehicle as any).driver_contact || ''
+    });
+    setShowVehicleModal(true);
+  };
+
+  const handleVehicleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const vehicleData = {
+        ...vehicleFormData,
+        fuel_efficiency_kmpl: parseFloat(vehicleFormData.fuel_efficiency_kmpl),
+        tank_capacity_liters: parseFloat(vehicleFormData.tank_capacity_liters),
+        current_fuel_level: parseFloat(vehicleFormData.current_fuel_level),
+        status: 'available'
+      };
+
+      if (editingVehicle) {
+        // Update existing vehicle
+        await axios.put(`/api/fuel/vehicles/${editingVehicle}`, vehicleData);
+        addToast({
+          type: 'success',
+          title: 'Success',
+          message: 'Vehicle updated successfully'
+        });
+      } else {
+        // Add new vehicle
+        await axios.post('/api/fuel/vehicles', vehicleData);
+        addToast({
+          type: 'success',
+          title: 'Success',
+          message: 'Vehicle added successfully'
+        });
+      }
+
+      setShowVehicleModal(false);
+      await fetchVehicles(); // Refresh vehicle list
+    } catch (error) {
+      console.error('Vehicle operation failed:', error);
+      let errorMessage = 'Failed to save vehicle information';
+      
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          errorMessage = error.response.data?.message || `Server error: ${error.response.status}`;
+        } else if (error.request) {
+          errorMessage = 'No response from server. Check if backend is running.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: errorMessage
+      });
+    }
+  };
+
+  const handleDeleteVehicle = (vehicleId: string) => {
+    setDeletingVehicle(vehicleId);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingVehicle) return;
+    
+    try {
+      await axios.delete(`/api/fuel/vehicles/${deletingVehicle}`);
+      addToast({
+        type: 'success',
+        title: 'Success',
+        message: 'Vehicle deleted successfully'
+      });
+      setShowDeleteConfirm(false);
+      setDeletingVehicle(null);
+      await fetchVehicles(); // Refresh vehicle list
+    } catch (error) {
+      console.error('Vehicle deletion failed:', error);
+      let errorMessage = 'Failed to delete vehicle';
+      
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          errorMessage = error.response.data?.message || `Server error: ${error.response.status}`;
+        } else if (error.request) {
+          errorMessage = 'No response from server. Check if backend is running.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: errorMessage
+      });
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setDeletingVehicle(null);
+  };
+
+  // Configuration functions
+  const handleAddDumpingSite = () => {
+    setConfigData(prev => ({
+      ...prev,
+      dumpingSites: [
+        ...prev.dumpingSites,
+        { id: '', name: '', location: '', coordinates: { lat: '', lng: '' } }
+      ]
+    }));
+  };
+
+  const handleRemoveDumpingSite = (index: number) => {
+    setConfigData(prev => ({
+      ...prev,
+      dumpingSites: prev.dumpingSites.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleDumpingSiteChange = (index: number, field: string, value: string) => {
+    setConfigData(prev => ({
+      ...prev,
+      dumpingSites: prev.dumpingSites.map((site, i) => 
+        i === index 
+          ? field.includes('.') 
+            ? { ...site, coordinates: { ...site.coordinates, [field.split('.')[1]]: value } }
+            : { ...site, [field]: value }
+          : site
+      )
+    }));
+  };
+
+  const handleSaveConfiguration = async () => {
+    try {
+      // Save to localStorage for now (could be API later)
+      localStorage.setItem('wastesense_config', JSON.stringify(configData));
+      addToast({
+        type: 'success',
+        title: 'Success',
+        message: 'Configuration saved successfully'
+      });
+      setShowConfigModal(false);
+    } catch (error) {
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to save configuration'
+      });
+    }
+  };
+
+  // Load configuration on component mount
+  useEffect(() => {
+    const savedConfig = localStorage.getItem('wastesense_config');
+    if (savedConfig) {
+      try {
+        const config = JSON.parse(savedConfig);
+        setConfigData(config);
+      } catch (error) {
+        console.error('Failed to load configuration:', error);
+      }
+    }
+  }, []);
+
+  // Fetch vehicles function
+  const fetchVehicles = async () => {
+    setVehiclesLoading(true);
+    setVehiclesError('');
+    try {
+      const response = await axios.get('/api/fuel/vehicles');
+      setVehicles(response.data.vehicles || []);
+    } catch (error) {
+      console.error('Failed to fetch vehicles:', error);
+      setVehiclesError('Failed to load vehicles');
+    } finally {
+      setVehiclesLoading(false);
+    }
+  };
+
+  // Fetch fuel analytics
+  const fetchFuelAnalytics = async () => {
+    setFuelAnalyticsLoading(true);
+    try {
+      const response = await axios.get('/api/fuel/analytics?period=7');
+      setFuelAnalytics(response.data.summary);
+    } catch (error) {
+      console.error('Failed to fetch fuel analytics:', error);
+    } finally {
+      setFuelAnalyticsLoading(false);
+    }
+  };
+
+  // Load vehicles and fuel analytics on component mount
+  useEffect(() => {
+    fetchVehicles();
+    fetchFuelAnalytics();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 p-0 md:p-0 font-sans">
@@ -800,6 +1108,94 @@ export default function DispatcherDashboard() {
           </button>
           {markAllMessage && <p className="mt-2 text-green-700 font-semibold">{markAllMessage}</p>}
         </div>
+
+        {/* Vehicle Management Section */}
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Fleet Management</h2>
+            <button
+              onClick={handleAddVehicle}
+              className="btn btn-primary btn-sm"
+            >
+              Add Vehicle
+            </button>
+          </div>
+
+          {vehiclesLoading ? (
+            <div className="text-center py-4">Loading vehicles...</div>
+          ) : vehiclesError ? (
+            <div className="text-red-600 text-center py-4">{vehiclesError}</div>
+          ) : vehicles.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500 dark:text-gray-400 mb-4">No vehicles registered yet</p>
+              <button
+                onClick={handleAddVehicle}
+                className="btn btn-primary"
+              >
+                Register First Vehicle
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {vehicles.map(vehicle => (
+                <div key={vehicle.id} className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h3 className="font-semibold text-gray-900 dark:text-white">{vehicle.id}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {(vehicle as any).make} {(vehicle as any).model} ({(vehicle as any).year})
+                      </p>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleEditVehicle(vehicle)}
+                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteVehicle(vehicle.id)}
+                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                        title="Delete Vehicle"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Status:</span>
+                      <span className={`font-medium ${
+                        vehicle.status === 'available' ? 'text-green-600 dark:text-green-400' :
+                        vehicle.status === 'on-route' ? 'text-blue-600 dark:text-blue-400' :
+                        'text-yellow-600 dark:text-yellow-400'
+                      }`}>
+                        {vehicle.status}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Fuel:</span>
+                      <span className="text-gray-900 dark:text-white">
+                        {(vehicle as any).fuel_percentage || 0}%
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Driver:</span>
+                      <span className="text-gray-900 dark:text-white">
+                        {(vehicle as any).driver_name || 'Unassigned'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Modals */}
@@ -939,7 +1335,7 @@ export default function DispatcherDashboard() {
                   </label>
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Truck ID
@@ -979,6 +1375,458 @@ export default function DispatcherDashboard() {
         </div>
       )}
 
+      {/* Vehicle Management Modal */}
+      {showVehicleModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+              {editingVehicle ? 'Edit Vehicle' : 'Add New Vehicle'}
+            </h3>
+            
+            <form onSubmit={handleVehicleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Vehicle ID *</label>
+                  <input
+                    type="text"
+                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    value={vehicleFormData.id}
+                    onChange={e => setVehicleFormData(prev => ({ ...prev, id: e.target.value }))}
+                    placeholder="e.g., ZL001, ZL002"
+                    required
+                    disabled={!!editingVehicle}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Registration Number *</label>
+                  <input
+                    type="text"
+                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    value={vehicleFormData.registration_number}
+                    onChange={e => setVehicleFormData(prev => ({ ...prev, registration_number: e.target.value }))}
+                    placeholder="e.g., GR 1234-20"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Vehicle Type *</label>
+                  <select
+                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    value={vehicleFormData.type}
+                    onChange={e => setVehicleFormData(prev => ({ ...prev, type: e.target.value }))}
+                    required
+                  >
+                    <option value="compressed_truck">Compressed Garbage Truck</option>
+                    <option value="rear_loader">Rear Loader</option>
+                    <option value="side_loader">Side Loader</option>
+                    <option value="front_loader">Front Loader</option>
+                    <option value="roll_off">Roll-off Truck</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Make *</label>
+                  <input
+                    type="text"
+                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    value={vehicleFormData.make}
+                    onChange={e => setVehicleFormData(prev => ({ ...prev, make: e.target.value }))}
+                    placeholder="e.g., SINOTRUK, Dongfeng, Zoomlion"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Model *</label>
+                  <input
+                    type="text"
+                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    value={vehicleFormData.model}
+                    onChange={e => setVehicleFormData(prev => ({ ...prev, model: e.target.value }))}
+                    placeholder="e.g., HOWO, DFL1160"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Year *</label>
+                  <input
+                    type="number"
+                    min="2000"
+                    max={new Date().getFullYear() + 1}
+                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    value={vehicleFormData.year}
+                    onChange={e => setVehicleFormData(prev => ({ ...prev, year: parseInt(e.target.value) }))}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Fuel Efficiency (km/L) *
+                    <span className="text-xs text-gray-500 block">Typical: 3-6 km/L for garbage trucks</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="1"
+                    max="15"
+                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    value={vehicleFormData.fuel_efficiency_kmpl}
+                    onChange={e => setVehicleFormData(prev => ({ ...prev, fuel_efficiency_kmpl: e.target.value }))}
+                    placeholder="e.g., 4.5"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Tank Capacity (Liters) *
+                  </label>
+                  <input
+                    type="number"
+                    min="50"
+                    max="500"
+                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    value={vehicleFormData.tank_capacity_liters}
+                    onChange={e => setVehicleFormData(prev => ({ ...prev, tank_capacity_liters: e.target.value }))}
+                    placeholder="e.g., 200"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Current Fuel Level (Liters) *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    value={vehicleFormData.current_fuel_level}
+                    onChange={e => setVehicleFormData(prev => ({ ...prev, current_fuel_level: e.target.value }))}
+                    placeholder="e.g., 150"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Driver Name</label>
+                  <input
+                    type="text"
+                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    value={vehicleFormData.driver_name}
+                    onChange={e => setVehicleFormData(prev => ({ ...prev, driver_name: e.target.value }))}
+                    placeholder="e.g., Kwame Asante"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Driver Contact</label>
+                  <input
+                    type="tel"
+                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    value={vehicleFormData.driver_contact}
+                    onChange={e => setVehicleFormData(prev => ({ ...prev, driver_contact: e.target.value }))}
+                    placeholder="e.g., +233 24 123 4567"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setShowVehicleModal(false)}
+                  className="btn btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                >
+                  {editingVehicle ? 'Update Vehicle' : 'Add Vehicle'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* System Configuration Modal */}
+      {showConfigModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-6">
+              System Configuration
+            </h3>
+            
+            <div className="space-y-8">
+              {/* Dumping Sites Configuration */}
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="text-md font-medium text-gray-900 dark:text-white">Dumping Sites</h4>
+                  <button
+                    onClick={handleAddDumpingSite}
+                    className="btn btn-primary btn-sm"
+                  >
+                    Add Site
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  {configData.dumpingSites.map((site, index) => (
+                    <div key={index} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                      <div className="flex justify-between items-start mb-3">
+                        <h5 className="font-medium text-gray-900 dark:text-white">Site {index + 1}</h5>
+                        {configData.dumpingSites.length > 1 && (
+                          <button
+                            onClick={() => handleRemoveDumpingSite(index)}
+                            className="text-red-600 hover:text-red-800 dark:text-red-400"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Site ID *</label>
+                          <input
+                            type="text"
+                            className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            value={site.id}
+                            onChange={e => handleDumpingSiteChange(index, 'id', e.target.value)}
+                            placeholder="e.g., BORTEYMAN"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Site Name *</label>
+                          <input
+                            type="text"
+                            className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            value={site.name}
+                            onChange={e => handleDumpingSiteChange(index, 'name', e.target.value)}
+                            placeholder="e.g., Borteyman Landfill Site"
+                          />
+                        </div>
+                        
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Location *</label>
+                          <input
+                            type="text"
+                            className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            value={site.location}
+                            onChange={e => handleDumpingSiteChange(index, 'location', e.target.value)}
+                            placeholder="e.g., Tema, Greater Accra"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Latitude</label>
+                          <input
+                            type="number"
+                            step="0.000001"
+                            className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            value={site.coordinates.lat}
+                            onChange={e => handleDumpingSiteChange(index, 'coordinates.lat', e.target.value)}
+                            placeholder="e.g., 5.7167"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Longitude</label>
+                          <input
+                            type="number"
+                            step="0.000001"
+                            className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            value={site.coordinates.lng}
+                            onChange={e => handleDumpingSiteChange(index, 'coordinates.lng', e.target.value)}
+                            placeholder="e.g., -0.0167"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Zone Distances Configuration */}
+              <div>
+                <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4">Zone to Dumping Site Distances (km)</h4>
+                <div className="space-y-4">
+                  {Object.keys(configData.zoneDistances).map(zone => (
+                    <div key={zone} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                      <h5 className="font-medium text-gray-900 dark:text-white mb-3">{zone}</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {configData.dumpingSites.filter(site => site.id).map(site => (
+                          <div key={site.id}>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                              Distance to {site.name} (km) *
+                            </label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              min="0"
+                              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                              value={(configData.zoneDistances as any)[zone][site.id] || ''}
+                              onChange={e => setConfigData(prev => ({
+                                ...prev,
+                                zoneDistances: {
+                                  ...prev.zoneDistances,
+                                  [zone]: {
+                                    ...prev.zoneDistances[zone as keyof typeof prev.zoneDistances],
+                                    [site.id]: parseFloat(e.target.value) || 0
+                                  }
+                                }
+                              }))}
+                              placeholder="e.g., 12.5"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Collection Thresholds */}
+              <div>
+                <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4">Collection Thresholds by Zone</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(configData.collectionThresholds).map(([zone, config]) => (
+                    <div key={zone} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                      <h5 className="font-medium text-gray-900 dark:text-white mb-3">{zone}</h5>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Collection Threshold (reports) *
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            value={config.threshold}
+                            onChange={e => setConfigData(prev => ({
+                              ...prev,
+                              collectionThresholds: {
+                                ...prev.collectionThresholds,
+                                [zone]: {
+                                  ...prev.collectionThresholds[zone as keyof typeof prev.collectionThresholds],
+                                  threshold: parseInt(e.target.value) || 1
+                                }
+                              }
+                            }))}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Estimated Households
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            value={config.households}
+                            onChange={e => setConfigData(prev => ({
+                              ...prev,
+                              collectionThresholds: {
+                                ...prev.collectionThresholds,
+                                [zone]: {
+                                  ...prev.collectionThresholds[zone as keyof typeof prev.collectionThresholds],
+                                  households: parseInt(e.target.value) || 0
+                                }
+                              }
+                            }))}
+                            placeholder="e.g., 45000"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Fuel Price Configuration */}
+              <div>
+                <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4">Fuel Price</h4>
+                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                  <div className="max-w-md">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Current Fuel Price (₵ per liter) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      value={configData.fuelPricePerLiter}
+                      onChange={e => setConfigData(prev => ({
+                        ...prev,
+                        fuelPricePerLiter: parseFloat(e.target.value) || 0
+                      }))}
+                      placeholder="e.g., 10.50"
+                    />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      This will be used for automatic fuel cost calculations
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 flex justify-end space-x-3">
+              <button
+                onClick={() => setShowConfigModal(false)}
+                className="btn btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveConfiguration}
+                className="btn btn-primary"
+              >
+                Save Configuration
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Vehicle Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+              Confirm Vehicle Deletion
+            </h3>
+            
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Are you sure you want to delete vehicle <strong>{deletingVehicle}</strong>? This action cannot be undone.
+            </p>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleCancelDelete}
+                className="btn btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="btn bg-red-600 hover:bg-red-700 text-white"
+              >
+                Delete Vehicle
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Toast Notifications */}
       <div className="fixed top-4 right-4 z-50 space-y-2">
         {toasts.map((toast) => (
@@ -1001,7 +1849,7 @@ export default function DispatcherDashboard() {
                   )}
                   {toast.type === 'error' && (
                     <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
                     </svg>
                   )}
                   {toast.type === 'warning' && (

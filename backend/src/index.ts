@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes';
 import forecastRoutes from './routes/forecast.routes';
+import fuelRoutes from './routes/fuel.routes';
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use(express.static('public'));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/forecast', forecastRoutes);
+app.use('/api/fuel', fuelRoutes);
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {

@@ -371,9 +371,9 @@ export default function Insights() {
                         <div className="text-sm text-gray-300">Incoming Deliveries</div>
                         <div className="text-lg font-bold text-yellow-400">{siteDeliveries.length}</div>
                       </div>
-                    </div>
-                  </div>
-                  
+          </div>
+        </div>
+
                   {/* Click Indicator */}
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-gray-300">
@@ -536,7 +536,7 @@ export default function Insights() {
             <div>
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
                 Composition Breakdown
-              </h3>
+          </h3>
               <ResponsiveContainer width="100%" height={300}>
                 {selectedSite === 'all' ? (
                   <PieChart>
@@ -678,7 +678,7 @@ export default function Insights() {
           <p className="text-gray-600 dark:text-gray-400">
             Choose a date from the date picker above to view waste composition data and images.
           </p>
-        </div>
+              </div>
       )}
 
       {/* Trend Analysis Charts - Real Composition Changes Over Time */}
@@ -741,7 +741,7 @@ export default function Insights() {
             </div>
 
             {/* Total Weight Trend */}
-            <div>
+                <div>
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
                 Total Waste Weight Over Time
               </h3>
@@ -817,7 +817,7 @@ export default function Insights() {
       {trendLoading && (
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700 text-center">
           <div className="text-lg text-gray-600 dark:text-gray-300">Loading trend data...</div>
-        </div>
+      </div>
       )}
 
       {/* No Trend Data */}

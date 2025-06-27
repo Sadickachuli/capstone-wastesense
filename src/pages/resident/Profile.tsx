@@ -48,15 +48,15 @@ export default function Profile() {
               <div>
                 <dt className="text-sm font-medium text-gray-500 dark:text-gray-300">Email address</dt>
                 <dd className="mt-1 text-base text-gray-900 dark:text-white font-semibold">{user?.email}</dd>
-              </div>
+                </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500 dark:text-gray-300">Phone number</dt>
                 <dd className="mt-1 text-base text-gray-900 dark:text-white font-semibold">{user?.phone}</dd>
-              </div>
+                </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500 dark:text-gray-300">Zone</dt>
                 <dd className="mt-1 text-base text-gray-900 dark:text-white font-semibold">{user?.zone}</dd>
-              </div>
+                </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500 dark:text-gray-300">Member since</dt>
                 <dd className="mt-1 text-base text-gray-900 dark:text-white font-semibold">
@@ -70,9 +70,9 @@ export default function Profile() {
                     }
                     return 'Unknown';
                   })()}
-                </dd>
-              </div>
-            </dl>
+                  </dd>
+                </div>
+              </dl>
           </div>
         </div>
       ) : (

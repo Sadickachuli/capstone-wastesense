@@ -139,7 +139,7 @@ export default function RecyclerDashboard() {
   const [siteCompositions, setSiteCompositions] = useState<Record<string, any>>({});
   const [siteImages, setSiteImages] = useState<Record<string, string>>({});
   const [allSitesImage, setAllSitesImage] = useState<string | null>(null);
-  
+
   // Set initial selected site when data loads
   useEffect(() => {
     if (sites.length > 0 && !selectedSite) {
@@ -327,7 +327,7 @@ export default function RecyclerDashboard() {
         <div className="flex items-center gap-2">
           <span className="inline-block w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-blue-400 dark:from-green-700 dark:to-blue-700 flex items-center justify-center text-white text-xl font-bold shadow-lg">
             {user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : 'U'}
-          </span>
+              </span>
         </div>
       </div>
 

@@ -59,7 +59,7 @@ const defaultNotifications: Record<string, NotificationSetting[]> = {
 };
 
 export default function UserSettings({ role }: UserSettingsProps) {
-  const { user, setUser } = useAuth();
+  const { user } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const [notifications, setNotifications] = useState(defaultNotifications[role]);
 

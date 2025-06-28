@@ -16,7 +16,7 @@ export interface Report {
   userId: string;
   timestamp: string;
   zone: string;
-  status: 'new' | 'in-progress' | 'completed';
+  status: 'new' | 'pending' | 'in-progress' | 'completed' | 'collected';
   description?: string;
   location?: {
     lat: number;

@@ -80,11 +80,15 @@ export default function Insights() {
   // Fetch deliveries
   useEffect(() => {
     fetchDeliveries();
+    // Refresh deliveries every 30 seconds to see new ones
+    const interval = setInterval(fetchDeliveries, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchDeliveries = async () => {
     try {
       const response = await axios.get('/api/auth/deliveries');
+      console.log('DEBUG: Fetched deliveries:', response.data.deliveries);
       setDeliveries(response.data.deliveries);
     } catch (error) {
       console.error('Failed to fetch deliveries:', error);

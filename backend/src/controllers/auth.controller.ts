@@ -387,10 +387,29 @@ export const markAllReportsCollected = async (req: Request, res: Response) => {
     
     console.log('DEBUG: Notifications archived:', notificationsUpdated);
 
+    // UPDATE VEHICLE STATUS: scheduled → in-transit (not available yet)
+    const currentTime = new Date().toISOString();
+    await db('vehicles')
+      .where('id', truckId)
+      .update({
+        status: 'in-transit',
+        updated_at: currentTime
+      });
+    console.log(`DEBUG: Vehicle ${truckId} status updated to in-transit`);
+
+    // Complete schedules for this vehicle (they're now in-transit)
+    const completedSchedules = await db('schedules')
+      .where('vehicle_id', truckId)
+      .whereIn('status', ['scheduled', 'in-progress'])
+      .update({
+        status: 'completed',
+        updated_at: currentTime
+      });
+    console.log(`DEBUG: Completed ${completedSchedules} schedules for vehicle ${truckId}`);
+
     // AUTOMATIC FUEL CONSUMPTION LOGGING - PRACTICAL IMPLEMENTATION
     if (reportsUpdated > 0 && reportsToUpdate.length > 0) {
       const zone = reportsToUpdate[0].zone;
-      const currentTime = new Date().toISOString();
       
       // TODO: Get configuration from dispatcher settings (for now use defaults)
       // In a real implementation, this would come from the dispatcher's saved configuration
@@ -452,7 +471,7 @@ export const markAllReportsCollected = async (req: Request, res: Response) => {
           logged_by: (req as any).user?.id || 'system'
         });
         
-        // Update vehicle fuel level and odometer
+        // Update vehicle fuel level and odometer (keep status as in-transit)
         const newFuelLevel = Math.max(0, vehicle.current_fuel_level - fuelConsumed);
         const newTotalDistance = Number(vehicle.total_distance_km) + Number(actualDistance.toFixed(1));
         
@@ -461,14 +480,13 @@ export const markAllReportsCollected = async (req: Request, res: Response) => {
           .update({
             current_fuel_level: Number(newFuelLevel.toFixed(2)),
             total_distance_km: newTotalDistance,
-            status: 'available', // Mark as available after collection
             updated_at: currentTime
           });
         
         console.log(`DEBUG: Auto-logged fuel consumption - ${fuelConsumed.toFixed(2)}L for ${actualDistance.toFixed(1)}km trip using configured distance: ${distance}km`);
       }
 
-      // Create delivery record with realistic arrival time
+      // Create delivery record with IN-TRANSIT status
       const estimatedArrival = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
       
       // Calculate estimated weight and composition (realistic values based on reports)
@@ -496,7 +514,7 @@ export const markAllReportsCollected = async (req: Request, res: Response) => {
         facility_id: dumpingSiteId,
         zone: zone,
         estimated_arrival: estimatedArrival.toISOString(),
-        status: 'in-transit',
+        status: 'in-transit', // Vehicle is in-transit to dumping site
         weight: estimatedWeight,
         composition: JSON.stringify(mockComposition),
         // Add fuel tracking data to delivery
@@ -505,14 +523,17 @@ export const markAllReportsCollected = async (req: Request, res: Response) => {
         fuel_consumed_liters: vehicle ? fuelConsumed : null,
         fuel_cost: vehicle ? fuelCost : null,
         actual_departure: vehicle ? tripStart.toISOString() : null,
-        actual_arrival: currentTime,
+        actual_arrival: null, // Will be set when composition is updated
         created_by: (req as any).user?.id || null,
       }).returning('*');
 
-      console.log('DEBUG: Delivery created with fuel tracking data:', delivery);
+      console.log('DEBUG: Delivery created with in-transit status:', delivery);
     }
 
-    res.json({ updatedCount: reportsUpdated });
+    res.json({ 
+      updatedCount: reportsUpdated,
+      message: `Successfully marked ${reportsUpdated} reports as collected. Vehicle is now in-transit to dumping site.`
+    });
   } catch (err) {
     console.error('Mark All Reports Collected error:', err);
     res.status(500).json({ message: 'Internal server error' });
@@ -603,167 +624,286 @@ export const getArchivedDispatcherNotifications = async (req: Request, res: Resp
   }
 };
 
-// Get intelligent dispatch recommendation based on real fleet
+// Get dispatch recommendation with smart threshold logic
 export const getDispatchRecommendation = async (req: Request, res: Response) => {
   try {
-    // Get available vehicles from the fleet
-    const availableVehicles = await db('vehicles')
-      .where('status', 'available')
-      .where('needs_refuel', false)
-      .orderBy('fuel_percentage', 'desc'); // Prioritize vehicles with more fuel
+    const { trucks } = req.query;
+    const availableTrucks = parseInt(trucks as string) || 3;
 
-    if (availableVehicles.length === 0) {
-      return res.json({
-        recommendation: 'No vehicles available',
-        reportCounts: { North: 0, South: 0 },
-        allocation: { North: 0, South: 0 },
-        schedules: [],
-        availableVehicles: availableVehicles.length,
-        reason: 'All vehicles are either busy or need refueling'
-      });
-    }
-
-    // Get current reports by zone
-    const reportCounts = await db('reports')
-      .select('zone')
-      .count('* as count')
-      .where('status', 'pending')
-      .groupBy('zone');
-
-    const counts = {
-      North: 0,
-      South: 0
-    };
-
-    reportCounts.forEach((row: any) => {
-      if (row.zone === 'Ablekuma North') counts.North = Number(row.count);
-      if (row.zone === 'Ayawaso West') counts.South = Number(row.count);
+    // Get system configuration for zone customers
+    const configRows = await db('system_config').select('key', 'value');
+    const config: { [key: string]: any } = {};
+    configRows.forEach(row => {
+      try {
+        config[row.key] = JSON.parse(row.value);
+      } catch {
+        config[row.key] = row.value;
+      }
     });
 
-    // Get zone customer configuration from database
-    const zoneConfigRow = await db('system_config').where('key', 'zone_customers').first();
-    let zoneConfig;
-    
-    if (zoneConfigRow) {
-      try {
-        zoneConfig = JSON.parse(zoneConfigRow.value);
-      } catch (err) {
-        console.error('Failed to parse zone configuration:', err);
-        // Fallback to defaults
-        zoneConfig = {
-          'Ablekuma North': { totalCustomers: 145 },
-          'Ayawaso West': { totalCustomers: 82 }
-        };
+    const zoneCustomers = config.zone_customers || {
+      'Ablekuma North': { totalCustomers: 145 },
+      'Ayawaso West': { totalCustomers: 82 }
+    };
+
+    // Get current report counts by zone
+    const reportCounts = await db('reports')
+      .join('users', 'reports.user_id', 'users.id')
+      .select('users.zone')
+      .count('* as count')
+      .whereIn('reports.status', ['new', 'in-progress'])
+      .groupBy('users.zone');
+
+    const counts: { [key: string]: number } = {};
+    reportCounts.forEach((row: any) => {
+      counts[row.zone] = parseInt(row.count);
+    });
+
+    const northReports = counts['Ablekuma North'] || 0;
+    const southReports = counts['Ayawaso West'] || 0;
+    const northCustomers = zoneCustomers['Ablekuma North']?.totalCustomers || 145;
+    const southCustomers = zoneCustomers['Ayawaso West']?.totalCustomers || 82;
+
+    // Smart threshold logic
+    const getThreshold = (totalCustomers: number) => {
+      if (totalCustomers > 40) {
+        return Math.ceil(totalCustomers * 0.8); // 80% threshold for large zones
+      } else {
+        return totalCustomers; // 100% threshold for small zones
       }
-    } else {
-      // Fallback to defaults if no config found
-      zoneConfig = {
-        'Ablekuma North': { totalCustomers: 145 },
-        'Ayawaso West': { totalCustomers: 82 }
-      };
-    }
+    };
 
-    // Determine which zones need collection
-    const northReady = counts.North >= zoneConfig['Ablekuma North'].totalCustomers;
-    const southReady = counts.South >= zoneConfig['Ayawaso West'].totalCustomers;
+    const northThreshold = getThreshold(northCustomers);
+    const southThreshold = getThreshold(southCustomers);
 
-    if (!northReady && !southReady) {
-      return res.json({
-        recommendation: 'No zones ready for collection',
-        reportCounts: { North: counts.North, South: counts.South },
-        allocation: { North: 0, South: 0 },
-        schedules: [],
-        availableVehicles: availableVehicles.length,
-        reason: `Ablekuma North: ${zoneConfig['Ablekuma North'].totalCustomers - counts.North} more needed, Ayawaso West: ${zoneConfig['Ayawaso West'].totalCustomers - counts.South} more needed`
-      });
-    }
+    const northReached = northReports >= northThreshold;
+    const southReached = southReports >= southThreshold;
 
-    // Smart vehicle allocation based on priority and efficiency
-    const schedules = [];
-    let vehicleIndex = 0;
-    const allocation = { North: 0, South: 0 };
+    let allocation: { [key: string]: number } = { North: 0, South: 0 };
+    let schedules: any[] = [];
+    let shouldAutoSchedule = false;
 
-    // Prioritize zone with higher percentage completion
-    const northPriority = counts.North / zoneConfig['Ablekuma North'].totalCustomers;
-    const southPriority = counts.South / zoneConfig['Ayawaso West'].totalCustomers;
+    if (northReached || southReached) {
+      // Check if scheduling has already happened for these zones
+      const existingSchedules = await db('schedules')
+        .where('status', 'scheduled')
+        .whereIn('zone', [
+          ...(northReached ? ['Ablekuma North'] : []),
+          ...(southReached ? ['Ayawaso West'] : [])
+        ])
+        .select('zone', 'vehicle_id', 'id', 'scheduled_start', 'estimated_completion', 'reports_count');
 
-    const zones = [
-      { name: 'Ablekuma North', key: 'North', ready: northReady, priority: northPriority, reports: counts.North },
-      { name: 'Ayawaso West', key: 'South', ready: southReady, priority: southPriority, reports: counts.South }
-    ].sort((a, b) => b.priority - a.priority);
+      const northScheduled = existingSchedules.filter(s => s.zone === 'Ablekuma North');
+      const southScheduled = existingSchedules.filter(s => s.zone === 'Ayawaso West');
 
-    // Schedule collections for ready zones
-    for (const zone of zones) {
-      if (zone.ready && vehicleIndex < availableVehicles.length) {
-        const vehicle = availableVehicles[vehicleIndex];
-        const now = new Date();
+      if ((northReached && northScheduled.length > 0) || (southReached && southScheduled.length > 0)) {
+        // Scheduling already happened, show existing schedules
+        allocation.North = northScheduled.length;
+        allocation.South = southScheduled.length;
         
-        // Schedule collection 30 minutes from now for first zone, 2 hours for second
-        const collectionTime = new Date(now.getTime() + (vehicleIndex === 0 ? 30 : 120) * 60 * 1000);
+        // Get vehicle info for existing schedules
+        for (const schedule of existingSchedules) {
+          const vehicle = await db('vehicles').where('id', schedule.vehicle_id).first();
+          schedules.push({
+            id: schedule.id,
+            zone: schedule.zone,
+            vehicleInfo: `${vehicle?.make || ''} ${vehicle?.model || ''} (${schedule.vehicle_id})`,
+            scheduledStart: schedule.scheduled_start,
+            estimatedCompletion: schedule.estimated_completion,
+            reportsCount: schedule.reports_count
+          });
+        }
         
-        // Estimate completion time based on zone size (larger zones take longer)
-        const estimatedDuration = zone.reports > 100 ? 4 : 3; // hours
-        const completionTime = new Date(collectionTime.getTime() + estimatedDuration * 60 * 60 * 1000);
-
-        const estimatedDistance = zone.name === 'Ablekuma North' ? 25 : 18; // km to dumping sites
-        const estimatedFuelConsumption = Math.round((estimatedDistance) / vehicle.fuel_efficiency_kmpl * 10) / 10;
-
-        // Generate unique schedule ID
-        const scheduleId = `SCH-${Date.now()}-${vehicleIndex}`;
-
-        // Create schedule entry
-        const schedule = {
-          id: scheduleId,
-          vehicleId: vehicle.id,
-          vehicleInfo: `${vehicle.make} ${vehicle.model} (${vehicle.registration_number || vehicle.id})`,
-          driverName: vehicle.driver_name || 'Unassigned',
-          driverContact: vehicle.driver_contact || '',
-          zone: zone.name,
-          zoneKey: zone.key,
-          reportsCount: zone.reports,
-          scheduledStart: collectionTime.toISOString(),
-          estimatedCompletion: completionTime.toISOString(),
-          status: 'scheduled',
-          fuelLevel: vehicle.fuel_percentage,
-          estimatedDistance: estimatedDistance,
-          estimatedFuelConsumption: estimatedFuelConsumption
+        shouldAutoSchedule = true; // Mark as auto-scheduled (already happened)
+      } else {
+        // Need to schedule now
+        shouldAutoSchedule = true;
+        
+        // PRACTICAL CAPACITY-BASED ALLOCATION (not percentage-based)
+        // Calculate actual truck needs based on waste volume and truck capacity
+        
+        // Estimate waste volume per report (average household bin)
+        const wastePerReport = 0.24; // cubic meters per household bin (240L standard bin)
+        
+        // Get truck capacities and calculate optimal allocation
+        const availableVehicles = await db('vehicles')
+          .where('status', 'available')
+          .whereNot('needs_refuel', true)
+          .orderBy('fuel_efficiency_kmpl', 'desc'); // Prioritize fuel-efficient vehicles
+        
+        // Truck capacity mapping (cubic meters)
+        const getTruckCapacity = (type: string) => {
+          switch (type) {
+            case 'van': return 3.5; // Small van - good for 1-15 households
+            case 'rear_loader': return 12; // Medium truck - good for 15-50 households  
+            case 'compressed_truck': return 25; // Large truck - good for 50+ households
+            default: return 8; // Default medium capacity
+          }
         };
+        
+        let vehicleIndex = 0;
+        
+        // Smart allocation for North zone
+        if (northReached && availableVehicles.length > vehicleIndex) {
+          const northWasteVolume = northReports * wastePerReport;
+          
+          // Find the smallest truck that can handle the load efficiently
+          let trucksNeeded = 0;
+          let remainingVolume = northWasteVolume;
+          
+          for (const vehicle of availableVehicles.slice(vehicleIndex)) {
+            if (remainingVolume <= 0) break;
+            
+            const truckCapacity = getTruckCapacity(vehicle.type);
+            if (remainingVolume <= truckCapacity) {
+              // This truck can handle the remaining load
+              trucksNeeded++;
+              remainingVolume = 0;
+            } else {
+              // Need this truck plus more
+              trucksNeeded++;
+              remainingVolume -= truckCapacity;
+            }
+            
+            // Safety limit: max 2 trucks for any zone (fuel efficiency)
+            if (trucksNeeded >= 2) break;
+          }
+          
+          allocation.North = Math.min(trucksNeeded, availableVehicles.length - vehicleIndex, 2);
+          
+          // Schedule trucks for North zone
+          for (let i = 0; i < allocation.North; i++) {
+            const vehicle = availableVehicles[vehicleIndex++];
+            const scheduleId = `SCH-${Date.now()}-${i}`;
+            const scheduledStart = new Date(Date.now() + 15 * 60 * 1000);
+            const estimatedCompletion = new Date(scheduledStart.getTime() + 3 * 60 * 60 * 1000);
 
-        schedules.push(schedule);
-        allocation[zone.key as keyof typeof allocation] = 1;
+            await db('schedules').insert({
+              id: scheduleId,
+              vehicle_id: vehicle.id,
+              zone: 'Ablekuma North',
+              scheduled_start: scheduledStart.toISOString(),
+              estimated_completion: estimatedCompletion.toISOString(),
+              status: 'scheduled',
+              reports_count: northReports,
+              estimated_distance_km: config.zoneDistances?.['Ablekuma North']?.['WS001'] || 15,
+              estimated_fuel_consumption: ((config.zoneDistances?.['Ablekuma North']?.['WS001'] || 15) / vehicle.fuel_efficiency_kmpl).toFixed(2),
+              driver_name: vehicle.driver_name,
+              driver_contact: vehicle.driver_contact
+            });
 
-        // Save schedule to database
-        await db('schedules').insert({
-          id: scheduleId,
-          vehicle_id: vehicle.id,
-          zone: zone.name,
-          scheduled_start: collectionTime.toISOString(),
-          estimated_completion: completionTime.toISOString(),
-          status: 'scheduled',
-          reports_count: zone.reports,
-          estimated_distance_km: estimatedDistance,
-          estimated_fuel_consumption: estimatedFuelConsumption,
-          driver_name: vehicle.driver_name || null,
-          driver_contact: vehicle.driver_contact || null,
-          created_by: (req as any).user?.id || 'system'
-        });
+            await db('vehicles')
+              .where('id', vehicle.id)
+              .update({ 
+                status: 'scheduled',
+                updated_at: new Date().toISOString()
+              });
 
-        // Update vehicle status to 'scheduled'
-        await db('vehicles')
-          .where('id', vehicle.id)
-          .update({ status: 'scheduled' });
+            schedules.push({
+              id: scheduleId,
+              zone: 'Ablekuma North',
+              vehicleInfo: `${vehicle.make} ${vehicle.model} (${vehicle.id}) - ${vehicle.type}`,
+              scheduledStart: scheduledStart.toISOString(),
+              estimatedCompletion: estimatedCompletion.toISOString(),
+              reportsCount: northReports
+            });
+          }
+        }
 
-        vehicleIndex++;
+        // Smart allocation for South zone
+        if (southReached && availableVehicles.length > vehicleIndex) {
+          const southWasteVolume = southReports * wastePerReport;
+          
+          // Find the smallest truck that can handle the load efficiently
+          let trucksNeeded = 0;
+          let remainingVolume = southWasteVolume;
+          
+          for (const vehicle of availableVehicles.slice(vehicleIndex)) {
+            if (remainingVolume <= 0) break;
+            
+            const truckCapacity = getTruckCapacity(vehicle.type);
+            if (remainingVolume <= truckCapacity) {
+              // This truck can handle the remaining load
+              trucksNeeded++;
+              remainingVolume = 0;
+            } else {
+              // Need this truck plus more
+              trucksNeeded++;
+              remainingVolume -= truckCapacity;
+            }
+            
+            // Safety limit: max 2 trucks for any zone (fuel efficiency)
+            if (trucksNeeded >= 2) break;
+          }
+          
+          allocation.South = Math.min(trucksNeeded, availableVehicles.length - vehicleIndex, 2);
+          
+          // Schedule trucks for South zone
+          for (let i = 0; i < allocation.South; i++) {
+            const vehicle = availableVehicles[vehicleIndex++];
+            const scheduleId = `SCH-${Date.now()}-${vehicleIndex}`;
+            const scheduledStart = new Date(Date.now() + 15 * 60 * 1000);
+            const estimatedCompletion = new Date(scheduledStart.getTime() + 3 * 60 * 60 * 1000);
+
+            await db('schedules').insert({
+              id: scheduleId,
+              vehicle_id: vehicle.id,
+              zone: 'Ayawaso West',
+              scheduled_start: scheduledStart.toISOString(),
+              estimated_completion: estimatedCompletion.toISOString(),
+              status: 'scheduled',
+              reports_count: southReports,
+              estimated_distance_km: config.zoneDistances?.['Ayawaso West']?.['WS002'] || 18,
+              estimated_fuel_consumption: ((config.zoneDistances?.['Ayawaso West']?.['WS002'] || 18) / vehicle.fuel_efficiency_kmpl).toFixed(2),
+              driver_name: vehicle.driver_name,
+              driver_contact: vehicle.driver_contact
+            });
+
+            await db('vehicles')
+              .where('id', vehicle.id)
+              .update({ 
+                status: 'scheduled',
+                updated_at: new Date().toISOString()
+              });
+
+            schedules.push({
+              id: scheduleId,
+              zone: 'Ayawaso West',
+              vehicleInfo: `${vehicle.make} ${vehicle.model} (${vehicle.id}) - ${vehicle.type}`,
+              scheduledStart: scheduledStart.toISOString(),
+              estimatedCompletion: estimatedCompletion.toISOString(),
+              reportsCount: southReports
+            });
+          }
+        }
       }
     }
+
+    const recommendation = shouldAutoSchedule 
+      ? `✅ AUTO-SCHEDULED: ${schedules.length} trucks dispatched to zones that reached threshold`
+      : northReports > 0 || southReports > 0
+      ? `Monitoring: Waiting for more reports to reach threshold`
+      : `No collection needed at this time`;
+
+    const reason = shouldAutoSchedule
+      ? `Threshold reached - Ablekuma North: ${northReports}/${northThreshold}, Ayawaso West: ${southReports}/${southThreshold}`
+      : `Current reports - Ablekuma North: ${northReports}/${northThreshold}, Ayawaso West: ${southReports}/${southThreshold}`;
 
     res.json({
-      recommendation: schedules.length > 0 ? 'Collection scheduled' : 'No vehicles available for ready zones',
-      reportCounts: { North: counts.North, South: counts.South },
+      availableVehicles: availableTrucks,
+      reportCounts: {
+        North: northReports,
+        South: southReports
+      },
+      thresholds: {
+        North: northThreshold,
+        South: southThreshold
+      },
       allocation,
+      recommendation,
+      reason,
       schedules,
-      availableVehicles: availableVehicles.length,
-      reason: schedules.length > 0 ? `${schedules.length} vehicle(s) scheduled for collection` : 'All available vehicles assigned'
+      autoScheduled: shouldAutoSchedule
     });
 
   } catch (err) {
@@ -896,10 +1036,35 @@ export const updateWasteComposition = async (req: Request, res: Response) => {
         .where('status', 'in-transit')
         .update({ 
           status: 'arrived',
+          actual_arrival: new Date().toISOString(),
           updated_at: new Date().toISOString()
         });
       
       console.log(`DEBUG: Updated ${deliveriesUpdated} deliveries from 'in-transit' to 'arrived' for site ${id}`);
+      
+      // UPDATE VEHICLE STATUS: in-transit → available (final step in workflow)
+      if (deliveriesUpdated > 0) {
+        // Get truck IDs from the updated deliveries
+        const arrivedDeliveries = await db('deliveries')
+          .where('facility_id', id)
+          .where('status', 'arrived')
+          .where('updated_at', '>', new Date(Date.now() - 5 * 60 * 1000).toISOString()) // Updated in last 5 minutes
+          .select('truck_id');
+        
+        const truckIds = arrivedDeliveries.map(d => d.truck_id);
+        
+        if (truckIds.length > 0) {
+          const vehiclesUpdated = await db('vehicles')
+            .whereIn('id', truckIds)
+            .where('status', 'in-transit')
+            .update({
+              status: 'available',
+              updated_at: new Date().toISOString()
+            });
+          
+          console.log(`DEBUG: Updated ${vehiclesUpdated} vehicles from 'in-transit' to 'available' after composition update`);
+        }
+      }
     }
 
     // Get site info for notification
@@ -1266,8 +1431,14 @@ export const getCollectionSchedules = async (req: Request, res: Response) => {
         'vehicles.registration_number',
         'vehicles.type as vehicle_type'
       )
-      .where('schedules.status', 'in', ['scheduled', 'in-progress'])
-      .orderBy('schedules.scheduled_start', 'asc');
+      .where(function() {
+        this.whereIn('schedules.status', ['scheduled', 'in-progress'])
+          .orWhere(function() {
+            this.where('schedules.status', 'completed')
+              .andWhere('schedules.updated_at', '>', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()); // Last 24 hours
+          });
+      })
+      .orderBy('schedules.scheduled_start', 'desc'); // Show most recent first
 
     // Filter by zone if specified (for residents)
     if (zone) {
@@ -1350,6 +1521,59 @@ export const updateSystemConfig = async (req: Request, res: Response) => {
     res.json({ message: 'Configuration updated successfully' });
   } catch (err) {
     console.error('Update System Config error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Complete schedules when reports are collected
+export const completeSchedulesByReports = async (req: Request, res: Response) => {
+  try {
+    // Find zones that have recently collected reports
+    const zonesWithCollectedReports = await db('reports')
+      .select('zone')
+      .where('status', 'collected')
+      .where('updated_at', '>', new Date(Date.now() - 10 * 60 * 1000).toISOString()) // Updated in last 10 minutes
+      .groupBy('zone');
+
+    const zonesToComplete = zonesWithCollectedReports.map((row: any) => row.zone);
+
+    if (zonesToComplete.length > 0) {
+      // Update schedules for these zones to completed
+      const updatedCount = await db('schedules')
+        .whereIn('zone', zonesToComplete)
+        .whereIn('status', ['scheduled', 'in-progress'])
+        .update({
+          status: 'completed',
+          updated_at: new Date().toISOString()
+        });
+
+      // Also update vehicle status back to available for completed schedules
+      const completedSchedules = await db('schedules')
+        .whereIn('zone', zonesToComplete)
+        .where('status', 'completed')
+        .select('vehicle_id');
+
+      if (completedSchedules.length > 0) {
+        const vehicleIds = completedSchedules.map(s => s.vehicle_id);
+        await db('vehicles')
+          .whereIn('id', vehicleIds)
+          .update({
+            status: 'available',
+            updated_at: new Date().toISOString()
+          });
+      }
+
+      console.log(`Completed ${updatedCount} schedules for zones: ${zonesToComplete.join(', ')}`);
+      res.json({ 
+        message: 'Schedules updated successfully', 
+        completedSchedules: updatedCount,
+        zones: zonesToComplete 
+      });
+    } else {
+      res.json({ message: 'No schedules to complete', completedSchedules: 0 });
+    }
+  } catch (err) {
+    console.error('Complete Schedules error:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
 }; 

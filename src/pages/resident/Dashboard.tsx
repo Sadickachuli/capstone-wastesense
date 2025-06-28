@@ -55,7 +55,7 @@ export default function ResidentDashboard() {
     // Refresh schedules every 30 seconds
     const interval = setInterval(fetchSchedules, 30000);
     return () => clearInterval(interval);
-  }, [user?.zone]);
+  }, [user?.zone, reports]);
 
   const getNextSchedule = (): CollectionSchedule | null => {
     const now = new Date();
@@ -69,9 +69,13 @@ export default function ResidentDashboard() {
   const getActiveSchedule = (): CollectionSchedule | null => {
     const now = new Date();
     return schedules.find(schedule => 
-      schedule.status === 'in-progress' || 
-      (new Date(schedule.scheduledStart) <= now && new Date(schedule.estimatedCompletion) >= now)
+      (schedule.status === 'in-progress') || 
+      (schedule.status === 'scheduled' && new Date(schedule.scheduledStart) <= now && new Date(schedule.estimatedCompletion) >= now)
     ) || null;
+  };
+
+  const getRecentCompletedSchedule = (): CollectionSchedule | null => {
+    return schedules.find(schedule => schedule.status === 'completed') || null;
   };
 
   const handleOpenModal = () => {
@@ -107,6 +111,7 @@ export default function ResidentDashboard() {
 
   const nextSchedule = getNextSchedule();
   const activeSchedule = getActiveSchedule();
+  const recentCompletedSchedule = getRecentCompletedSchedule();
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto py-8 px-4">
@@ -157,6 +162,19 @@ export default function ResidentDashboard() {
                 Expected completion: {new Date(activeSchedule.estimatedCompletion).toLocaleString()}
               </p>
             </div>
+          ) : recentCompletedSchedule ? (
+            <div className="mt-3 p-3 bg-green-50 dark:bg-green-900 rounded-lg border-l-4 border-green-500">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-green-600 dark:text-green-400">✅</span>
+                <span className="font-semibold text-green-800 dark:text-green-200">Collection Completed</span>
+              </div>
+              <p className="text-sm text-green-700 dark:text-green-300">
+                Vehicle: {recentCompletedSchedule.vehicle.make} {recentCompletedSchedule.vehicle.model}
+              </p>
+              <p className="text-sm text-green-700 dark:text-green-300">
+                Completed: {new Date(recentCompletedSchedule.estimatedCompletion).toLocaleDateString()}
+              </p>
+            </div>
           ) : nextSchedule ? (
             <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900 rounded-lg border-l-4 border-blue-500">
               <div className="flex items-center gap-2 mb-2">
@@ -198,20 +216,23 @@ export default function ResidentDashboard() {
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white">Report #{report.id}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">{new Date(report.timestamp).toLocaleDateString()}</p>
+                    <p className="font-medium text-gray-900 dark:text-white">Bin Full Report</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">{new Date(report.timestamp).toLocaleDateString()} at {new Date(report.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                     <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{report.description || 'No description provided'}</p>
                   </div>
                   <span
                     className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      report.status === 'completed'
+                      report.status === 'completed' || report.status === 'collected'
                         ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
                         : report.status === 'in-progress'
                         ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
                         : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
                     }`}
                   >
-                    {report.status}
+                    {report.status === 'collected' ? 'collected' : 
+                     report.status === 'completed' ? 'completed' :
+                     report.status === 'in-progress' ? 'in progress' :
+                     report.status}
                   </span>
                 </div>
               </div>

@@ -155,6 +155,7 @@ export default function DispatcherDashboard() {
   const [showDumpingSiteModal, setShowDumpingSiteModal] = useState(false);
   const [selectedDumpingSite, setSelectedDumpingSite] = useState('');
   const [selectedTruckId, setSelectedTruckId] = useState('T001');
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
 
   // Fuel tracking state
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -354,21 +355,18 @@ export default function DispatcherDashboard() {
 
   // Handler to mark report as collected
   const handleMarkCollected = async (reportId: string) => {
-    setUpdatingReportId(reportId);
-    try {
-      await axios.patch(`/api/auth/reports/${reportId}/status`, { status: 'collected' });
-      // Refresh active reports
-      const res = await axios.get('/api/auth/reports/active');
-      setActiveReports(res.data.reports);
-    } catch (err) {
-      alert('Failed to update report status');
-    } finally {
-      setUpdatingReportId(null);
-    }
+    // Show dumping site modal for individual report
+    setSelectedReportId(reportId);
+    setShowDumpingSiteModal(true);
   };
 
   // Handler to mark all reports as collected
   const handleMarkAllCollected = async () => {
+    // Set default truck to first available vehicle
+    const availableVehicle = vehicles.find(v => v.status === 'available' || v.status === 'scheduled');
+    if (availableVehicle) {
+      setSelectedTruckId(availableVehicle.id);
+    }
     setShowDumpingSiteModal(true);
   };
 
@@ -381,20 +379,44 @@ export default function DispatcherDashboard() {
     setMarkAllLoading(true);
     setMarkAllMessage('');
     try {
-      const res = await axios.patch('/api/auth/reports/mark-all-collected', {
-        dumpingSiteId: selectedDumpingSite,
-        truckId: selectedTruckId
-      });
-      setMarkAllMessage(`Marked ${res.data.updatedCount} reports as collected and created delivery to ${selectedDumpingSite === 'WS001' ? 'North Dumping Site' : 'South Dumping Site'}.`);
+      if (selectedReportId) {
+        // Handle individual report
+        setUpdatingReportId(selectedReportId);
+        await axios.patch(`/api/auth/reports/${selectedReportId}/status`, { 
+          status: 'collected',
+          dumpingSiteId: selectedDumpingSite 
+        });
+        setMarkAllMessage(`Report marked as collected and delivered to ${selectedDumpingSite === 'WS001' ? 'North Dumping Site' : 'South Dumping Site'}.`);
+      } else {
+        // Handle mark all reports
+        const res = await axios.patch('/api/auth/reports/mark-all-collected', {
+          dumpingSiteId: selectedDumpingSite,
+          truckId: selectedTruckId
+        });
+        setMarkAllMessage(`Marked ${res.data.updatedCount} reports as collected and created delivery to ${selectedDumpingSite === 'WS001' ? 'North Dumping Site' : 'South Dumping Site'}.`);
+      }
+      
+      // Update any active schedules to completed status
+      try {
+        await axios.patch('/api/auth/schedules/complete-by-reports');
+      } catch (scheduleErr) {
+        console.warn('Failed to update schedules:', scheduleErr);
+      }
+      
+      // Refresh vehicles to show updated status
+      await fetchVehicles();
+      
       // Refresh active reports
       const refreshed = await axios.get('/api/auth/reports/active');
       setActiveReports(refreshed.data.reports);
       setShowDumpingSiteModal(false);
       setSelectedDumpingSite('');
+      setSelectedReportId(null);
     } catch (err) {
-      setMarkAllMessage('Failed to mark all as collected');
+      setMarkAllMessage(selectedReportId ? 'Failed to mark report as collected' : 'Failed to mark all as collected');
     } finally {
       setMarkAllLoading(false);
+      setUpdatingReportId(null);
     }
   };
 
@@ -792,6 +814,13 @@ export default function DispatcherDashboard() {
   useEffect(() => {
     fetchVehicles();
     fetchFuelAnalytics();
+    
+    // Refresh vehicles every 30 seconds to catch status updates
+    const vehicleInterval = setInterval(fetchVehicles, 30000);
+    
+    return () => {
+      clearInterval(vehicleInterval);
+    };
   }, []);
 
   return (
@@ -1282,10 +1311,14 @@ export default function DispatcherDashboard() {
                       <span className="text-gray-600 dark:text-gray-400">Status:</span>
                       <span className={`font-medium ${
                         vehicle.status === 'available' ? 'text-green-600 dark:text-green-400' :
-                        vehicle.status === 'on-route' ? 'text-blue-600 dark:text-blue-400' :
-                        'text-yellow-600 dark:text-yellow-400'
+                        vehicle.status === 'scheduled' ? 'text-yellow-600 dark:text-yellow-400' :
+                        vehicle.status === 'in-transit' ? 'text-blue-600 dark:text-blue-400' :
+                        'text-gray-600 dark:text-gray-400'
                       }`}>
-                        {vehicle.status}
+                        {vehicle.status === 'available' ? 'Available' :
+                         vehicle.status === 'scheduled' ? 'Scheduled' :
+                         vehicle.status === 'in-transit' ? 'In Transit to Site' :
+                         vehicle.status}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -1455,11 +1488,14 @@ export default function DispatcherDashboard() {
                   onChange={(e) => setSelectedTruckId(e.target.value)}
                   className="block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 >
-                  <option value="T001">Truck T001</option>
-                  <option value="T002">Truck T002</option>
-                  <option value="T003">Truck T003</option>
-                  <option value="T004">Truck T004</option>
-                  <option value="T005">Truck T005</option>
+                  {vehicles.filter(v => v.status === 'available' || v.status === 'scheduled' || v.status === 'in-transit').map(vehicle => (
+                    <option key={vehicle.id} value={vehicle.id}>
+                      {vehicle.id} - {vehicle.make} {vehicle.model} ({Math.round(vehicle.fuel_percentage)}% fuel, {vehicle.status})
+                    </option>
+                  ))}
+                  {vehicles.filter(v => v.status === 'available' || v.status === 'scheduled' || v.status === 'in-transit').length === 0 && (
+                    <option value="">No vehicles available</option>
+                  )}
                 </select>
               </div>
             </div>
@@ -1467,7 +1503,11 @@ export default function DispatcherDashboard() {
             <div className="mt-6 flex justify-end space-x-3">
               <button
                 type="button"
-                onClick={() => setShowDumpingSiteModal(false)}
+                onClick={() => {
+                  setShowDumpingSiteModal(false);
+                  setSelectedReportId(null);
+                  setSelectedDumpingSite('');
+                }}
                 className="btn btn-secondary"
               >
                 Cancel

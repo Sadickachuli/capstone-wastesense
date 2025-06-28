@@ -1029,6 +1029,93 @@ export const updateWasteComposition = async (req: Request, res: Response) => {
       .where({ id })
       .update(updateFields);
 
+    // FIRST: Update vehicle status from 'scheduled' to 'in-transit' when waste composition is confirmed
+    // This happens when dispatcher confirms waste delivered to dumping site
+    const scheduledVehicles = await db('vehicles')
+      .where('status', 'scheduled')
+      .select('id');
+    
+    if (scheduledVehicles.length > 0) {
+      const vehiclesUpdated = await db('vehicles')
+        .where('status', 'scheduled')
+        .update({
+          status: 'in-transit',
+          updated_at: new Date().toISOString()
+        });
+      
+      console.log(`DEBUG: Updated ${vehiclesUpdated} vehicles from 'scheduled' to 'in-transit' after waste composition update`);
+      
+      // Create or update deliveries for these vehicles
+      for (const vehicle of scheduledVehicles) {
+        // Check if delivery already exists for this vehicle
+        const existingDelivery = await db('deliveries')
+          .where('truck_id', vehicle.id)
+          .where('facility_id', id)
+          .whereIn('status', ['pending', 'scheduled'])
+          .first();
+        
+        if (!existingDelivery) {
+          // Create new delivery record
+          await db('deliveries').insert({
+            truck_id: vehicle.id,
+            facility_id: id,
+            zone: 'Unknown', // Will be updated based on vehicle's last route
+            estimated_arrival: new Date().toISOString(),
+            status: 'in-transit',
+            weight: Number(currentCapacity),
+            composition: JSON.stringify({ plastic, paper, glass, metal, organic }),
+            created_by: updated_by || null,
+          });
+          console.log(`DEBUG: Created delivery record for vehicle ${vehicle.id} to site ${id}`);
+        } else {
+          // Update existing delivery to in-transit
+          await db('deliveries')
+            .where('id', existingDelivery.id)
+            .update({
+              status: 'in-transit',
+              weight: Number(currentCapacity),
+              composition: JSON.stringify({ plastic, paper, glass, metal, organic }),
+              updated_at: new Date().toISOString()
+            });
+          console.log(`DEBUG: Updated existing delivery for vehicle ${vehicle.id} to in-transit status`);
+        }
+      }
+
+      // ALSO: Complete schedules for these vehicles when waste composition is confirmed
+      // This ensures resident dashboard shows correct status
+      const vehicleIds = scheduledVehicles.map(v => v.id);
+      if (vehicleIds.length > 0) {
+        const completedSchedules = await db('schedules')
+          .whereIn('vehicle_id', vehicleIds)
+          .whereIn('status', ['scheduled', 'in-progress'])
+          .update({
+            status: 'completed',
+            updated_at: new Date().toISOString()
+          });
+        
+        console.log(`DEBUG: Completed ${completedSchedules} schedules for vehicles ${vehicleIds.join(', ')} after waste composition update`);
+      }
+    }
+
+    // ADDITIONAL: Complete schedules for any in-transit vehicles when waste composition is updated
+    // This handles cases where vehicles were already moved to in-transit status
+    const inTransitVehicles = await db('vehicles')
+      .where('status', 'in-transit')
+      .select('id');
+    
+    if (inTransitVehicles.length > 0) {
+      const inTransitVehicleIds = inTransitVehicles.map(v => v.id);
+      const completedSchedules = await db('schedules')
+        .whereIn('vehicle_id', inTransitVehicleIds)
+        .whereIn('status', ['scheduled', 'in-progress'])
+        .update({
+          status: 'completed',
+          updated_at: new Date().toISOString()
+        });
+      
+      console.log(`DEBUG: Completed ${completedSchedules} schedules for in-transit vehicles ${inTransitVehicleIds.join(', ')} after waste composition update`);
+    }
+
     // If annotated image is provided, update any in-transit deliveries to arrived for this site
     if (annotated_image) {
       const deliveriesUpdated = await db('deliveries')

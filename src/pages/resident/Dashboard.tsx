@@ -75,7 +75,25 @@ export default function ResidentDashboard() {
   };
 
   const getRecentCompletedSchedule = (): CollectionSchedule | null => {
-    return schedules.find(schedule => schedule.status === 'completed') || null;
+    // Only show completed schedule if there are no active or scheduled collections
+    const hasActiveOrScheduled = schedules.some(schedule => 
+      schedule.status === 'scheduled' || schedule.status === 'in-progress'
+    );
+    
+    if (hasActiveOrScheduled) {
+      return null; // Don't show completed if there are active/scheduled collections
+    }
+    
+    // Find the most recent completed schedule (within last 24 hours)
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const recentCompleted = schedules
+      .filter(schedule => 
+        schedule.status === 'completed' && 
+        new Date(schedule.estimatedCompletion) > oneDayAgo
+      )
+      .sort((a, b) => new Date(b.estimatedCompletion).getTime() - new Date(a.estimatedCompletion).getTime());
+    
+    return recentCompleted[0] || null;
   };
 
   const handleOpenModal = () => {

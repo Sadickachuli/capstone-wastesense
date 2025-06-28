@@ -1,0 +1,63 @@
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: wastesense-db
+    env: node
+    plan: free
+    databaseName: wastesense
+    databaseUser: wastesense_user
+    region: ohio
+
+  # Backend API
+  - type: web
+    name: wastesense-backend
+    env: node
+    region: ohio
+    plan: free
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: wastesense-db
+          property: connectionString
+      - key: YOLO_API_URL
+        value: https://waste-sense-api.onrender.com
+      - key: CORS_ORIGINS
+        value: https://wastesense-frontend.onrender.com
+
+  # ML Forecasting Service
+  - type: web
+    name: wastesense-ml-forecasting
+    env: python
+    region: ohio
+    plan: free
+    rootDir: ml_service
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: ENVIRONMENT
+        value: production
+
+  # Frontend Static Site
+  - type: web
+    name: wastesense-frontend
+    env: static
+    region: ohio
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://wastesense-backend.onrender.com/api
+      - key: VITE_ML_SERVICE_URL
+        value: https://wastesense-ml-forecasting.onrender.com
+      - key: VITE_YOLO_API_URL
+        value: https://waste-sense-api.onrender.com 

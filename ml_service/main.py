@@ -22,6 +22,11 @@ def get_overall_forecast():
         ]
     }
 
+@app.get('/health')
+def health_check():
+    """Health check endpoint for monitoring."""
+    return {"status": "ok", "service": "ml-forecasting"}
+
 @app.get('/forecast/next-day')
 def forecast_next_day():
     """Forecast for tomorrow for all districts and overall."""

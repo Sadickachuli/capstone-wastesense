@@ -7,7 +7,12 @@ dotenv.config();
 const dbConfig = process.env.DATABASE_URL 
   ? {
       client: 'pg',
-      connection: process.env.DATABASE_URL,
+      connection: {
+        connectionString: process.env.DATABASE_URL,
+        ssl: {
+          rejectUnauthorized: false
+        }
+      },
       pool: {
         min: 2,
         max: 10,

@@ -1,0 +1,104 @@
+# Azure Deployment Guide for WasteSense
+# Using GitHub Education Azure Credits
+
+## Prerequisites
+1. GitHub Education Pack approved
+2. Azure account with $100 credits
+3. Azure CLI installed
+
+## Deployment Steps
+
+### 1. Frontend (React) - Azure Static Web Apps (FREE)
+```bash
+# Build the frontend
+npm run build
+
+# Deploy using Azure Static Web Apps
+az staticwebapp create \
+  --name wastesense-frontend \
+  --resource-group wastesense-rg \
+  --source https://github.com/Sadickachuli/capstone-wastesense \
+  --location "East US" \
+  --branch main \
+  --app-location "/" \
+  --output-location "dist"
+```
+
+### 2. Backend (Node.js) - Azure App Service
+```bash
+# Navigate to backend
+cd backend
+
+# Create App Service Plan (Free/Basic tier)
+az appservice plan create \
+  --name wastesense-plan \
+  --resource-group wastesense-rg \
+  --sku B1 \
+  --is-linux
+
+# Create Web App
+az webapp create \
+  --name wastesense-api \
+  --resource-group wastesense-rg \
+  --plan wastesense-plan \
+  --runtime "NODE|18-lts"
+
+# Deploy backend
+az webapp deployment source config \
+  --name wastesense-api \
+  --resource-group wastesense-rg \
+  --repo-url https://github.com/Sadickachuli/capstone-wastesense \
+  --branch main \
+  --manual-integration
+```
+
+### 3. Database - Azure Database for PostgreSQL (FREE tier)
+```bash
+# Create PostgreSQL server
+az postgres server create \
+  --name wastesense-db \
+  --resource-group wastesense-rg \
+  --location eastus \
+  --admin-user wastesense_admin \
+  --admin-password [your-secure-password] \
+  --sku-name B_Gen5_1 \
+  --version 11
+```
+
+### 4. ML Service - Azure Container Instances
+```bash
+# Deploy ML service container
+az container create \
+  --name wastesense-ml \
+  --resource-group wastesense-rg \
+  --image [your-ml-container] \
+  --ports 5000 \
+  --memory 2 \
+  --cpu 1
+```
+
+## Environment Variables for Backend
+```env
+DATABASE_URL=postgresql://wastesense_admin:[password]@wastesense-db.postgres.database.azure.com:5432/wastesense
+ML_SERVICE_URL=http://wastesense-ml.eastus.azurecontainer.io:5000
+AZURE_STORAGE_CONNECTION_STRING=[your-storage-connection]
+```
+
+## Cost Estimation (With GitHub Education Credits)
+- Static Web Apps: FREE
+- App Service (B1): ~$13/month
+- PostgreSQL (Basic): ~$20/month  
+- Container Instances: ~$15/month
+- Storage: ~$2/month
+- **Total: ~$50/month** (Covered by $100 credits for 2 months)
+
+## Alternative: Heroku Quick Deploy
+If you prefer simpler deployment:
+1. Get Heroku credits from GitHub Pack ($13/month for 24 months)
+2. Use Heroku Postgres add-on
+3. Deploy with git push heroku main
+
+## Backup Option: DigitalOcean
+- $200 credits for 1 year
+- More control, requires more setup
+- Great for learning DevOps 

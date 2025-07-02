@@ -249,7 +249,7 @@ python main.py
 
 ---
 
-## Video Demo
+## Video Demo for prototype(Previous submission)
 > **https://youtu.be/kqI5h2c6mvs?si=te9iNPK6nAmrgsyg**
 
 ## 📊 Performance Analysis

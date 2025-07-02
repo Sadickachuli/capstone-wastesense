@@ -16,25 +16,20 @@ const port = process.env.PORT || 3001;
 async function initializeDatabase() {
   try {
     console.log('🗄️ Running database migrations...');
-    const knex = require('knex');
-    const config = require('../knexfile.ts').default;
-    const environment = process.env.NODE_ENV || 'development';
-    const knexInstance = knex(config[environment]);
     
-    await knexInstance.migrate.latest();
+    // Use the same db instance that's already configured
+    await db.migrate.latest();
     console.log('✅ Database migrations completed');
     
     // Check if database is empty (no users), then seed
     const userCount = await db('users').count('id as count').first();
     if (!userCount || parseInt(userCount.count as string) === 0) {
       console.log('🌱 Database is empty, running seeds...');
-      await knexInstance.seed.run();
+      await db.seed.run();
       console.log('✅ Database seeding completed');
     } else {
       console.log('📊 Database already has data, skipping seeds');
     }
-    
-    await knexInstance.destroy();
   } catch (error) {
     console.error('❌ Database initialization failed:', error);
     // Don't crash the app, continue running

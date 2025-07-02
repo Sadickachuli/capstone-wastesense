@@ -226,6 +226,32 @@ python main.py
 
 ---
 
+---
+
+## Designs (Screenshots)
+> - Sign In
+
+![09 06 2025_18 06 28_REC](https://github.com/user-attachments/assets/782013f6-9f12-4927-9a17-ca1c624d2145)
+
+> - Recycler insights (with forecasting and analytics)
+
+![09 06 2025_18 08 59_REC](https://github.com/user-attachments/assets/8dfa2b01-183f-4a08-b4f0-a8cfc28a9e10) ![09 06 2025_18 09 31_REC](https://github.com/user-attachments/assets/c5dfcbd6-ff5d-491b-bbfe-a979afc615a1) ![09 06 2025_18 09 58_REC](https://github.com/user-attachments/assets/cd10d29a-b080-4a49-ae55-60cf17a3cf5b) ![09 06 2025_18 10 26_REC](https://github.com/user-attachments/assets/ce00e20d-4838-46be-8746-9c916e1a0166) ![09 06 2025_18 11 02_REC](https://github.com/user-attachments/assets/0679f3d6-77c1-4247-8d08-66e8a2e5e243)
+
+
+> - Dispatcher dashboard (with real-time updates, manual and ML waste composition input)
+
+![09 06 2025_18 15 56_REC](https://github.com/user-attachments/assets/f2f4883c-724a-49b5-b2d3-f8d7b412da91) ![09 06 2025_18 48 48_REC](https://github.com/user-attachments/assets/c6992bcb-5fb6-4dcd-a98d-152a45fe3a0d) ![09 06 2025_18 16 24_REC](https://github.com/user-attachments/assets/16ddc407-a98b-445f-98d1-24619b1a7a30) ![09 06 2025_18 16 56_REC](https://github.com/user-attachments/assets/f43a7aa5-0781-4cd6-a872-ffbd132c182b)
+
+> - Resident dashboard
+
+![09 06 2025_18 17 58_REC](https://github.com/user-attachments/assets/cb00a0cc-60b1-4455-9c39-a2017279329b) ![09 06 2025_18 18 56_REC](https://github.com/user-attachments/assets/105a9611-e010-4240-8a72-dde9d40ed251)
+
+
+---
+
+## Video Demo
+> **https://youtu.be/kqI5h2c6mvs?si=te9iNPK6nAmrgsyg**
+
 ## 📊 Performance Analysis
 
 ### 📈 **Objectives Achievement Analysis**

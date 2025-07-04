@@ -18,10 +18,10 @@ export default function Forecasting() {
   const [error, setError] = useState<string | null>(null);
   const { isDarkMode } = useTheme();
 
-  const fetchForecast = async () => {
-    setLoading(true);
+    const fetchForecast = async () => {
+      setLoading(true);
     setError(null);
-    try {
+      try {
       const ML_SERVICE_URL = environment.getMlServiceUrl();
       console.log('🔮 Fetching forecast from:', ML_SERVICE_URL);
       
@@ -30,7 +30,7 @@ export default function Forecasting() {
       });
       
       console.log('✅ Forecast response:', res.data);
-      setForecast(res.data);
+        setForecast(res.data);
     } catch (err: any) {
       console.error('❌ Failed to fetch forecast:', err);
       
@@ -41,11 +41,11 @@ export default function Forecasting() {
       } else {
         setError('Failed to load forecast. Please check your connection and try again.');
       }
-      setForecast(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+        setForecast(null);
+      } finally {
+        setLoading(false);
+      }
+    };
 
   useEffect(() => {
     fetchForecast();

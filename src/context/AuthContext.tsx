@@ -57,8 +57,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
-      // If the input matches the employee ID pattern, send as employee_id
-      const isEmployeeId = /^[A-Z]{3,4}\d{3}$/i.test(email);
+      // If the input matches the employee ID pattern (e.g., DISP001, ADMIN001), treat it as an employee ID.
+      // Pattern: 3–6 alphabetic characters followed by exactly 3 digits.
+      const isEmployeeId = /^[A-Z]{3,6}\d{3}$/i.test(email);
       const body = isEmployeeId
         ? { employee_id: email, password }
         : { email, password };

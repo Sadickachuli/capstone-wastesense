@@ -215,7 +215,7 @@ app.post('/setup-database', async (req: Request, res: Response) => {
       await db('users').insert([
         {
           email: 'recyclerablekuma1@test.com',
-          password_hash: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password123
+          password_hash: '$2b$10$nhww01gyXhTrn1wsTFRJ5ux1TUGIqpVmYeOOdnIT/hNQux5rrdxoS',
           role: 'resident',
           name: 'Test Resident',
           zone: 'Ablekuma North'
@@ -223,7 +223,7 @@ app.post('/setup-database', async (req: Request, res: Response) => {
         {
           employee_id: 'DIS001',
           email: 'dispatcher@test.com',
-          password_hash: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password123
+          password_hash: '$2b$10$nhww01gyXhTrn1wsTFRJ5ux1TUGIqpVmYeOOdnIT/hNQux5rrdxoS',
           role: 'dispatcher',
           name: 'Test Dispatcher',
           facility: 'Central Dispatch'
@@ -231,7 +231,7 @@ app.post('/setup-database', async (req: Request, res: Response) => {
         {
           employee_id: 'REC001',
           email: 'recycler@test.com',
-          password_hash: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password123
+          password_hash: '$2b$10$nhww01gyXhTrn1wsTFRJ5ux1TUGIqpVmYeOOdnIT/hNQux5rrdxoS',
           role: 'recycler',
           name: 'Test Recycler',
           facility: 'Recycling Center 1'
@@ -246,14 +246,18 @@ app.post('/setup-database', async (req: Request, res: Response) => {
       await db('users').insert({
         employee_id: 'ADMIN001',
         email: 'admin@wastesense.com',
-        password_hash: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password123
+        password_hash: '$2b$10$nhww01gyXhTrn1wsTFRJ5ux1TUGIqpVmYeOOdnIT/hNQux5rrdxoS',
         role: 'admin',
         name: 'WasteSense Admin',
         facility: 'Admin Panel'
       });
       console.log('✅ Admin user created successfully');
     } else {
-      console.log('✅ Admin user already exists');
+      // Ensure admin password hash is the expected one
+      await db('users')
+        .where('employee_id', 'ADMIN001')
+        .update({ password_hash: '$2b$10$nhww01gyXhTrn1wsTFRJ5ux1TUGIqpVmYeOOdnIT/hNQux5rrdxoS' });
+      console.log('✅ Admin user already exists – password hash ensured');
     }
 
     // Continue with other setup if users were created

@@ -27,7 +27,8 @@ export async function up(knex: Knex): Promise<void> {
     await knex('users').insert({
       employee_id: 'ADMIN001',
       email: 'admin@wastesense.com',
-      password_hash: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password123
+      // bcrypt hash for 'password123'
+      password_hash: '$2b$10$nhww01gyXhTrn1wsTFRJ5ux1TUGIqpVmYeOOdnIT/hNQux5rrdxoS',
       role: 'admin',
       name: 'WasteSense Admin',
       facility: 'Admin Panel',

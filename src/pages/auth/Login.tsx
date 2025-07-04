@@ -13,13 +13,13 @@ const validationSchema = Yup.object({
       value =>
         !!value &&
         (
-          /^[A-Z]{3,4}\d{3}$/i.test(value) || // Matches DISP001, REC001, etc.
+          /^[A-Z]{3,6}\d{3}$/i.test(value) || // Matches DISP001, REC001, ADMIN001, etc.
           Yup.string().email().isValidSync(value)
         )
     )
     .required('Email or Employee ID is required'),
   password: Yup.string()
-    .min(8, 'Password must be at least 8 characters')
+    .min(6, 'Password must be at least 6 characters')
     .required('Password is required'),
 });
 

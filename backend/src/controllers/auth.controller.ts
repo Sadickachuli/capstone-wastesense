@@ -1504,27 +1504,6 @@ export const getUserReports = async (req: Request, res: Response) => {
   }
 };
 
-// Debug endpoint to check what users exist in the database
-export const debugUsers = async (req: Request, res: Response) => {
-  try {
-    const users = await db('users').select('id', 'email', 'employee_id', 'name', 'role', 'created_at');
-    res.json({
-      count: users.length,
-      users: users.map(user => ({
-        id: user.id,
-        email: user.email,
-        employee_id: user.employee_id,
-        name: user.name,
-        role: user.role,
-        created_at: user.created_at
-      }))
-    });
-  } catch (error) {
-    console.error('Debug users error:', error);
-    res.status(500).json({ message: 'Database error', error: error.message });
-  }
-};
-
 // Get collection schedules for residents
 export const getCollectionSchedules = async (req: Request, res: Response) => {
   try {

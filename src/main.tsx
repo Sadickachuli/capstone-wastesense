@@ -5,8 +5,6 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import AppRoutes from './routes';
 import ErrorBoundary from './components/common/ErrorBoundary';
-import './debug-frontend-urls.js';
-import './test-all-apis.js';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

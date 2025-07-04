@@ -35,12 +35,18 @@ app.post('/setup-database', async (req: Request, res: Response) => {
   try {
     console.log('🗄️ Setting up database...');
     
-    // Create enum type first
+    // Create or update enum type to include admin
     await db.raw(`
       DO $$ BEGIN
         CREATE TYPE user_role AS ENUM ('resident', 'dispatcher', 'recycler', 'admin');
       EXCEPTION
-        WHEN duplicate_object THEN null;
+        WHEN duplicate_object THEN 
+          -- Enum already exists, try to add admin role if it doesn't exist
+          BEGIN
+            ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'admin';
+          EXCEPTION
+            WHEN OTHERS THEN null;
+          END;
       END $$;
     `);
     

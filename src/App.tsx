@@ -10,10 +10,12 @@ import WasteSiteDetails from './pages/recycler/WasteSiteDetails';
 import PrivateRoute from './components/PrivateRoute';
 import LandingPage from './pages/LandingPage';
 import SignupResident from './pages/auth/SignupResident';
+import { DebugPanel } from './components/DebugPanel';
 
 function App() {
   return (
     <AuthProvider>
+      <DebugPanel />
       <Router>
         <Routes>
           <Route path="/" element={<LandingPage />} />

@@ -1,11 +1,13 @@
 import { User, Report, BinStatus, Route, Delivery, WasteSite, Notification } from '../types';
 import axios from 'axios';
+import { environment } from '../config/environment';
 
-// Configure axios with the API base URL from environment variables
-const API_BASE_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:3001/api';
-const ML_SERVICE_URL = (import.meta as any).env.VITE_ML_SERVICE_URL || 'http://localhost:8000';
+// Configure axios with the API base URL from environment configuration
+const API_BASE_URL = environment.getApiUrl();
+const ML_SERVICE_URL = environment.getMlServiceUrl();
 
-// Uncomment for debugging: console.log('mockApi.ts: API_BASE_URL =', API_BASE_URL);
+console.log('mockApi.ts: API_BASE_URL =', API_BASE_URL);
+console.log('mockApi.ts: ML_SERVICE_URL =', ML_SERVICE_URL);
 
 // Create axios instance instead of modifying defaults
 const apiClient = axios.create({

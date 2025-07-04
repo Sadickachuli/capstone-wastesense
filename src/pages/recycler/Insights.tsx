@@ -7,9 +7,10 @@ import { api } from '../../api/mockApi';
 import { Delivery } from '../../types';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { environment } from '../../config/environment';
 
-// Get API base URL from environment variables
-const API_BASE_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:3001/api';
+// Get API base URL from environment configuration
+const API_BASE_URL = environment.getApiUrl();
 
 const WASTE_COLORS: Record<string, string> = {
   plastic: '#2563eb', // blue

@@ -176,9 +176,9 @@ export default function RecyclerDashboard() {
     axios.get('/api/forecast/next-day').then(res => setForecast(res.data));
   }, []);
 
-  // Fetch annotated images for each site on mount or when sites change
-  useEffect(() => {
-    async function fetchAnnotatedImages() {
+      // Fetch annotated images for each site on mount or when sites change (updated for production)
+    useEffect(() => {
+      async function fetchAnnotatedImages() {
       const images: Record<string, string> = {};
       for (const site of sites) {
         try {

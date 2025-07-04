@@ -6,4 +6,4 @@ dist/
 build/
 *.log
 backend/.env
-frontend/.env
+frontend/.envlocal_wastesense_backup.sql

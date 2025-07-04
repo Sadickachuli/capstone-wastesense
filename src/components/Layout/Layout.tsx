@@ -10,6 +10,8 @@ import {
   TruckIcon,
   ChartBarIcon,
   ArrowLeftOnRectangleIcon,
+  CogIcon,
+  UsersIcon,
 } from '@heroicons/react/24/outline';
 
 interface NavItem {
@@ -41,6 +43,10 @@ const getNavItems = (role: string): NavItem[] => {
         { name: 'Forecasting', to: '/recycler/forecasting', icon: ChartBarIcon },
         { name: 'Insights', to: '/recycler/insights', icon: ChartBarIcon },
         { name: 'Profile', to: '/recycler/profile', icon: UserIcon },
+      ];
+    case 'admin':
+      return [
+        { name: 'Dashboard', to: '/admin/dashboard', icon: HomeIcon },
       ];
     default:
       return [];

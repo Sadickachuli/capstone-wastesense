@@ -1,17 +1,59 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import UserSettings from '../../components/settings/UserSettings';
+import { environment } from '../../config/environment';
+import axios from 'axios';
 
 type TabType = 'profile' | 'settings';
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('profile');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const tabs: { id: TabType; name: string }[] = [
     { id: 'profile', name: 'Profile' },
     { id: 'settings', name: 'Settings' },
   ];
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword.trim()) {
+      setDeleteError('Please enter your password');
+      return;
+    }
+
+    setIsDeleting(true);
+    setDeleteError('');
+
+    try {
+      const API_BASE_URL = environment.getApiUrl();
+      await axios.delete(`${API_BASE_URL}/auth/account/${user?.id}`, {
+        data: { password: deletePassword }
+      });
+
+      // Account deleted successfully, logout user
+      logout();
+      alert('Your account has been deleted successfully. Thank you for using WasteSense!');
+    } catch (error: any) {
+      console.error('Account deletion error:', error);
+      if (error.response?.data?.message) {
+        setDeleteError(error.response.data.message);
+      } else {
+        setDeleteError('Failed to delete account. Please try again.');
+      }
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setDeletePassword('');
+    setDeleteError('');
+  };
 
   return (
     <div className="max-w-2xl mx-auto py-8 px-4 space-y-8">
@@ -73,10 +115,80 @@ export default function Profile() {
                   </dd>
                 </div>
               </dl>
+            
+            {/* Account Actions */}
+            <div className="w-full border-t border-gray-200 dark:border-gray-700 mt-6 pt-6">
+              <div className="flex justify-center">
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 transition-colors"
+                >
+                  Delete Account
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       ) : (
         <UserSettings role="resident" />
+      )}
+
+      {/* Delete Account Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+              Delete Account
+            </h2>
+            
+            <div className="mb-4">
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                Are you sure you want to delete your account? This action cannot be undone.
+              </p>
+              
+              <p className="text-sm text-red-600 dark:text-red-400 mb-4">
+                ⚠️ All your reports and data will be permanently removed.
+              </p>
+              
+              <div className="mb-4">
+                <label htmlFor="deletePassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Enter your password to confirm:
+                </label>
+                <input
+                  type="password"
+                  id="deletePassword"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 dark:bg-gray-700 dark:text-white"
+                  placeholder="Enter your password"
+                />
+              </div>
+              
+              {deleteError && (
+                <p className="text-red-600 dark:text-red-400 text-sm mb-4">
+                  {deleteError}
+                </p>
+              )}
+            </div>
+            
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={handleCancelDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={isDeleting}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Account'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

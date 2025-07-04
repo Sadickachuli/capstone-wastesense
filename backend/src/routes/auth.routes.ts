@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { signup, login, reportBinFull, getThresholdStatus, getDispatcherNotifications, updateReportStatus, getActiveReports, getUserReports, markAllReportsCollected, getArchivedDispatcherNotifications, getDispatchRecommendation, getRecyclerNotifications, updateWasteComposition, getWasteSites, detectWasteFromImage, getWasteCompositionHistory, detectWasteFromImageLLM, upload, getDeliveries, updateDeliveryStatus, getCollectionSchedules, getSystemConfig, updateSystemConfig, completeSchedulesByReports } from '../controllers/auth.controller';
+import { signup, login, reportBinFull, getThresholdStatus, getDispatcherNotifications, updateReportStatus, getActiveReports, getUserReports, markAllReportsCollected, getArchivedDispatcherNotifications, getDispatchRecommendation, getRecyclerNotifications, updateWasteComposition, getWasteSites, detectWasteFromImage, getWasteCompositionHistory, detectWasteFromImageLLM, upload, getDeliveries, updateDeliveryStatus, getCollectionSchedules, getSystemConfig, updateSystemConfig, completeSchedulesByReports, deleteAccount, getAllUsers, getAllReports, getSystemStats } from '../controllers/auth.controller';
 
 const router = Router();
 
@@ -33,5 +33,13 @@ router.patch('/schedules/complete-by-reports', completeSchedulesByReports);
 // Configuration routes
 router.get('/config', getSystemConfig);
 router.post('/config', updateSystemConfig);
+
+// Account management routes
+router.delete('/account/:userId', deleteAccount);
+
+// Admin-only routes
+router.get('/admin/users', getAllUsers);
+router.get('/admin/reports', getAllReports);
+router.get('/admin/stats', getSystemStats);
 
 export default router; 

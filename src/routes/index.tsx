@@ -30,6 +30,9 @@ import RecyclerNotifications from '../pages/recycler/Notifications';
 import WasteSiteDetails from '../pages/recycler/WasteSiteDetails';
 import Forecasting from '../pages/recycler/Forecasting';
 
+// Admin Pages
+import AdminDashboard from '../pages/admin/Dashboard';
+
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: string[];
@@ -179,6 +182,16 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={['recycler']}>
             <Forecasting />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Admin Routes */}
+      <Route
+        path="/admin/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <AdminDashboard />
           </ProtectedRoute>
         }
       />

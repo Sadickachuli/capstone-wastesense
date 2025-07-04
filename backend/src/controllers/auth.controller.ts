@@ -113,11 +113,11 @@ export const login = async (req: Request, res: Response) => {
     let user;
 
     if (isStaffLogin) {
-      // Staff login (dispatcher/recycler)
+      // Staff login (dispatcher/recycler/admin)
       const data = staffLoginSchema.parse(req.body);
       user = await db('users')
         .where('employee_id', data.employee_id)
-        .whereIn('role', ['dispatcher', 'recycler'])
+        .whereIn('role', ['dispatcher', 'recycler', 'admin'])
         .first();
     } else {
       // Resident login
@@ -168,6 +168,107 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Invalid input', errors: err.errors });
     }
     console.error('Login error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const deleteAccount = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { password } = req.body;
+
+    // Get the user to verify they exist and get their details
+    const user = await db('users').where('id', userId).first();
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Only allow residents to delete their own accounts
+    if (user.role !== 'resident') {
+      return res.status(403).json({ message: 'Only residents can delete their accounts' });
+    }
+
+    // Verify password
+    const validPassword = await bcrypt.compare(password, user.password_hash);
+    if (!validPassword) {
+      return res.status(401).json({ message: 'Invalid password' });
+    }
+
+    // Delete the user (CASCADE will handle related records)
+    await db('users').where('id', userId).del();
+
+    res.json({ message: 'Account deleted successfully' });
+  } catch (err: unknown) {
+    console.error('Account deletion error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Admin functions
+export const getAllUsers = async (req: Request, res: Response) => {
+  try {
+    const users = await db('users')
+      .select('id', 'email', 'name', 'role', 'employee_id', 'phone', 'zone', 'facility', 'created_at')
+      .orderBy('created_at', 'desc');
+    
+    res.json({ users });
+  } catch (err: unknown) {
+    console.error('Get all users error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getAllReports = async (req: Request, res: Response) => {
+  try {
+    const reports = await db('reports')
+      .select('reports.*', 'users.name as user_name', 'users.email as user_email')
+      .leftJoin('users', 'reports.user_id', 'users.id')
+      .orderBy('reports.created_at', 'desc');
+    
+    res.json({ reports });
+  } catch (err: unknown) {
+    console.error('Get all reports error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getSystemStats = async (req: Request, res: Response) => {
+  try {
+    const [userStats, reportStats, wasteStats] = await Promise.all([
+      db('users')
+        .select('role')
+        .count('* as count')
+        .groupBy('role'),
+      db('reports')
+        .select('status')
+        .count('* as count')
+        .groupBy('status'),
+      db('waste_sites')
+        .select('*')
+    ]);
+
+    const totalUsers = userStats.reduce((sum, stat) => sum + parseInt(stat.count as string), 0);
+    const totalReports = reportStats.reduce((sum, stat) => sum + parseInt(stat.count as string), 0);
+    const totalWasteSites = wasteStats.length;
+
+    res.json({
+      userStats: userStats.reduce((acc, stat) => ({ ...acc, [stat.role]: parseInt(stat.count as string) }), {}),
+      reportStats: reportStats.reduce((acc, stat) => ({ ...acc, [stat.status]: parseInt(stat.count as string) }), {}),
+      totalUsers,
+      totalReports,
+      totalWasteSites,
+      wasteStats: wasteStats.map(site => ({
+        id: site.id,
+        name: site.name,
+        location: site.location,
+        currentCapacity: site.current_capacity,
+        maxCapacity: site.max_capacity,
+        utilizationPercent: Math.round((site.current_capacity / site.max_capacity) * 100)
+      }))
+    });
+  } catch (err: unknown) {
+    console.error('Get system stats error:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
 }; 

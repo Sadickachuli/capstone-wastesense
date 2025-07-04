@@ -38,7 +38,7 @@ app.post('/setup-database', async (req: Request, res: Response) => {
     // Create enum type first
     await db.raw(`
       DO $$ BEGIN
-        CREATE TYPE user_role AS ENUM ('resident', 'dispatcher', 'recycler');
+        CREATE TYPE user_role AS ENUM ('resident', 'dispatcher', 'recycler', 'admin');
       EXCEPTION
         WHEN duplicate_object THEN null;
       END $$;
@@ -229,6 +229,14 @@ app.post('/setup-database', async (req: Request, res: Response) => {
           role: 'recycler',
           name: 'Test Recycler',
           facility: 'Recycling Center 1'
+        },
+        {
+          employee_id: 'ADMIN001',
+          email: 'admin@wastesense.com',
+          password_hash: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password123
+          role: 'admin',
+          name: 'WasteSense Admin',
+          facility: 'Admin Panel'
         }
       ]);
       

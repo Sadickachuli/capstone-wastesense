@@ -38,10 +38,15 @@ def get_overall_forecast():
         ]
     }
 
+@app.get('/')
+def root():
+    """Root endpoint."""
+    return {"message": "WasteSense ML Forecasting Service", "status": "running", "cors": "enabled"}
+
 @app.get('/health')
 def health_check():
     """Health check endpoint for monitoring."""
-    return {"status": "ok", "service": "ml-forecasting"}
+    return {"status": "ok", "service": "ml-forecasting", "cors": "enabled"}
 
 @app.get('/forecast/next-day')
 def forecast_next_day():

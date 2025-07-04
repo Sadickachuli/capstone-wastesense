@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Notification } from '../types';
 import { api } from '../api/mockApi';
 import { useAuth } from '../context/AuthContext';
+import { environment } from '../config/environment';
 import axios from 'axios';
 
 export function useNotifications() {
@@ -17,7 +18,8 @@ export function useNotifications() {
         let data;
         if (user.role === 'recycler') {
           // Fetch from real backend for recyclers
-          const res = await axios.get('/api/auth/notifications/recycler');
+          const API_BASE_URL = environment.getApiUrl();
+          const res = await axios.get(`${API_BASE_URL}/auth/notifications/recycler`);
           data = res.data.notifications;
           // Ensure metadata is always an object
           data = data.map(n => ({

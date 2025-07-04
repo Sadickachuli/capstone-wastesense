@@ -915,12 +915,38 @@ export const getDispatchRecommendation = async (req: Request, res: Response) => 
 // Get notifications for recycler
 export const getRecyclerNotifications = async (req: Request, res: Response) => {
   try {
-    const notifications = await db('notifications')
+    let notifications = await db('notifications')
       .where('for_role', 'recycler')
       .andWhere('archived', false)
       .orderBy('created_at', 'desc')
       .limit(20);
-    console.log('Recycler notifications:', notifications);
+    
+    console.log('Recycler notifications found:', notifications.length);
+    
+    // If no notifications exist, create a sample one
+    if (notifications.length === 0) {
+      console.log('Creating sample notification for recycler...');
+      const sampleNotification = {
+        id: uuidv4(),
+        type: 'info',
+        title: 'New Waste Composition Update',
+        message: 'Waste composition updated at North Dumping Site',
+        for_role: 'recycler',
+        is_read: false,
+        archived: false,
+        metadata: JSON.stringify({
+          siteId: 'WS001',
+          updateType: 'composition'
+        }),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      await db('notifications').insert(sampleNotification);
+      notifications = [sampleNotification];
+      console.log('Sample notification created successfully');
+    }
+    
     res.json({ notifications });
   } catch (err) {
     console.error('Get Recycler Notifications error:', err);

@@ -1,6 +1,11 @@
 import { User, Report, BinStatus, Route, Delivery, WasteSite, Notification } from '../types';
 import axios from 'axios';
 
+// Configure axios with the API base URL from environment variables
+const API_BASE_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:5000/api';
+const ML_SERVICE_URL = (import.meta as any).env.VITE_ML_SERVICE_URL || 'http://localhost:8000';
+axios.defaults.baseURL = API_BASE_URL;
+
 // Simulated API delay
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -245,48 +250,23 @@ const mockForecastHistory = [
 export const api = {
   auth: {
     login: async (email: string, password: string) => {
-      await delay(1000);
-      const user = mockUsers.find((u) => u.email === email);
-      if (!user) throw new Error('Invalid credentials');
-      return user;
+      const res = await axios.post('/auth/login', { email, password });
+      return res.data.user;
     },
     signup: async (data: Partial<User> & { password: string }) => {
-      await delay(1000);
-      const newUser: User = {
-        id: String(mockUsers.length + 1),
-        email: data.email!,
-        role: data.role!,
-        name: data.name!,
-        phone: data.phone,
-        zone: data.zone,
-        facility: data.facility,
-        createdAt: new Date().toISOString(),
-      };
-      mockUsers.push(newUser);
-      persistData('mockUsers', mockUsers);
-      return newUser;
+      const res = await axios.post('/auth/signup', data);
+      return res.data.user;
     },
   },
   reports: {
     create: async (data: Partial<Report>) => {
-      await delay(1000);
-      const newReport: Report = {
-        id: String(mockReports.length + 1),
-        userId: data.userId!,
-        timestamp: new Date().toISOString(),
-        zone: data.zone!,
-        status: 'new',
-        description: data.description,
-        location: data.location!,
-      };
-      mockReports.push(newReport);
-      return newReport;
+      const res = await axios.post('/auth/reports', data);
+      return res.data.report;
     },
     list: async (userId?: string) => {
-      await delay(1000);
-      return userId
-        ? mockReports.filter((r) => r.userId === userId)
-        : mockReports;
+      const url = userId ? `/auth/reports?userId=${userId}` : '/auth/reports';
+      const res = await axios.get(url);
+      return res.data.reports;
     },
   },
   bins: {
@@ -323,43 +303,29 @@ export const api = {
   },
   deliveries: {
     list: async () => {
-      await delay(1000);
-      return mockDeliveries;
+      const res = await axios.get('/auth/deliveries');
+      return res.data.deliveries;
     },
     create: async (data: Partial<Delivery>) => {
-      await delay(1000);
-      const newDelivery: Delivery = {
-        id: String(mockDeliveries.length + 1),
-        truckId: data.truckId!,
-        facilityId: data.facilityId!,
-        zone: data.zone || '',
-        estimatedArrival: data.estimatedArrival!,
-        status: data.status as any || 'pending',
-        weight: data.weight!,
-        composition: data.composition!,
-      };
-      mockDeliveries.push(newDelivery);
-      persistData('mockDeliveries', mockDeliveries);
-      return newDelivery;
+      const res = await axios.post('/auth/deliveries', data);
+      return res.data.delivery;
     },
   },
   wasteSites: {
     list: async () => {
       // Use real backend
-      const res = await axios.get('/api/auth/waste-sites');
+      const res = await axios.get('/auth/waste-sites');
       return res.data.sites;
     },
     
     getById: async (id: string) => {
-      await delay(500);
-      const site = mockWasteSites.find(site => site.id === id);
-      if (!site) throw new Error('Waste site not found');
-      return site;
+      const res = await axios.get(`/auth/waste-sites/${id}`);
+      return res.data.site;
     },
     
     updateComposition: async (id: string, data: WasteSite['composition'] & { updated_by?: string }) => {
       // POST to backend with flat fields and optional updated_by
-      const res = await axios.post(`/api/auth/waste-sites/${id}/composition`, {
+      const res = await axios.post(`/auth/waste-sites/${id}/composition`, {
         ...data
       });
       return res.data;
@@ -373,58 +339,24 @@ export const api = {
       forRole: 'resident' | 'dispatcher' | 'recycler';
       metadata?: Record<string, any>;
     }) => {
-      await delay(500);
-      
-      const targetUsers = getUsersByRole(data.forRole);
-      const notificationId = String(notificationCounter++);
-      const timestamp = new Date().toISOString();
-      
-      const notifications = targetUsers.map(user => ({
-        id: notificationId,
-        userId: user.id,
-        type: data.type,
-        title: data.title,
-        message: data.message,
-        timestamp,
-        read: false,
-        metadata: data.metadata,
-      }));
-
-      mockNotifications.push(...notifications);
-      
-      // Persist the updated data
-      persistData('mockNotifications', mockNotifications);
-      persistData('notificationCounter', notificationCounter);
-      
-      return notifications[0];
+      const res = await axios.post('/auth/notifications', data);
+      return res.data.notification;
     },
 
     list: async (userId: string) => {
-      await delay(500);
-      return mockNotifications
-        .filter(n => n.userId === userId)
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      const res = await axios.get(`/auth/notifications?userId=${userId}`);
+      return res.data.notifications;
     },
 
     markAsRead: async (id: string) => {
-      await delay(500);
-      const notifications = mockNotifications.filter(n => n.id === id);
-      notifications.forEach(notification => {
-        notification.read = true;
-      });
-      persistData('mockNotifications', mockNotifications);
-      return notifications[0];
+      const res = await axios.put(`/auth/notifications/${id}/read`);
+      return res.data.notification;
     },
   },
   forecast: {
     history: async (params: { district?: string } = {}) => {
-      await delay(500);
-      // Filter by district if provided
-      let data = mockForecastHistory;
-      if (params.district) {
-        data = data.filter(row => row.district === params.district);
-      }
-      return data;
+      const res = await axios.get(`${ML_SERVICE_URL}/forecast/history`, { params });
+      return res.data;
     },
   },
 }; 

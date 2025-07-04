@@ -229,22 +229,36 @@ python main.py
 ---
 
 ## Designs (Screenshots)
-> - Sign In
+> - # **Sign In**
 
 ![09 06 2025_18 06 28_REC](https://github.com/user-attachments/assets/782013f6-9f12-4927-9a17-ca1c624d2145)
 
-> - Recycler insights (with forecasting and analytics)
+> - # **Recycler account (with forecasting and analytics)**
 
-![09 06 2025_18 08 59_REC](https://github.com/user-attachments/assets/8dfa2b01-183f-4a08-b4f0-a8cfc28a9e10) ![09 06 2025_18 09 31_REC](https://github.com/user-attachments/assets/c5dfcbd6-ff5d-491b-bbfe-a979afc615a1) ![09 06 2025_18 09 58_REC](https://github.com/user-attachments/assets/cd10d29a-b080-4a49-ae55-60cf17a3cf5b) ![09 06 2025_18 10 26_REC](https://github.com/user-attachments/assets/ce00e20d-4838-46be-8746-9c916e1a0166) ![09 06 2025_18 11 02_REC](https://github.com/user-attachments/assets/0679f3d6-77c1-4247-8d08-66e8a2e5e243)
+![image](https://github.com/user-attachments/assets/3665465c-fc42-47e8-a94e-547137bacca0)
+![Screenshot 2025-07-04 122819](https://github.com/user-attachments/assets/5e42e5d5-0b5d-44c0-8efa-4e3019ee1d97)
+![image](https://github.com/user-attachments/assets/adf08496-cd85-409d-b897-2273d04cff78)
+![image](https://github.com/user-attachments/assets/c0d044c3-348c-4d29-97a1-360282176422)
+![image](https://github.com/user-attachments/assets/6b455ed3-2324-4317-b2d5-a547c16da147)
+![image](https://github.com/user-attachments/assets/a871f78c-61dd-4ff6-b432-a3e10f1db2e1)
+![image](https://github.com/user-attachments/assets/74623aea-a1c8-4e14-b4f2-282c67d398ec)
+![image](https://github.com/user-attachments/assets/ac311d2b-07cb-4924-97c0-07beed2c01d6)
 
 
-> - Dispatcher dashboard (with real-time updates, manual and ML waste composition input)
+> - # **Dispatcher account (with real-time updates, real-time fuel tracking, manual and ML waste composition input)**
 
-![09 06 2025_18 15 56_REC](https://github.com/user-attachments/assets/f2f4883c-724a-49b5-b2d3-f8d7b412da91) ![09 06 2025_18 48 48_REC](https://github.com/user-attachments/assets/c6992bcb-5fb6-4dcd-a98d-152a45fe3a0d) ![09 06 2025_18 16 24_REC](https://github.com/user-attachments/assets/16ddc407-a98b-445f-98d1-24619b1a7a30) ![09 06 2025_18 16 56_REC](https://github.com/user-attachments/assets/f43a7aa5-0781-4cd6-a872-ffbd132c182b)
+![image](https://github.com/user-attachments/assets/c8072643-0d8e-4030-917f-e576f1d114fc)
+![image](https://github.com/user-attachments/assets/55cd7e09-8a27-4a8d-8cc6-500d60aa2347)
+![image](https://github.com/user-attachments/assets/f7ecac1b-e856-4fb3-8d9d-ffe762e2e66c)
+![image](https://github.com/user-attachments/assets/db0d07c3-fe54-4078-9188-3292e9fa0996)
 
-> - Resident dashboard
 
-![09 06 2025_18 17 58_REC](https://github.com/user-attachments/assets/cb00a0cc-60b1-4455-9c39-a2017279329b) ![09 06 2025_18 18 56_REC](https://github.com/user-attachments/assets/105a9611-e010-4240-8a72-dde9d40ed251)
+
+> - # **Resident account**
+
+![image](https://github.com/user-attachments/assets/9a6a9e38-11c8-4bf2-9ec3-e1e006716e24)
+![image](https://github.com/user-attachments/assets/d076cfcc-f45f-4eb9-b41c-ea8390d411e2)
+![image](https://github.com/user-attachments/assets/704ce0ec-0aee-4f71-86bb-3a2b5d3c66c0)
 
 
 ---

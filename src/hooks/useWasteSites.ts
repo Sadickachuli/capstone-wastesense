@@ -12,7 +12,14 @@ export function useWasteSites() {
   useEffect(() => {
     const fetchSites = async () => {
       try {
+        console.log('useWasteSites: Starting to fetch sites...');
         const data = await api.wasteSites.list();
+        console.log('useWasteSites: Received data:', data);
+        
+        if (!data || !Array.isArray(data)) {
+          throw new Error('Invalid data format received from API');
+        }
+        
         const mapped = data.map((site: any) => ({
           ...site,
           composition: site.composition || {
@@ -23,11 +30,12 @@ export function useWasteSites() {
             organic: Number(site.composition_organic ?? site.composition?.organic ?? 0),
           },
         }));
+        console.log('useWasteSites: Mapped sites:', mapped);
         setSites(mapped);
         setError(null);
-      } catch (err) {
-        setError('Failed to fetch waste sites');
-        console.error(err);
+      } catch (err: any) {
+        console.error('useWasteSites error:', err);
+        setError(`Failed to fetch waste sites: ${err.message}`);
       } finally {
         setLoading(false);
       }

@@ -4,6 +4,10 @@ import axios from 'axios';
 // Configure axios with the API base URL from environment variables
 const API_BASE_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:5000/api';
 const ML_SERVICE_URL = (import.meta as any).env.VITE_ML_SERVICE_URL || 'http://localhost:8000';
+
+console.log('mockApi.ts: API_BASE_URL =', API_BASE_URL);
+console.log('mockApi.ts: Environment variables:', (import.meta as any).env);
+
 axios.defaults.baseURL = API_BASE_URL;
 
 // Simulated API delay
@@ -313,9 +317,26 @@ export const api = {
   },
   wasteSites: {
     list: async () => {
-      // Use real backend
-      const res = await axios.get('/auth/waste-sites');
-      return res.data.sites;
+      try {
+        console.log('Fetching waste sites from API...');
+        console.log('Using base URL:', axios.defaults.baseURL);
+        
+        // Try with relative URL first
+        let res;
+        try {
+          res = await axios.get('/auth/waste-sites');
+        } catch (relativeError) {
+          console.log('Relative URL failed, trying full URL...');
+          // Fallback to full URL
+          res = await axios.get(`${API_BASE_URL}/auth/waste-sites`);
+        }
+        
+        console.log('Waste sites API response:', res.data);
+        return res.data.sites || res.data;
+      } catch (error) {
+        console.error('Error fetching waste sites:', error);
+        throw error;
+      }
     },
     
     getById: async (id: string) => {

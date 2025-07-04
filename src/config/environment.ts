@@ -28,8 +28,16 @@ export const environment = {
       return envUrl;
     }
     
+    // Check if we're in production based on multiple indicators
+    const isProduction = 
+      (import.meta as any).env.PROD === true ||
+      (import.meta as any).env.MODE === 'production' ||
+      window.location.hostname.includes('onrender.com') ||
+      window.location.hostname.includes('netlify.app') ||
+      window.location.hostname.includes('vercel.app');
+    
     // If we're in production mode, use production URL
-    if ((import.meta as any).env.PROD) {
+    if (isProduction) {
       return this.production.API_URL;
     }
     
@@ -45,7 +53,15 @@ export const environment = {
       return envUrl;
     }
     
-    if ((import.meta as any).env.PROD) {
+    // Check if we're in production based on multiple indicators
+    const isProduction = 
+      (import.meta as any).env.PROD === true ||
+      (import.meta as any).env.MODE === 'production' ||
+      window.location.hostname.includes('onrender.com') ||
+      window.location.hostname.includes('netlify.app') ||
+      window.location.hostname.includes('vercel.app');
+    
+    if (isProduction) {
       return this.production.ML_SERVICE_URL;
     }
     

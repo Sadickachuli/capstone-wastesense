@@ -14,7 +14,7 @@
     "@heroicons/react": "^2.0.18",
     "@types/react-datepicker": "^6.2.0",
     "@types/yup": "^0.29.14",
-    "axios": "^1.9.0",
+    "axios": "^1.10.0",
     "form-data": "^4.0.3",
     "formik": "^2.4.6",
     "json5": "^2.2.3",

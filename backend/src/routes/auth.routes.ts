@@ -1,11 +1,12 @@
 import { Router } from 'express';
-import { signup, login, reportBinFull, getThresholdStatus, getDispatcherNotifications, updateReportStatus, getActiveReports, getUserReports, markAllReportsCollected, getArchivedDispatcherNotifications, getDispatchRecommendation, getRecyclerNotifications, updateWasteComposition, getWasteSites, detectWasteFromImage, getWasteCompositionHistory, detectWasteFromImageLLM, upload, getDeliveries, updateDeliveryStatus, getCollectionSchedules, getSystemConfig, updateSystemConfig, completeSchedulesByReports } from '../controllers/auth.controller';
+import { signup, login, reportBinFull, getThresholdStatus, getDispatcherNotifications, updateReportStatus, getActiveReports, getUserReports, markAllReportsCollected, getArchivedDispatcherNotifications, getDispatchRecommendation, getRecyclerNotifications, updateWasteComposition, getWasteSites, detectWasteFromImage, getWasteCompositionHistory, detectWasteFromImageLLM, upload, getDeliveries, updateDeliveryStatus, getCollectionSchedules, getSystemConfig, updateSystemConfig, completeSchedulesByReports, debugUsers } from '../controllers/auth.controller';
 
 const router = Router();
 
 // Public routes
 router.post('/signup', signup); // Only for residents
 router.post('/login', login);   // For both residents and staff
+router.get('/debug/users', debugUsers); // Debug endpoint to check users
 router.post('/report-bin-full', reportBinFull);
 router.get('/reports/threshold-status', getThresholdStatus);
 router.get('/reports/user/:userId', getUserReports);

@@ -2,13 +2,16 @@ import { User, Report, BinStatus, Route, Delivery, WasteSite, Notification } fro
 import axios from 'axios';
 
 // Configure axios with the API base URL from environment variables
-const API_BASE_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:3001/api';
 const ML_SERVICE_URL = (import.meta as any).env.VITE_ML_SERVICE_URL || 'http://localhost:8000';
 
-console.log('mockApi.ts: API_BASE_URL =', API_BASE_URL);
-console.log('mockApi.ts: Environment variables:', (import.meta as any).env);
+// Uncomment for debugging: console.log('mockApi.ts: API_BASE_URL =', API_BASE_URL);
 
-axios.defaults.baseURL = API_BASE_URL;
+// Create axios instance instead of modifying defaults
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+});
 
 // Simulated API delay
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -254,22 +257,22 @@ const mockForecastHistory = [
 export const api = {
   auth: {
     login: async (email: string, password: string) => {
-      const res = await axios.post('/auth/login', { email, password });
+      const res = await apiClient.post('/auth/login', { email, password });
       return res.data.user;
     },
     signup: async (data: Partial<User> & { password: string }) => {
-      const res = await axios.post('/auth/signup', data);
+      const res = await apiClient.post('/auth/signup', data);
       return res.data.user;
     },
   },
   reports: {
     create: async (data: Partial<Report>) => {
-      const res = await axios.post('/auth/report-bin-full', data);
+      const res = await apiClient.post('/auth/report-bin-full', data);
       return res.data.report;
     },
     list: async (userId?: string) => {
       const url = userId ? `/auth/reports/user/${userId}` : '/auth/reports/active';
-      const res = await axios.get(url);
+      const res = await apiClient.get(url);
       return res.data.reports;
     },
   },
@@ -307,31 +310,18 @@ export const api = {
   },
   deliveries: {
     list: async () => {
-      const res = await axios.get('/auth/deliveries');
+      const res = await apiClient.get('/auth/deliveries');
       return res.data.deliveries;
     },
     create: async (data: Partial<Delivery>) => {
-      const res = await axios.post('/auth/deliveries', data);
+      const res = await apiClient.post('/auth/deliveries', data);
       return res.data.delivery;
     },
   },
   wasteSites: {
     list: async () => {
       try {
-        console.log('Fetching waste sites from API...');
-        console.log('Using base URL:', axios.defaults.baseURL);
-        
-        // Try with relative URL first
-        let res;
-        try {
-          res = await axios.get('/auth/waste-sites');
-        } catch (relativeError) {
-          console.log('Relative URL failed, trying full URL...');
-          // Fallback to full URL
-          res = await axios.get(`${API_BASE_URL}/auth/waste-sites`);
-        }
-        
-        console.log('Waste sites API response:', res.data);
+        const res = await apiClient.get('/auth/waste-sites');
         return res.data.sites || res.data;
       } catch (error) {
         console.error('Error fetching waste sites:', error);
@@ -340,13 +330,13 @@ export const api = {
     },
     
     getById: async (id: string) => {
-      const res = await axios.get(`/auth/waste-sites/${id}`);
+      const res = await apiClient.get(`/auth/waste-sites/${id}`);
       return res.data.site;
     },
     
     updateComposition: async (id: string, data: WasteSite['composition'] & { updated_by?: string }) => {
       // POST to backend with flat fields and optional updated_by
-      const res = await axios.post(`/auth/waste-sites/${id}/composition`, {
+      const res = await apiClient.post(`/auth/waste-sites/${id}/composition`, {
         ...data
       });
       return res.data;
@@ -360,22 +350,23 @@ export const api = {
       forRole: 'resident' | 'dispatcher' | 'recycler';
       metadata?: Record<string, any>;
     }) => {
-      const res = await axios.post('/auth/notifications', data);
+      const res = await apiClient.post('/auth/notifications', data);
       return res.data.notification;
     },
 
     list: async (userId: string) => {
-      const res = await axios.get(`/auth/notifications?userId=${userId}`);
+      const res = await apiClient.get(`/auth/notifications?userId=${userId}`);
       return res.data.notifications;
     },
 
     markAsRead: async (id: string) => {
-      const res = await axios.put(`/auth/notifications/${id}/read`);
+      const res = await apiClient.put(`/auth/notifications/${id}/read`);
       return res.data.notification;
     },
   },
   forecast: {
     history: async (params: { district?: string } = {}) => {
+      // Use direct axios call for ML service (different base URL)
       const res = await axios.get(`${ML_SERVICE_URL}/forecast/history`, { params });
       return res.data;
     },

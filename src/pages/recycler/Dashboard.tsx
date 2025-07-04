@@ -7,6 +7,10 @@ import { api } from '../../api/mockApi';
 import { Link, useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import axios from 'axios';
+
+// Get API base URL from environment variables
+const API_BASE_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:3001/api';
+const ML_SERVICE_URL = (import.meta as any).env.VITE_ML_SERVICE_URL || 'http://localhost:8000';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useTheme } from '../../context/ThemeContext';
@@ -173,7 +177,7 @@ export default function RecyclerDashboard() {
   }, [hasCreatedTestNotification]);
 
   useEffect(() => {
-    axios.get('/api/forecast/next-day').then(res => setForecast(res.data));
+    axios.get(`${ML_SERVICE_URL}/forecast/next-day`).then(res => setForecast(res.data));
   }, []);
 
       // Fetch annotated images for each site on mount or when sites change (updated for production)
@@ -182,7 +186,7 @@ export default function RecyclerDashboard() {
       const images: Record<string, string> = {};
       for (const site of sites) {
         try {
-          const res = await axios.get(`/api/auth/waste-compositions/history?site_id=${site.id}`);
+          const res = await axios.get(`${API_BASE_URL}/auth/waste-compositions/history?site_id=${site.id}`);
           if (res.data.history && res.data.history[0] && res.data.history[0].annotated_image) {
             images[site.id] = res.data.history[0].annotated_image;
           }
@@ -203,7 +207,7 @@ export default function RecyclerDashboard() {
       
       for (const site of sites) {
         try {
-          const res = await axios.get(`/api/auth/waste-compositions/history?site_id=${site.id}`);
+          const res = await axios.get(`${API_BASE_URL}/auth/waste-compositions/history?site_id=${site.id}`);
           if (res.data.history && res.data.history.length > 0) {
             const latest = res.data.history[0];
             compositions[site.id] = latest;
@@ -300,7 +304,7 @@ export default function RecyclerDashboard() {
     setLoadingDetails(true);
     // For demo, use today's date (synthetic data is for past days, but forecast is for tomorrow)
     // In real use, would use the forecasted date
-    axios.get('/api/forecast/history', { params: { district } })
+    axios.get(`${ML_SERVICE_URL}/forecast/history`, { params: { district } })
       .then(res => {
         setDetails(res.data.slice(-1)); // last day
         setDetailsModal({ open: true, district });

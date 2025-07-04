@@ -260,11 +260,11 @@ export const api = {
   },
   reports: {
     create: async (data: Partial<Report>) => {
-      const res = await axios.post('/auth/reports', data);
+      const res = await axios.post('/auth/report-bin-full', data);
       return res.data.report;
     },
     list: async (userId?: string) => {
-      const url = userId ? `/auth/reports?userId=${userId}` : '/auth/reports';
+      const url = userId ? `/auth/reports/user/${userId}` : '/auth/reports/active';
       const res = await axios.get(url);
       return res.data.reports;
     },

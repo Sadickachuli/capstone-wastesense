@@ -275,7 +275,10 @@ python main.py
 ## 🌍 Deployment
 
 ### 🚀 **Live Application**
-** To be updated soon
+
+# WEB APPLICATION LIVE AT: https://wastesense-frontend.onrender.com/
+
+- **check the credential list to login and test it with the different roles**
 
 
 ### 🏗️ **Deployment Architecture**

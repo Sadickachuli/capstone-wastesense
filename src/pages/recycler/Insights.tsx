@@ -471,9 +471,8 @@ export default function Insights() {
             </label>
             <DatePicker
               selected={selectedDate}
-              onChange={(date) => setSelectedDate(date as Date | null)}
+              onChange={(date) => setSelectedDate(Array.isArray(date) ? date[0] : date)}
               includeDates={availableDates}
-              selectsMultiple={false}
               placeholderText="Choose a date"
               className={`form-input rounded-lg border-2 border-blue-300 focus:border-blue-500 focus:ring focus:ring-blue-200/50 shadow-sm text-center bg-white hover:bg-gray-50 transition-colors duration-200 ${
                 isDarkMode ? 'bg-gray-800 text-white border-gray-600 placeholder-gray-400' : ''

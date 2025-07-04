@@ -229,11 +229,11 @@ python main.py
 ---
 
 ## Designs (Screenshots)
-> - Sign In
+> - # **Sign In**
 
 ![09 06 2025_18 06 28_REC](https://github.com/user-attachments/assets/782013f6-9f12-4927-9a17-ca1c624d2145)
 
-> - Recycler account (with forecasting and analytics)
+> - # **Recycler account (with forecasting and analytics)**
 
 ![image](https://github.com/user-attachments/assets/3665465c-fc42-47e8-a94e-547137bacca0)
 ![Screenshot 2025-07-04 122819](https://github.com/user-attachments/assets/5e42e5d5-0b5d-44c0-8efa-4e3019ee1d97)
@@ -245,7 +245,7 @@ python main.py
 ![image](https://github.com/user-attachments/assets/ac311d2b-07cb-4924-97c0-07beed2c01d6)
 
 
-> - Dispatcher account (with real-time updates, real-time fuel tracking, manual and ML waste composition input)
+> - # **Dispatcher account (with real-time updates, real-time fuel tracking, manual and ML waste composition input)**
 
 ![image](https://github.com/user-attachments/assets/c8072643-0d8e-4030-917f-e576f1d114fc)
 ![image](https://github.com/user-attachments/assets/55cd7e09-8a27-4a8d-8cc6-500d60aa2347)
@@ -254,7 +254,7 @@ python main.py
 
 
 
-> - Resident account
+> - # **Resident account**
 
 ![image](https://github.com/user-attachments/assets/9a6a9e38-11c8-4bf2-9ec3-e1e006716e24)
 ![image](https://github.com/user-attachments/assets/d076cfcc-f45f-4eb9-b41c-ea8390d411e2)

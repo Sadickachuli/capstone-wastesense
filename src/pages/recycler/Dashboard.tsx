@@ -7,10 +7,11 @@ import { api } from '../../api/mockApi';
 import { Link, useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import axios from 'axios';
+import { environment } from '../../config/environment';
 
-// Get API base URL from environment variables
-const API_BASE_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:3001/api';
-const ML_SERVICE_URL = (import.meta as any).env.VITE_ML_SERVICE_URL || 'http://localhost:8000';
+// Get API base URL from environment configuration
+const API_BASE_URL = environment.getApiUrl();
+const ML_SERVICE_URL = environment.getMlServiceUrl();
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useTheme } from '../../context/ThemeContext';

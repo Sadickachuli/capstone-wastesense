@@ -1,9 +1,25 @@
 from fastapi import FastAPI, Query
+from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import pandas as pd
 from model import load_data, train_and_forecast, get_historical, WASTE_TYPES
 
 app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174", 
+        "http://localhost:5175",
+        "https://wastesense-frontend.onrender.com"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 df = load_data()
 
 districts = df['district'].unique().tolist()

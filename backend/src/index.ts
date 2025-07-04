@@ -235,16 +235,29 @@ app.post('/setup-database', async (req: Request, res: Response) => {
           role: 'recycler',
           name: 'Test Recycler',
           facility: 'Recycling Center 1'
-        },
-        {
-          employee_id: 'ADMIN001',
-          email: 'admin@wastesense.com',
-          password_hash: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password123
-          role: 'admin',
-          name: 'WasteSense Admin',
-          facility: 'Admin Panel'
         }
       ]);
+    }
+
+    // Always ensure admin user exists (regardless of user count)
+    const adminExists = await db('users').where('employee_id', 'ADMIN001').first();
+    if (!adminExists) {
+      console.log('👑 Creating admin user...');
+      await db('users').insert({
+        employee_id: 'ADMIN001',
+        email: 'admin@wastesense.com',
+        password_hash: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password123
+        role: 'admin',
+        name: 'WasteSense Admin',
+        facility: 'Admin Panel'
+      });
+      console.log('✅ Admin user created successfully');
+    } else {
+      console.log('✅ Admin user already exists');
+    }
+
+    // Continue with other setup if users were created
+    if (!userCount || parseInt(userCount.count as string) === 0) {
       
       // Add test waste sites with compositions
       await db('waste_sites').insert([

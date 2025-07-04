@@ -151,7 +151,18 @@ export default function Insights() {
             // Store site images
             const site = sites[index];
             if (site && record.annotated_image) {
+              console.log(`🖼️ Image found for ${site.name}:`, {
+                siteId: site.id,
+                imageLength: record.annotated_image.length,
+                imageStart: record.annotated_image.substring(0, 50) + '...'
+              });
               siteImages[site.id] = record.annotated_image;
+            } else if (site) {
+              console.log(`❌ No image for ${site.name}:`, {
+                siteId: site.id,
+                hasRecord: !!record,
+                hasImage: !!record?.annotated_image
+              });
             }
           });
           
@@ -196,6 +207,13 @@ export default function Insights() {
             };
             setComposition(siteComposition);
             setTotalWeight(record.current_capacity || 0);
+            
+            console.log(`🖼️ Single site image for ${selectedSite}:`, {
+              hasImage: !!record.annotated_image,
+              imageLength: record.annotated_image?.length || 0,
+              imageStart: record.annotated_image?.substring(0, 50) + '...' || 'No image'
+            });
+            
             setAnnotatedImage(record.annotated_image || null);
             setAllSiteImages({}); // Clear all site images for single site view
           } else {

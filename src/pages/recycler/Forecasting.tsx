@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
 import { useTheme } from '../../context/ThemeContext';
+import { environment } from '../../config/environment';
 
 const WASTE_COLORS: Record<string, string> = {
   plastic: '#60A5FA',
@@ -20,9 +21,13 @@ export default function Forecasting() {
     const fetchForecast = async () => {
       setLoading(true);
       try {
-        const res = await axios.get('/api/forecast/next-day');
+        const ML_SERVICE_URL = environment.getMlServiceUrl();
+        console.log('🔮 Fetching forecast from:', `${ML_SERVICE_URL}/forecast/next-day`);
+        const res = await axios.get(`${ML_SERVICE_URL}/forecast/next-day`);
+        console.log('🔮 Forecast response:', res.data);
         setForecast(res.data);
       } catch (err) {
+        console.error('🔮 Forecast error:', err);
         setForecast(null);
       } finally {
         setLoading(false);

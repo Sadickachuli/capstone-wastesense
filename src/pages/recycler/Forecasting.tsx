@@ -22,12 +22,10 @@ export default function Forecasting() {
       setLoading(true);
       try {
         const ML_SERVICE_URL = environment.getMlServiceUrl();
-        console.log('🔮 Fetching forecast from:', `${ML_SERVICE_URL}/forecast/next-day`);
         const res = await axios.get(`${ML_SERVICE_URL}/forecast/next-day`);
-        console.log('🔮 Forecast response:', res.data);
         setForecast(res.data);
       } catch (err) {
-        console.error('🔮 Forecast error:', err);
+        console.error('Failed to fetch forecast:', err);
         setForecast(null);
       } finally {
         setLoading(false);

@@ -23,27 +23,17 @@ export const environment = {
     const mode = (import.meta as any).env.MODE;
     const prod = (import.meta as any).env.PROD;
     
-    console.log('🔧 Environment Debug:', {
-      VITE_API_URL: envUrl,
-      MODE: mode,
-      PROD: prod,
-      location: window.location.href
-    });
-    
     // If environment variable is set, use it
     if (envUrl) {
-      console.log('✅ Using environment API URL:', envUrl);
       return envUrl;
     }
     
     // If we're in production mode, use production URL
     if ((import.meta as any).env.PROD) {
-      console.log('✅ Using production API URL:', this.production.API_URL);
       return this.production.API_URL;
     }
     
     // Otherwise use localhost
-    console.log('✅ Using localhost API URL');
     return 'http://localhost:3001/api';
   },
   

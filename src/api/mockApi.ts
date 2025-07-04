@@ -6,8 +6,7 @@ import { environment } from '../config/environment';
 const API_BASE_URL = environment.getApiUrl();
 const ML_SERVICE_URL = environment.getMlServiceUrl();
 
-console.log('mockApi.ts: API_BASE_URL =', API_BASE_URL);
-console.log('mockApi.ts: ML_SERVICE_URL =', ML_SERVICE_URL);
+// API URLs configured from environment
 
 // Create axios instance instead of modifying defaults
 const apiClient = axios.create({

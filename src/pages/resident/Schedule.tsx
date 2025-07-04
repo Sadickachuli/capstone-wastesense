@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { environment } from '../../config/environment';
 import axios from 'axios';
 
 interface CollectionSchedule {
@@ -36,7 +37,8 @@ export default function Schedule() {
       setLoading(true);
       setError('');
       try {
-        const response = await axios.get(`/api/auth/schedules?zone=${encodeURIComponent(user.zone)}`);
+        const API_BASE_URL = environment.getApiUrl();
+        const response = await axios.get(`${API_BASE_URL}/auth/schedules?zone=${encodeURIComponent(user.zone)}`);
         setSchedules(response.data.schedules);
       } catch (err) {
         console.error('Failed to fetch schedules:', err);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { environment } from '../../config/environment';
 import axios from 'axios';
 
 interface Vehicle {
@@ -64,7 +65,8 @@ export default function FuelTracking() {
 
   const fetchVehicles = async () => {
     try {
-      const res = await axios.get('/api/fuel/vehicles');
+      const API_BASE_URL = environment.getApiUrl();
+      const res = await axios.get(`${API_BASE_URL}/fuel/vehicles`);
       setVehicles(res.data.vehicles);
     } catch (err) {
       console.error('Failed to fetch vehicles:', err);
@@ -73,7 +75,8 @@ export default function FuelTracking() {
 
   const fetchAnalytics = async () => {
     try {
-      const res = await axios.get('/api/fuel/analytics?period=7');
+      const API_BASE_URL = environment.getApiUrl();
+      const res = await axios.get(`${API_BASE_URL}/fuel/analytics?period=7`);
       if (res.data.summary) {
         setFuelAnalytics(res.data.summary);
       }
@@ -84,7 +87,8 @@ export default function FuelTracking() {
 
   const fetchLogs = async () => {
     try {
-      const res = await axios.get('/api/fuel/logs?limit=10');
+      const API_BASE_URL = environment.getApiUrl();
+      const res = await axios.get(`${API_BASE_URL}/fuel/logs?limit=10`);
       setFuelLogs(res.data.logs);
     } catch (err) {
       console.error('Failed to fetch logs:', err);
@@ -101,7 +105,8 @@ export default function FuelTracking() {
     }
 
     try {
-      await axios.post('/api/fuel/logs', {
+      const API_BASE_URL = environment.getApiUrl();
+      await axios.post(`${API_BASE_URL}/fuel/logs`, {
         vehicle_id: selectedVehicle,
         trip_type: 'collection',
         distance_km: Number(tripData.distance_km),

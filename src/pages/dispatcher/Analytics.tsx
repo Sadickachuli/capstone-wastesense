@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { environment } from '../../config/environment';
 import axios from 'axios';
 
 interface AnalyticsSummary {
@@ -58,7 +59,8 @@ export default function Analytics() {
 
   const fetchAnalytics = async () => {
     try {
-      const res = await axios.get(`/api/fuel/analytics?period=${period}`);
+      const API_BASE_URL = environment.getApiUrl();
+      const res = await axios.get(`${API_BASE_URL}/fuel/analytics?period=${period}`);
       if (res.data.summary) {
         setFuelAnalytics(res.data.summary);
       }
@@ -70,7 +72,8 @@ export default function Analytics() {
 
   const fetchVehicles = async () => {
     try {
-      const res = await axios.get('/api/fuel/vehicles');
+      const API_BASE_URL = environment.getApiUrl();
+      const res = await axios.get(`${API_BASE_URL}/fuel/vehicles`);
       setVehicles(res.data.vehicles);
     } catch (err) {
       console.error('Failed to fetch vehicles:', err);
@@ -80,7 +83,8 @@ export default function Analytics() {
   const fetchRealAnalytics = async () => {
     try {
       // Fetch active reports for current collections
-      const reportsRes = await axios.get('/api/auth/reports/active');
+      const API_BASE_URL = environment.getApiUrl();
+      const reportsRes = await axios.get(`${API_BASE_URL}/auth/reports/active`);
       const activeReports = reportsRes.data.reports || [];
       
       // Calculate real metrics from data

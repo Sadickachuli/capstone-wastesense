@@ -8,6 +8,9 @@ import { Delivery } from '../../types';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
+// Get API base URL from environment variables
+const API_BASE_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:3001/api';
+
 const WASTE_COLORS: Record<string, string> = {
   plastic: '#2563eb', // blue
   metal: '#6b7280',   // gray
@@ -42,7 +45,7 @@ export default function Insights() {
   useEffect(() => {
     async function fetchDetectionHistory() {
       try {
-        const res = await axios.get('/api/auth/waste-compositions/history');
+        const res = await axios.get(`${API_BASE_URL}/auth/waste-compositions/history`);
         const history = res.data.history || [];
         setDetectionHistory(history);
         
@@ -87,7 +90,7 @@ export default function Insights() {
 
   const fetchDeliveries = async () => {
     try {
-      const response = await axios.get('/api/auth/deliveries');
+      const response = await axios.get(`${API_BASE_URL}/auth/deliveries`);
       console.log('DEBUG: Fetched deliveries:', response.data.deliveries);
       setDeliveries(response.data.deliveries);
     } catch (error) {
@@ -112,7 +115,7 @@ export default function Insights() {
         const allSiteData = await Promise.all(
           sites.map(async (site) => {
             try {
-              const res = await axios.get(`/api/auth/waste-compositions/history?site_id=${site.id}`);
+              const res = await axios.get(`${API_BASE_URL}/auth/waste-compositions/history?site_id=${site.id}`);
               const records = res.data.history || [];
               return records.find((record: any) => {
                 // Try multiple date comparison methods
@@ -171,7 +174,7 @@ export default function Insights() {
       } else {
         // Single site
         try {
-          const res = await axios.get(`/api/auth/waste-compositions/history?site_id=${selectedSite}`);
+          const res = await axios.get(`${API_BASE_URL}/auth/waste-compositions/history?site_id=${selectedSite}`);
           const records = res.data.history || [];
           const record = records.find((r: any) => {
             // Try multiple date comparison methods
@@ -227,7 +230,7 @@ export default function Insights() {
         const allSiteData = await Promise.all(
           sites.map(async (site) => {
             try {
-              const res = await axios.get(`/api/auth/waste-compositions/history?site_id=${site.id}`);
+              const res = await axios.get(`${API_BASE_URL}/auth/waste-compositions/history?site_id=${site.id}`);
               return res.data.history || [];
             } catch {
               return [];
@@ -287,7 +290,7 @@ export default function Insights() {
       } else {
         // Single site trend
         try {
-          const res = await axios.get(`/api/auth/waste-compositions/history?site_id=${selectedSite}`);
+          const res = await axios.get(`${API_BASE_URL}/auth/waste-compositions/history?site_id=${selectedSite}`);
           const history = res.data.history || [];
           
           const trendPoints = history.map((record: any) => ({
@@ -468,8 +471,9 @@ export default function Insights() {
             </label>
             <DatePicker
               selected={selectedDate}
-              onChange={date => setSelectedDate(date)}
+              onChange={(date) => setSelectedDate(date as Date | null)}
               includeDates={availableDates}
+              selectsMultiple={false}
               placeholderText="Choose a date"
               className={`form-input rounded-lg border-2 border-blue-300 focus:border-blue-500 focus:ring focus:ring-blue-200/50 shadow-sm text-center bg-white hover:bg-gray-50 transition-colors duration-200 ${
                 isDarkMode ? 'bg-gray-800 text-white border-gray-600 placeholder-gray-400' : ''

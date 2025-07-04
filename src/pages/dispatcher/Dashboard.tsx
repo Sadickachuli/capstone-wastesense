@@ -4,6 +4,7 @@ import { api } from '../../api/mockApi';
 import { useWasteSites } from '../../hooks/useWasteSites';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { useReports } from '../../hooks/useReports';
+import { environment } from '../../config/environment';
 import axios from 'axios';
 
 interface Alert {
@@ -241,7 +242,8 @@ export default function DispatcherDashboard() {
       setThresholdLoading(true);
       setThresholdError('');
       try {
-        const res = await axios.get('/api/auth/reports/threshold-status');
+        const API_BASE_URL = environment.getApiUrl();
+        const res = await axios.get(`${API_BASE_URL}/auth/reports/threshold-status`);
         setThresholdStatus(res.data);
       } catch (err) {
         setThresholdError('Failed to fetch threshold status');
@@ -261,7 +263,8 @@ export default function DispatcherDashboard() {
       setNotificationsLoading(true);
       setNotificationsError('');
       try {
-        const res = await axios.get('/api/auth/notifications/dispatcher');
+        const API_BASE_URL = environment.getApiUrl();
+        const res = await axios.get(`${API_BASE_URL}/auth/notifications/dispatcher`);
         setNotifications(res.data.notifications);
       } catch (err) {
         setNotificationsError('Failed to fetch notifications');
@@ -281,7 +284,8 @@ export default function DispatcherDashboard() {
       setActiveReportsLoading(true);
       setActiveReportsError('');
       try {
-        const res = await axios.get('/api/auth/reports/active');
+        const API_BASE_URL = environment.getApiUrl();
+        const res = await axios.get(`${API_BASE_URL}/auth/reports/active`);
         setActiveReports(res.data.reports);
       } catch (err) {
         setActiveReportsError('Failed to fetch active reports');
@@ -298,7 +302,8 @@ export default function DispatcherDashboard() {
     setArchivedLoading(true);
     setArchivedError('');
     try {
-      const res = await axios.get('/api/auth/notifications/dispatcher/archived');
+      const API_BASE_URL = environment.getApiUrl();
+      const res = await axios.get(`${API_BASE_URL}/auth/notifications/dispatcher/archived`);
       setArchivedNotifications(res.data.notifications);
     } catch (err) {
       setArchivedError('Failed to fetch archived notifications');
@@ -379,17 +384,18 @@ export default function DispatcherDashboard() {
     setMarkAllLoading(true);
     setMarkAllMessage('');
     try {
+      const API_BASE_URL = environment.getApiUrl();
       if (selectedReportId) {
         // Handle individual report
         setUpdatingReportId(selectedReportId);
-        await axios.patch(`/api/auth/reports/${selectedReportId}/status`, { 
+        await axios.patch(`${API_BASE_URL}/auth/reports/${selectedReportId}/status`, { 
           status: 'collected',
           dumpingSiteId: selectedDumpingSite 
         });
         setMarkAllMessage(`Report marked as collected and delivered to ${selectedDumpingSite === 'WS001' ? 'North Dumping Site' : 'South Dumping Site'}.`);
       } else {
         // Handle mark all reports
-        const res = await axios.patch('/api/auth/reports/mark-all-collected', {
+        const res = await axios.patch(`${API_BASE_URL}/auth/reports/mark-all-collected`, {
           dumpingSiteId: selectedDumpingSite,
           truckId: selectedTruckId
         });
@@ -398,7 +404,7 @@ export default function DispatcherDashboard() {
       
       // Update any active schedules to completed status
       try {
-        await axios.patch('/api/auth/schedules/complete-by-reports');
+        await axios.patch(`${API_BASE_URL}/auth/schedules/complete-by-reports`);
       } catch (scheduleErr) {
         console.warn('Failed to update schedules:', scheduleErr);
       }
@@ -407,7 +413,7 @@ export default function DispatcherDashboard() {
       await fetchVehicles();
       
       // Refresh active reports
-      const refreshed = await axios.get('/api/auth/reports/active');
+      const refreshed = await axios.get(`${API_BASE_URL}/auth/reports/active`);
       setActiveReports(refreshed.data.reports);
       setShowDumpingSiteModal(false);
       setSelectedDumpingSite('');
@@ -429,7 +435,8 @@ export default function DispatcherDashboard() {
       try {
         // Use actual vehicle count instead of arbitrary number
         const availableVehicleCount = vehicles.filter(v => v.status === 'available' && !v.needs_refuel).length;
-        const res = await axios.get(`/api/auth/dispatch/recommendation?trucks=${availableVehicleCount}`);
+        const API_BASE_URL = environment.getApiUrl();
+        const res = await axios.get(`${API_BASE_URL}/auth/dispatch/recommendation?trucks=${availableVehicleCount}`);
         setMlRecommendation(res.data);
       } catch (err) {
         setMlError('Failed to fetch dispatch recommendation');
@@ -459,9 +466,10 @@ export default function DispatcherDashboard() {
     try {
       const formData = new FormData();
       formData.append('file', wasteImage);
+      const API_BASE_URL = environment.getApiUrl();
       let res;
       if (detectionMethod === 'llm') {
-        res = await axios.post('/api/auth/detect-waste-llm', formData, {
+        res = await axios.post(`${API_BASE_URL}/auth/detect-waste-llm`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
         setDetectionResult({ 
@@ -471,7 +479,7 @@ export default function DispatcherDashboard() {
           raw: res.data.raw 
         });
       } else {
-        res = await axios.post('/api/auth/detect-waste-image', formData, {
+        res = await axios.post(`${API_BASE_URL}/auth/detect-waste-image`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
         setDetectionResult(res.data);
@@ -594,9 +602,10 @@ export default function DispatcherDashboard() {
         status: 'available'
       };
 
+      const API_BASE_URL = environment.getApiUrl();
       if (editingVehicle) {
         // Update existing vehicle
-        await axios.put(`/api/fuel/vehicles/${editingVehicle}`, vehicleData);
+        await axios.put(`${API_BASE_URL}/fuel/vehicles/${editingVehicle}`, vehicleData);
         addToast({
           type: 'success',
           title: 'Success',
@@ -604,7 +613,7 @@ export default function DispatcherDashboard() {
         });
       } else {
         // Add new vehicle
-        await axios.post('/api/fuel/vehicles', vehicleData);
+        await axios.post(`${API_BASE_URL}/fuel/vehicles`, vehicleData);
         addToast({
           type: 'success',
           title: 'Success',
@@ -645,7 +654,8 @@ export default function DispatcherDashboard() {
     if (!deletingVehicle) return;
     
     try {
-      await axios.delete(`/api/fuel/vehicles/${deletingVehicle}`);
+      const API_BASE_URL = environment.getApiUrl();
+      await axios.delete(`${API_BASE_URL}/fuel/vehicles/${deletingVehicle}`);
       addToast({
         type: 'success',
         title: 'Success',
@@ -725,7 +735,8 @@ export default function DispatcherDashboard() {
       };
       
       // Save to backend API
-      await axios.post('/api/auth/config', { config: backendConfig });
+      const API_BASE_URL = environment.getApiUrl();
+      await axios.post(`${API_BASE_URL}/auth/config`, { config: backendConfig });
       
       // Also save to localStorage as backup
       localStorage.setItem('wastesense_config', JSON.stringify(configData));
@@ -751,7 +762,8 @@ export default function DispatcherDashboard() {
     const loadConfiguration = async () => {
       try {
         // Try to load from backend first
-        const response = await axios.get('/api/auth/config');
+        const API_BASE_URL = environment.getApiUrl();
+        const response = await axios.get(`${API_BASE_URL}/auth/config`);
         const backendConfig = response.data.config;
         
         // Map backend structure to frontend structure
@@ -787,7 +799,8 @@ export default function DispatcherDashboard() {
     setVehiclesLoading(true);
     setVehiclesError('');
     try {
-      const response = await axios.get('/api/fuel/vehicles');
+      const API_BASE_URL = environment.getApiUrl();
+      const response = await axios.get(`${API_BASE_URL}/fuel/vehicles`);
       setVehicles(response.data.vehicles || []);
     } catch (error) {
       console.error('Failed to fetch vehicles:', error);
@@ -801,7 +814,8 @@ export default function DispatcherDashboard() {
   const fetchFuelAnalytics = async () => {
     setFuelAnalyticsLoading(true);
     try {
-      const response = await axios.get('/api/fuel/analytics?period=7');
+      const API_BASE_URL = environment.getApiUrl();
+      const response = await axios.get(`${API_BASE_URL}/fuel/analytics?period=7`);
       setFuelAnalytics(response.data.summary);
     } catch (error) {
       console.error('Failed to fetch fuel analytics:', error);

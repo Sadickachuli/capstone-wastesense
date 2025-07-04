@@ -152,30 +152,7 @@ export default function RecyclerDashboard() {
     }
   }, [sites, selectedSite]);
 
-  // Create a test notification only once
-  useEffect(() => {
-    const createTestNotification = async () => {
-      if (hasCreatedTestNotification) return;
-      
-      try {
-        await api.notifications.create({
-          type: 'info',
-          title: 'New Waste Composition Update',
-          message: 'Waste composition updated at North Dumping Site',
-          forRole: 'recycler',
-          metadata: {
-            siteId: 'WS001',
-            updateType: 'composition'
-          }
-        });
-        setHasCreatedTestNotification(true);
-      } catch (error) {
-        console.error('Failed to create test notification:', error);
-      }
-    };
-
-    createTestNotification();
-  }, [hasCreatedTestNotification]);
+  // Removed test notification creation - backend now handles this automatically
 
   useEffect(() => {
     axios.get(`${ML_SERVICE_URL}/forecast/next-day`).then(res => setForecast(res.data));

@@ -2,7 +2,7 @@
 
 > **A comprehensive digital solution for optimizing waste collection, analysis, and recycling in Ghana using AI-powered detection and fuel-efficient algorithms.**
 
-** Demo Video:** https://youtu.be/6coD9JquYuQ?si=Zae1mGqY1wwySjjN
+**Demo Video:** https://youtu.be/6coD9JquYuQ?si=Zae1mGqY1wwySjjN
 
 ## 📋 Table of Contents
 

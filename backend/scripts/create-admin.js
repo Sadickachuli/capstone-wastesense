@@ -13,7 +13,7 @@ async function createAdmin() {
 
     // Check if admin already exists
     const existingAdmin = await client.query(
-      "SELECT id FROM users WHERE email = 'admin@wastesense.com'"
+      "SELECT id FROM users WHERE email = 'admin@wastesense.com' OR employee_id = 'ADMIN001'"
     );
 
     if (existingAdmin.rows.length > 0) {
@@ -27,13 +27,14 @@ async function createAdmin() {
 
     // Create admin user
     const result = await client.query(`
-      INSERT INTO users (email, password_hash, name, role, created_at, updated_at)
-      VALUES ($1, $2, $3, $4, NOW(), NOW())
-      RETURNING id, email, name, role
-    `, ['admin@wastesense.com', passwordHash, 'System Admin', 'admin']);
+      INSERT INTO users (email, password_hash, name, employee_id, role, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+      RETURNING id, email, name, employee_id, role
+    `, ['admin@wastesense.com', passwordHash, 'System Admin', 'ADMIN001', 'admin']);
 
     console.log('✅ Admin user created successfully:');
     console.log('Email: admin@wastesense.com');
+    console.log('Employee ID: ADMIN001');
     console.log('Password: password123');
     console.log('Role: admin');
     console.log('User ID:', result.rows[0].id);

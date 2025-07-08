@@ -57,7 +57,7 @@ Test and evaluate the system's performance and robustness across various scenari
 ## ✨ Core Functionalities
 
 ### 🏠 **Resident Features**
-- **Smart Bin Reporting**: One-click waste reporting with automatic location detection
+- **Smart Bin Reporting**: One-click waste reporting 
 - **Real-time Collection Updates**: Live status of pickup schedules and completion
 - **Personalized Dashboard**: Zone-specific collection information and history
 - **Educational Tips**: Recycling guidelines and waste separation advice
@@ -72,7 +72,7 @@ Test and evaluate the system's performance and robustness across various scenari
 ### ♻️ **Recycler Features**
 - **Incoming Deliveries Dashboard**: Real-time waste stream monitoring
 - **Composition Analytics**: Detailed breakdown of waste types and trends
-- **ML-Powered Forecasting**: Predictive analytics for waste volume planning
+- **ML-Powered Forecasting**: Predictive analytics for waste volume planning(with synthetic dataset for now)
 - **Export Capabilities**: Data export for stakeholder reporting
 - **Trend Analysis**: Historical data visualization and insights
 

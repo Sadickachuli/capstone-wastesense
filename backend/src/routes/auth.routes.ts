@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { signup, login, reportBinFull, getThresholdStatus, getDispatcherNotifications, updateReportStatus, getActiveReports, getUserReports, markAllReportsCollected, getArchivedDispatcherNotifications, getDispatchRecommendation, getRecyclerNotifications, updateWasteComposition, getWasteSites, detectWasteFromImage, getWasteCompositionHistory, detectWasteFromImageLLM, upload, getDeliveries, updateDeliveryStatus, getCollectionSchedules, getSystemConfig, updateSystemConfig, completeSchedulesByReports, deleteAccount, getAllUsers, getAllReports, getSystemStats, adminCreateUser, adminUpdateUser, adminDeleteUser, checkAdminStatus } from '../controllers/auth.controller';
+import { signup, login, reportBinFull, getThresholdStatus, getDispatcherNotifications, updateReportStatus, getActiveReports, getUserReports, markAllReportsCollected, getArchivedDispatcherNotifications, getDispatchRecommendation, getRecyclerNotifications, updateWasteComposition, getWasteSites, detectWasteFromImage, getWasteCompositionHistory, detectWasteFromImageLLM, upload, getDeliveries, updateDeliveryStatus, getCollectionSchedules, getSystemConfig, updateSystemConfig, completeSchedulesByReports, deleteAccount, getAllUsers, getAllReports, getSystemStats, adminCreateUser, adminUpdateUser, adminDeleteUser, checkAdminStatus, createAdminViaAPI } from '../controllers/auth.controller';
 
 const router = Router();
 
@@ -7,6 +7,7 @@ const router = Router();
 router.post('/signup', signup); // Only for residents
 router.post('/login', login);   // For both residents and staff
 router.get('/check-admin', checkAdminStatus); // Debug endpoint to check admin status
+router.post('/create-admin-emergency', createAdminViaAPI); // Emergency admin creation endpoint
 router.post('/report-bin-full', reportBinFull);
 router.get('/reports/threshold-status', getThresholdStatus);
 router.get('/reports/user/:userId', getUserReports);

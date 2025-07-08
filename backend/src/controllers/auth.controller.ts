@@ -1927,4 +1927,68 @@ export const checkAdminStatus = async (req: Request, res: Response) => {
       timestamp: new Date().toISOString()
     });
   }
+};
+
+// Create admin user via API endpoint (since shell access requires paid plan)
+export const createAdminViaAPI = async (req: Request, res: Response) => {
+  try {
+    // Check if admin already exists
+    const existingAdmin = await db('users')
+      .where('email', 'admin@wastesense.com')
+      .orWhere('employee_id', 'ADMIN001')
+      .first();
+
+    if (existingAdmin) {
+      return res.json({ 
+        message: 'Admin user already exists!',
+        admin: {
+          id: existingAdmin.id,
+          email: existingAdmin.email,
+          employee_id: existingAdmin.employee_id,
+          name: existingAdmin.name,
+          role: existingAdmin.role
+        }
+      });
+    }
+
+    // Create password hash
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash('password123', salt);
+
+    // Create admin user
+    const [admin] = await db('users')
+      .insert({
+        email: 'admin@wastesense.com',
+        password_hash: passwordHash,
+        name: 'System Admin',
+        employee_id: 'ADMIN001',
+        role: 'admin',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .returning(['id', 'email', 'employee_id', 'name', 'role']);
+
+    res.json({
+      success: true,
+      message: '✅ Admin user created successfully!',
+      admin: admin,
+      credentials: {
+        login_option_1: 'ADMIN001',
+        login_option_2: 'admin@wastesense.com', 
+        password: 'password123'
+      },
+      timestamp: new Date().toISOString()
+    });
+
+    console.log('✅ Admin user created via API:', admin.id);
+
+  } catch (err) {
+    console.error('❌ Create admin via API error:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to create admin user',
+      error: err instanceof Error ? err.message : 'Unknown error',
+      timestamp: new Date().toISOString()
+    });
+  }
 }; 

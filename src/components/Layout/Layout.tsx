@@ -47,6 +47,7 @@ const getNavItems = (role: string): NavItem[] => {
     case 'admin':
       return [
         { name: 'Dashboard', to: '/admin/dashboard', icon: HomeIcon },
+        { name: 'Users', to: '/admin/users', icon: UsersIcon },
       ];
     default:
       return [];

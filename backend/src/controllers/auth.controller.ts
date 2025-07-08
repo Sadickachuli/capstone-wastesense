@@ -219,6 +219,128 @@ export const getAllUsers = async (req: Request, res: Response) => {
   }
 };
 
+// =========================
+// Admin – User CRUD
+// =========================
+
+// Validation schemas for admin user management
+const adminCreateUserSchema = z.object({
+  email: z.string().email().optional(),
+  employee_id: z.string().optional(),
+  password: z.string().min(6),
+  role: z.enum(['resident', 'dispatcher', 'recycler', 'admin']),
+  name: z.string().optional(),
+  phone: z.string().optional(),
+  zone: z.string().optional(),
+  facility: z.string().optional(),
+});
+
+const adminUpdateUserSchema = adminCreateUserSchema.partial();
+
+// Create new user (any role)
+export const adminCreateUser = async (req: Request, res: Response) => {
+  try {
+    const data = adminCreateUserSchema.parse(req.body);
+
+    // Ensure either email or employee_id is provided depending on role
+    if (['dispatcher', 'recycler', 'admin'].includes(data.role) && !data.employee_id) {
+      return res.status(400).json({ message: 'employee_id is required for staff roles' });
+    }
+    if (data.role === 'resident' && !data.email) {
+      return res.status(400).json({ message: 'email is required for resident role' });
+    }
+
+    // Check uniqueness
+    if (data.email) {
+      const exists = await db('users').where('email', data.email).first();
+      if (exists) return res.status(400).json({ message: 'Email already in use' });
+    }
+    if (data.employee_id) {
+      const exists = await db('users').where('employee_id', data.employee_id).first();
+      if (exists) return res.status(400).json({ message: 'Employee ID already in use' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(data.password, salt);
+
+    const [user] = await db('users')
+      .insert({
+        email: data.email,
+        employee_id: data.employee_id,
+        password_hash: passwordHash,
+        role: data.role,
+        name: data.name,
+        phone: data.phone,
+        zone: data.zone,
+        facility: data.facility,
+      })
+      .returning(['id', 'email', 'employee_id', 'role', 'name', 'phone', 'zone', 'facility', 'created_at']);
+
+    res.status(201).json({ user });
+  } catch (err: unknown) {
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({ message: 'Invalid input', errors: err.errors });
+    }
+    console.error('Admin create user error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Update existing user
+export const adminUpdateUser = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const data = adminUpdateUserSchema.parse(req.body);
+
+    // Prevent changing to duplicate email or employee_id
+    if (data.email) {
+      const exists = await db('users').where('email', data.email).andWhereNot('id', id).first();
+      if (exists) return res.status(400).json({ message: 'Email already in use by another user' });
+    }
+    if (data.employee_id) {
+      const exists = await db('users').where('employee_id', data.employee_id).andWhereNot('id', id).first();
+      if (exists) return res.status(400).json({ message: 'Employee ID already in use by another user' });
+    }
+
+    const updateData: any = { ...data };
+
+    // Hash password if provided
+    if (data.password) {
+      const salt = await bcrypt.genSalt(10);
+      updateData.password_hash = await bcrypt.hash(data.password, salt);
+      delete updateData.password;
+    }
+
+    await db('users').where('id', id).update(updateData);
+
+    const user = await db('users').where('id', id).first();
+    res.json({ user });
+  } catch (err: unknown) {
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({ message: 'Invalid input', errors: err.errors });
+    }
+    console.error('Admin update user error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Delete user
+export const adminDeleteUser = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Prevent deleting self in case admin uses own ID
+    // (Assuming req.user.id is set in auth middleware)
+    // if (req.user?.id === id) return res.status(400).json({ message: 'Cannot delete own account' });
+
+    await db('users').where('id', id).del();
+    res.json({ message: 'User deleted' });
+  } catch (err) {
+    console.error('Admin delete user error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 export const getAllReports = async (req: Request, res: Response) => {
   try {
     const reports = await db('reports')

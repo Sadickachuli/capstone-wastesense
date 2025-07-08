@@ -32,6 +32,7 @@ import Forecasting from '../pages/recycler/Forecasting';
 
 // Admin Pages
 import AdminDashboard from '../pages/admin/Dashboard';
+import AdminUsers from '../pages/admin/Users';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -192,6 +193,14 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={['admin']}>
             <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <AdminUsers />
           </ProtectedRoute>
         }
       />

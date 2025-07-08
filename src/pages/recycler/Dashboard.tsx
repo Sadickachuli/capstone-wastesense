@@ -159,8 +159,8 @@ export default function RecyclerDashboard() {
   }, []);
 
       // Fetch annotated images for each site on mount or when sites change (updated for production)
-    useEffect(() => {
-      async function fetchAnnotatedImages() {
+  useEffect(() => {
+    async function fetchAnnotatedImages() {
       const images: Record<string, string> = {};
       for (const site of sites) {
         try {

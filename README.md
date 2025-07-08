@@ -2,7 +2,7 @@
 
 > **A comprehensive digital solution for optimizing waste collection, analysis, and recycling in Ghana using AI-powered detection and fuel-efficient algorithms.**
 
-[![Demo Video](https://img.shields.io/badge/📹_Demo_Video-Watch_Now-red?style=for-the-badge)]([https://youtu.be/6coD9JquYuQ?si=Zae1mGqY1wwySjjN])
+![Demo Video]([https://youtu.be/6coD9JquYuQ?si=Zae1mGqY1wwySjjN])
 
 ## 📋 Table of Contents
 
@@ -30,6 +30,27 @@ WasteSense is a **smart waste management system** designed specifically for Ghan
 - ✅ **Dual AI detection** (YOLO + LLM) for 95% waste composition accuracy
 - ✅ **Mobile-first design** optimized for Ghana's mobile infrastructure
 - ✅ **Complete workflow automation** from reporting to recycling
+
+## 1.3 Project's Main Objective
+
+The overall aim of this project is to develop an integrated, web-based waste management system that leverages resident "Bin Full" reports, a dispatcher vehicle management and smart collection scheduler, AI-powered waste composition analysis, and recycler dashboards/notifications to optimize urban waste collection and provide actionable insights for all stakeholders in Ghana.
+
+### 1.3.1 List of the Specific Objectives
+
+**O1: Resident Bin Full Reporting & Status Dashboard**  
+Implement a secure, web-based interface for residents to submit "Bin Full" reports, view their report history, and receive real-time updates on collection status and recycling tips.
+
+**O2: Dispatcher Vehicle Management & Smart Scheduling**  
+Provide dispatchers with a dashboard to monitor active bin reports, manage vehicle fleets (status: available, scheduled, in-transit), and utilize a smart scheduler that automatically allocates trucks and generates optimized collection routes when zone thresholds are reached.
+
+**O3: AI/LLM Waste Image Analysis**  
+Enable dispatchers to upload waste images from collection sites and utilize integrated AI (YOLO and LLM models) for automated, accurate waste composition analysis, supporting data-driven decision-making.
+
+**O4: Recycler Notifications & Insights Dashboard**  
+Deliver real-time notifications to recyclers about incoming deliveries, and provide dashboards with up-to-date facility composition analytics, delivery tracking, and historical waste trends for operational planning.
+
+**O5: System Testing and Evaluation**  
+Test and evaluate the system's performance and robustness across various scenarios, ensuring accuracy, reliability, and usability for all user roles (residents, dispatchers, recyclers) under realistic operational conditions.
 
 ---
 

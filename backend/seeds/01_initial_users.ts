@@ -42,6 +42,13 @@ export async function seed(knex: Knex): Promise<void> {
       employee_id: 'REC001',
       facility: 'Main Recycling Center',
       role: 'recycler'
+    },
+    // Added admin user
+    {
+      email: 'admin@wastesense.com',
+      password_hash: password,
+      name: 'System Admin',
+      role: 'admin'
     }
   ]);
 

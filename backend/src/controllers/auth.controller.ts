@@ -1888,4 +1888,43 @@ export const completeSchedulesByReports = async (req: Request, res: Response) =>
     console.error('Complete Schedules error:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
+};
+
+// Check admin status endpoint for debugging
+export const checkAdminStatus = async (req: Request, res: Response) => {
+  try {
+    // Check for admin users
+    const adminUsers = await db('users')
+      .select('id', 'email', 'employee_id', 'name', 'role')
+      .where('role', 'admin');
+
+    // Get total user count
+    const totalUsers = await db('users').count('* as count').first();
+
+    // Get users by role
+    const usersByRole = await db('users')
+      .select('role')
+      .count('* as count')
+      .groupBy('role');
+
+    res.json({
+      adminExists: adminUsers.length > 0,
+      adminCount: adminUsers.length,
+      admins: adminUsers,
+      totalUsers: totalUsers?.count || 0,
+      usersByRole: usersByRole,
+      databaseConnected: true,
+      environment: process.env.NODE_ENV,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('Check admin status error:', err);
+    res.status(500).json({ 
+      message: 'Database connection error',
+      error: err instanceof Error ? err.message : 'Unknown error',
+      databaseConnected: false,
+      environment: process.env.NODE_ENV,
+      timestamp: new Date().toISOString()
+    });
+  }
 }; 

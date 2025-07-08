@@ -9,7 +9,8 @@
     "build": "tsc",
     "migrate": "knex migrate:latest",
     "seed": "knex seed:run",
-    "create-admin": "node scripts/create-admin.js"
+    "create-admin": "node scripts/create-admin.js",
+    "check-admin": "node scripts/check-admin.js"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.6",

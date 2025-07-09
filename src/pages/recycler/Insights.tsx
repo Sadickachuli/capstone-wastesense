@@ -12,6 +12,28 @@ import { environment } from '../../config/environment';
 // Get API base URL from environment configuration
 const API_BASE_URL = environment.getApiUrl();
 
+// Helper function to format dates consistently in local timezone
+const formatDateLocal = (date: Date | string): string => {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// Helper function to create a date at start of day in local timezone
+const createLocalDate = (dateStr: string): Date => {
+  // Parse the date string as local time (not UTC)
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    const year = parseInt(parts[0]);
+    const month = parseInt(parts[1]) - 1; // Month is 0-based
+    const day = parseInt(parts[2]);
+    return new Date(year, month, day);
+  }
+  return new Date(dateStr);
+};
+
 const WASTE_COLORS: Record<string, string> = {
   plastic: '#2563eb', // blue
   metal: '#6b7280',   // gray
@@ -125,12 +147,20 @@ export default function Insights() {
         const history = res.data.history || [];
         setDetectionHistory(history);
         
-        // Get unique dates and sort them
-        const dates = Array.from(new Set(history.map((record: any) => record.date)))
+        // Get unique dates and sort them, using local date parsing
+        const uniqueDateStrings = Array.from(new Set(history.map((record: any) => {
+          // Ensure we get the date part only, avoiding timezone issues
+          const dateStr = record.date.split('T')[0]; // Remove time part if present
+          return dateStr;
+        })))
           .sort()
-          .reverse()
-          .map(date => new Date(date as string));
+          .reverse();
+        
+        // Convert to Date objects using local timezone
+        const dates = uniqueDateStrings.map(dateStr => createLocalDate(dateStr));
         setAvailableDates(dates);
+        
+        console.log('📅 Available dates:', uniqueDateStrings);
       } catch (error) {
         console.error('Failed to fetch detection history:', error);
       }
@@ -184,7 +214,8 @@ export default function Insights() {
 
   const fetchCompositionForDate = async () => {
     try {
-      const dateStr = selectedDate!.toISOString().slice(0, 10);
+      // Use local date formatting to avoid timezone issues
+      const dateStr = formatDateLocal(selectedDate!);
       
       if (selectedSite === 'all') {
         // Aggregate all sites for the selected date
@@ -194,10 +225,10 @@ export default function Insights() {
               const res = await axios.get(`${API_BASE_URL}/auth/waste-compositions/history?site_id=${site.id}`);
               const records = res.data.history || [];
               return records.find((record: any) => {
-                // Try multiple date comparison methods
+                // Use consistent date formatting for comparison
                 const recordDate = record.date;
-                const recordDateStr = new Date(recordDate).toISOString().slice(0, 10);
-                return recordDateStr === dateStr || recordDate === dateStr;
+                const recordDateStr = formatDateLocal(recordDate);
+                return recordDateStr === dateStr;
               });
             } catch {
               return null;
@@ -272,10 +303,10 @@ export default function Insights() {
           const res = await axios.get(`${API_BASE_URL}/auth/waste-compositions/history?site_id=${selectedSite}`);
           const records = res.data.history || [];
           const record = records.find((r: any) => {
-            // Try multiple date comparison methods
+            // Use consistent date formatting for comparison
             const recordDate = r.date;
-            const recordDateStr = new Date(recordDate).toISOString().slice(0, 10);
-            return recordDateStr === dateStr || recordDate === dateStr;
+            const recordDateStr = formatDateLocal(recordDate);
+            return recordDateStr === dateStr;
           });
           
           if (record) {
@@ -300,6 +331,7 @@ export default function Insights() {
             setAnnotatedImage(record.annotated_image || null);
             setAllSiteImages({}); // Clear all site images for single site view
           } else {
+            console.log(`❌ No record found for date ${dateStr} on site ${selectedSite}`);
             setComposition(null);
             setTotalWeight(0);
             setAnnotatedImage(null);

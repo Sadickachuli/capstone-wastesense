@@ -264,7 +264,7 @@ python main.py
 
 > - # **Recycler account (with forecasting and analytics)**
 
-![image](https://github.com/user-attachments/assets/a667a5d0-fef1-4204-860f-1d0cf9c0279f)
+![image](https://github.com/user-attachments/assets/5e9e3902-fc0c-4da9-bc2f-1fbe738d44a3)
 ![image](https://github.com/user-attachments/assets/e8047717-ae17-4a13-8339-91fe2266fcec)
 ![image](https://github.com/user-attachments/assets/6c949b61-957a-48d2-8e6c-989ea66d84f3)
 ![image](https://github.com/user-attachments/assets/a4af760b-a242-411b-8179-db535515847b)

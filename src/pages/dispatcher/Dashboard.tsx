@@ -847,13 +847,39 @@ export default function DispatcherDashboard() {
     };
   }, []);
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setAnimationInView(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (dashboardRef.current) {
+      observer.observe(dashboardRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-indigo-50 dark:bg-gradient-to-br dark:from-green-950 dark:via-gray-900 dark:to-green-900">
+    <div 
+      ref={dashboardRef}
+      className={`min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-indigo-50 dark:bg-gradient-to-br dark:from-green-950 dark:via-gray-900 dark:to-green-900 transition-all duration-1000 ${
+        animationInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+      }`}
+    >
       {/* Header */}
-      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-b border-white/20 dark:border-gray-700/20 sticky top-0 z-10 shadow-xl">
+      <div className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-b border-white/20 dark:border-gray-700/20 sticky top-0 z-10 shadow-xl transition-all duration-800 ${
+        animationInView ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+        <div className={`flex items-center gap-4 transition-all duration-1000 delay-200 ${
+          animationInView ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'
+        }`}>
               <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg animate-pulse">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -864,7 +890,9 @@ export default function DispatcherDashboard() {
                 <p className="text-gray-600 dark:text-gray-400">Manage routes, vehicles, and operations</p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className={`flex items-center gap-4 transition-all duration-1000 delay-300 ${
+              animationInView ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
+            }`}>
               <button className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -881,9 +909,11 @@ export default function DispatcherDashboard() {
                 </svg>
                 Settings
           </button>
-              <div className="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12l4 5v6h-3a2 2 0 11-4 0H9a2 2 0 11-4 0H2v-6l4-5z" />
+                  <circle cx="7" cy="17" r="2" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+                  <circle cx="17" cy="17" r="2" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
                 </svg>
               </div>
             </div>
@@ -893,9 +923,13 @@ export default function DispatcherDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Enhanced Zone Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 transition-all duration-1000 delay-400 ${
+          animationInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+        }`}>
           {/* Ablekuma North Zone Card */}
-        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl p-6 border border-white/20 dark:border-gray-700/20 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] group">
+        <div className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl p-6 border border-white/20 dark:border-gray-700/20 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] group ${
+          animationInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'
+        } transition-all duration-1000 delay-500`}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-indigo-400 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -951,7 +985,9 @@ export default function DispatcherDashboard() {
           </div>
           
           {/* Ayawaso West Zone Card */}
-        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl p-6 border border-white/20 dark:border-gray-700/20 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] group">
+        <div className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl p-6 border border-white/20 dark:border-gray-700/20 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] group ${
+          animationInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'
+        } transition-all duration-1000 delay-600`}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-14 h-14 bg-gradient-to-br from-green-400 to-emerald-400 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1007,11 +1043,13 @@ export default function DispatcherDashboard() {
           </div>
           
           {/* Available Trucks Card */}
-          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl p-6 border border-white/20 dark:border-gray-700/20 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] group">
+          <div className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl p-6 border border-white/20 dark:border-gray-700/20 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] group ${
+            animationInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'
+          } transition-all duration-1000 delay-700`}>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m3 0h4a1 1 0 011 1v4a1 1 0 01-1 1h-1l-1 10a2 2 0 01-2 2H5a2 2 0 01-2-2L2 10H1a1 1 0 01-1-1V5a1 1 0 011-1h4zM6 8v8m4-8v8m4-8v8" />
                 </svg>
               </div>
               <div>
@@ -1041,8 +1079,12 @@ export default function DispatcherDashboard() {
         </div>
 
         {/* Enhanced Notifications & ML Recommendation */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-8 border border-white/20 dark:border-gray-700/20 shadow-2xl">
+        <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 transition-all duration-1000 delay-800 ${
+          animationInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+        }`}>
+          <div className={`bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-8 border border-white/20 dark:border-gray-700/20 shadow-2xl transition-all duration-1000 delay-900 ${
+            animationInView ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'
+          }`}>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1122,7 +1164,9 @@ export default function DispatcherDashboard() {
             </div>
           </div>
           
-          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-8 border border-white/20 dark:border-gray-700/20 shadow-2xl">
+          <div className={`bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-8 border border-white/20 dark:border-gray-700/20 shadow-2xl transition-all duration-1000 delay-1000 ${
+            animationInView ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
+          }`}>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>🤖</span> Smart Collection Scheduler
             </h2>

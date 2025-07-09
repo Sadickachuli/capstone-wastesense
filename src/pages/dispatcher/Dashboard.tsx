@@ -867,93 +867,87 @@ export default function DispatcherDashboard() {
   return (
     <div 
       ref={dashboardRef}
-      className={`min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-indigo-50 dark:bg-gradient-to-br dark:from-green-950 dark:via-gray-900 dark:to-green-900 transition-all duration-1000 ${
-        animationInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+      className={`min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:bg-gradient-to-br dark:from-slate-900 dark:via-gray-900 dark:to-indigo-950 transition-all duration-700 ease-out ${
+        animationInView ? 'opacity-100' : 'opacity-0'
       }`}
     >
       {/* Header */}
-      <div className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-b border-white/20 dark:border-gray-700/20 sticky top-0 z-10 shadow-xl transition-all duration-800 ${
-        animationInView ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
+      <div className={`bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-10 shadow-sm transition-all duration-500 ease-out ${
+        animationInView ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
-        <div className={`flex items-center gap-4 transition-all duration-1000 delay-200 ${
-          animationInView ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'
+        <div className={`flex items-center gap-4 transition-all duration-600 ease-out delay-100 ${
+          animationInView ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-3'
         }`}>
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg animate-pulse">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dispatcher Dashboard</h1>
-                <p className="text-gray-600 dark:text-gray-400">Manage routes, vehicles, and operations</p>
+                <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Dispatcher Dashboard</h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Operations Management Center</p>
               </div>
             </div>
-            <div className={`flex items-center gap-4 transition-all duration-1000 delay-300 ${
-              animationInView ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
+            <div className={`flex items-center gap-3 transition-all duration-600 ease-out delay-200 ${
+              animationInView ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-3'
             }`}>
-              <button className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-2.5 rounded-lg font-medium shadow-sm hover:shadow-md transform hover:scale-[1.02] transition-all duration-200 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
                 Add Route
               </button>
           <button 
             onClick={() => setShowConfigModal(true)}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2"
+                className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-5 py-2.5 rounded-lg font-medium shadow-sm hover:shadow-md transform hover:scale-[1.02] transition-all duration-200 flex items-center gap-2"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 Settings
           </button>
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12l4 5v6h-3a2 2 0 11-4 0H9a2 2 0 11-4 0H2v-6l4-5z" />
-                  <circle cx="7" cy="17" r="2" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
-                  <circle cx="17" cy="17" r="2" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
-                </svg>
-              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
         {/* Enhanced Zone Statistics */}
-        <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 transition-all duration-1000 delay-400 ${
-          animationInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+        <div className={`transition-all duration-600 ease-out delay-300 ${
+          animationInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Ablekuma North Zone Card */}
-        <div className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl p-6 border border-white/20 dark:border-gray-700/20 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] group ${
-          animationInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'
-        } transition-all duration-1000 delay-500`}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-indigo-400 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className={`bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all duration-300 ease-out group ${
+          animationInView ? 'opacity-100' : 'opacity-0'
+        } transition-all duration-600 ease-out delay-400`}>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-all duration-300">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Ablekuma North</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Zone Coverage</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Zone Coverage</p>
               </div>
             </div>
             
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Reports</span>
-                <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Reports</span>
+                <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
                   {mlRecommendation?.reportCounts?.North ?? 0}/{configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145}
             </span>
               </div>
               
-              <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+              <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2">
                 <div 
-                  className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full transition-all duration-300"
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
                   style={{ width: `${Math.min(((mlRecommendation?.reportCounts?.North ?? 0) / (configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145)) * 100, 100)}%` }}
                 />
               </div>
@@ -968,16 +962,16 @@ export default function DispatcherDashboard() {
               <div className={`text-sm font-medium ${
               (mlRecommendation?.reportCounts?.North ?? 0) >= (configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145)
                   ? 'text-green-600 dark:text-green-400'
-                  : 'text-yellow-600 dark:text-yellow-400'
+                  : 'text-amber-600 dark:text-amber-400'
               }`}>
               {(mlRecommendation?.reportCounts?.North ?? 0) >= (configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145)
-                  ? `✅ Threshold reached - Dispatch trucks${mlRecommendation?.allocation?.North ? ` (${mlRecommendation.allocation.North} trucks)` : ''}`
+                  ? `✅ Ready for dispatch${mlRecommendation?.allocation?.North ? ` (${mlRecommendation.allocation.North} trucks)` : ''}`
                   : (
-                      <span className="flex items-center gap-1">
-                        <svg className="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <span className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        {(configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145) - (mlRecommendation?.reportCounts?.North ?? 0)} more reports needed
+                        {(configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145) - (mlRecommendation?.reportCounts?.North ?? 0)} more needed
             </span>
                     )}
           </div>
@@ -985,33 +979,33 @@ export default function DispatcherDashboard() {
           </div>
           
           {/* Ayawaso West Zone Card */}
-        <div className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl p-6 border border-white/20 dark:border-gray-700/20 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] group ${
-          animationInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'
-        } transition-all duration-1000 delay-600`}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-green-400 to-emerald-400 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className={`bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all duration-300 ease-out group ${
+          animationInView ? 'opacity-100' : 'opacity-0'
+        } transition-all duration-600 ease-out delay-500`}>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-all duration-300">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Ayawaso West</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Zone Coverage</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Zone Coverage</p>
               </div>
             </div>
             
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Reports</span>
-                <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Reports</span>
+                <span className="text-xl font-bold text-green-600 dark:text-green-400">
                   {mlRecommendation?.reportCounts?.South ?? 0}/{configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82}
             </span>
               </div>
               
-              <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+              <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2">
                 <div 
-                  className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all duration-300"
+                  className="bg-gradient-to-r from-emerald-500 to-green-600 h-2 rounded-full transition-all duration-500 ease-out"
                   style={{ width: `${Math.min(((mlRecommendation?.reportCounts?.South ?? 0) / (configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82)) * 100, 100)}%` }}
                 />
               </div>
@@ -1026,16 +1020,16 @@ export default function DispatcherDashboard() {
               <div className={`text-sm font-medium ${
               (mlRecommendation?.reportCounts?.South ?? 0) >= (configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82)
                   ? 'text-green-600 dark:text-green-400'
-                  : 'text-yellow-600 dark:text-yellow-400'
+                  : 'text-amber-600 dark:text-amber-400'
               }`}>
               {(mlRecommendation?.reportCounts?.South ?? 0) >= (configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82)
-                  ? `✅ Threshold reached - Dispatch trucks${mlRecommendation?.allocation?.South ? ` (${mlRecommendation.allocation.South} trucks)` : ''}`
+                  ? `✅ Ready for dispatch${mlRecommendation?.allocation?.South ? ` (${mlRecommendation.allocation.South} trucks)` : ''}`
                   : (
-                      <span className="flex items-center gap-1">
-                        <svg className="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <span className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        {(configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82) - (mlRecommendation?.reportCounts?.South ?? 0)} more reports needed
+                        {(configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82) - (mlRecommendation?.reportCounts?.South ?? 0)} more needed
             </span>
                     )}
           </div>
@@ -1043,12 +1037,12 @@ export default function DispatcherDashboard() {
           </div>
           
           {/* Available Trucks Card */}
-          <div className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl p-6 border border-white/20 dark:border-gray-700/20 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] group ${
-            animationInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'
-          } transition-all duration-1000 delay-700`}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className={`bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all duration-300 ease-out group ${
+            animationInView ? 'opacity-100' : 'opacity-0'
+          } transition-all duration-600 ease-out delay-600`}>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-all duration-300">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12l4 5v6h-3a2 2 0 11-4 0H9a2 2 0 11-4 0H2v-6l4-5z" />
                   <circle cx="7" cy="17" r="2" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
                   <circle cx="17" cy="17" r="2" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
@@ -1056,21 +1050,21 @@ export default function DispatcherDashboard() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Available Trucks</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Fleet Management</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Fleet Management</p>
               </div>
             </div>
             
             <div className="space-y-4">
               <div className="text-center">
-                <div className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                   {availableTrucks}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">Ready for dispatch</div>
               </div>
               
-              <div className="mt-4 p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-xl border border-purple-200/30 dark:border-purple-700/30">
+              <div className="mt-4 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-indigo-200/30 dark:border-indigo-700/30">
                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                  <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                   Automatically synced from Fleet Management

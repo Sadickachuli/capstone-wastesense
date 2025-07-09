@@ -5,11 +5,11 @@ import { useTheme } from '../../context/ThemeContext';
 import { environment } from '../../config/environment';
 
 const WASTE_COLORS: Record<string, string> = {
-  plastic: '#60A5FA',
-  paper: '#FBBF24',
-  glass: '#34D399',
-  metal: '#F87171',
-  organic: '#A78BFA',
+  plastic: '#3B82F6',
+  paper: '#F59E0B',
+  glass: '#10B981',
+  metal: '#EF4444',
+  organic: '#8B5CF6',
 };
 
 export default function Forecasting() {
@@ -18,10 +18,10 @@ export default function Forecasting() {
   const [error, setError] = useState<string | null>(null);
   const { isDarkMode } = useTheme();
 
-    const fetchForecast = async () => {
-      setLoading(true);
+  const fetchForecast = async () => {
+    setLoading(true);
     setError(null);
-      try {
+    try {
       const ML_SERVICE_URL = environment.getMlServiceUrl();
       console.log('🔮 Fetching forecast from:', ML_SERVICE_URL);
       
@@ -30,7 +30,7 @@ export default function Forecasting() {
       });
       
       console.log('✅ Forecast response:', res.data);
-        setForecast(res.data);
+      setForecast(res.data);
     } catch (err: any) {
       console.error('❌ Failed to fetch forecast:', err);
       
@@ -41,11 +41,11 @@ export default function Forecasting() {
       } else {
         setError('Failed to load forecast. Please check your connection and try again.');
       }
-        setForecast(null);
-      } finally {
-        setLoading(false);
-      }
-    };
+      setForecast(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchForecast();
@@ -57,138 +57,300 @@ export default function Forecasting() {
   const tooltipTextColor = isDarkMode ? '#F9FAFB' : '#111827';
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Forecast for Tomorrow</h1>
-        <button
-          onClick={fetchForecast}
-          disabled={loading}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? 'Loading...' : 'Refresh'}
-        </button>
-      </div>
-      
-      {loading && (
-        <div className="card bg-white dark:bg-gray-900 shadow dark:shadow-white animate-pulse mb-6">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Loading Forecast...</h2>
-          <div className="mb-4 text-gray-700 dark:text-gray-300">
-            <div className="h-4 w-1/2 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
-            <div className="h-4 w-1/3 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
-          </div>
-          <div className="flex items-end space-x-2 h-48 mb-4">
-            {[1,2,3,4,5].map(i => (
-              <div key={i} className="flex-1 flex flex-col items-center">
-                <div className="w-8 bg-gray-200 dark:bg-gray-700 rounded-t" style={{ height: `${40 + i*20}px` }} />
-                <div className="h-4 w-8 bg-gray-100 dark:bg-gray-600 rounded mt-2" />
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Enhanced Header */}
+        <div className="mb-8">
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-6">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-blue-500 rounded-xl flex items-center justify-center">
+                  <span className="text-white text-xl">🔮</span>
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                    ML Waste Forecasting
+                  </h1>
+                  <p className="text-gray-600 dark:text-gray-300 mt-1">
+                    AI-powered predictions for tomorrow's waste composition
+                  </p>
+                </div>
               </div>
-            ))}
-          </div>
-          <div className="flex flex-row space-x-4 mt-4">
-            <div className="h-8 w-32 bg-gray-200 dark:bg-gray-700 rounded" />
-            <div className="h-8 w-32 bg-gray-100 dark:bg-gray-600 rounded" />
-          </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-            ⏳ The ML service may take up to 60 seconds to wake up if it's been idle...
-          </p>
-        </div>
-      )}
-      
-      {error && (
-        <div className="card bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 mb-6">
-          <div className="flex items-center p-4">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
-                Forecast Unavailable
-              </h3>
-              <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-                {error}
-              </p>
               <button
                 onClick={fetchForecast}
-                className="mt-2 px-3 py-1 bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200 text-sm rounded hover:bg-red-200 dark:hover:bg-red-700"
+                disabled={loading}
+                className="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 flex items-center gap-2"
               >
-                Try Again
+                <span className="text-lg">{loading ? '⏳' : '🔄'}</span>
+                {loading ? 'Analyzing...' : 'Refresh Forecast'}
               </button>
             </div>
           </div>
         </div>
-      )}
-      
-      {forecast && (
-        <div className="card bg-white dark:bg-gray-900 shadow dark:shadow-white mb-6">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Forecast for Tomorrow</h2>
-          <p className="mb-4 text-gray-700 dark:text-gray-200">
-            Tomorrow's waste: <span className="font-semibold">{forecast.total_waste_tonnes.toFixed(1)} tonnes</span> from Ablekuma North and Ayawaso West. <br />
-            Composition: {Object.entries(forecast.composition_percent).map(([type, percent]) => `${percent}% ${type}`).join(', ')}
-          </p>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={forecast.districts.map((d: any) => ({
-              name: d.district,
-              ...d.composition_percent
-            }))} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-              <XAxis dataKey="name" stroke={axisColor} tick={{ fill: axisColor }} />
-              <YAxis unit="%" stroke={axisColor} tick={{ fill: axisColor }} />
-              <Tooltip 
-                contentStyle={{ 
-                  color: tooltipTextColor, 
-                  backgroundColor: tooltipBg,
-                  border: `1px solid ${isDarkMode ? '#374151' : '#E5E7EB'}`,
-                  borderRadius: '8px'
-                }} 
-                labelStyle={{ color: tooltipTextColor }} 
-                itemStyle={{ color: tooltipTextColor }} 
-              />
-              <Legend wrapperStyle={{ color: axisColor }} />
-              {Object.keys(WASTE_COLORS).map(type => (
-                <Line 
-                  key={type} 
-                  type="monotone" 
-                  dataKey={type} 
-                  stroke={WASTE_COLORS[type]} 
-                  name={type.charAt(0).toUpperCase() + type.slice(1)} 
-                  strokeWidth={3} 
-                  dot={{ r: 5, fill: WASTE_COLORS[type] }} 
-                  activeDot={{ r: 8, fill: WASTE_COLORS[type] }} 
-                />
-              ))}
-            </LineChart>
-          </ResponsiveContainer>
-          <div className="mt-4 flex flex-col md:flex-row md:items-center md:space-x-8">
-            <div className="flex-1 min-w-[320px]" style={{ height: 200 }}>
-              <PieChart width={320} height={200}>
-                <Pie
-                  data={Object.entries(forecast.composition_percent).map(([type, percent]) => ({ name: type, value: percent }))}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={40}
-                  label={({ name, value }) => `${name}: ${value}%`}
-                >
-                  {Object.keys(WASTE_COLORS).map((type) => (
-                    <Cell key={type} fill={WASTE_COLORS[type]} />
-                  ))}
-                </Pie>
-              </PieChart>
+        
+        {loading && (
+          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-8 mb-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-blue-500 rounded-lg flex items-center justify-center animate-pulse">
+                <span className="text-white text-sm">🤖</span>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">ML Analysis in Progress</h2>
             </div>
-            <div className="flex-1 text-gray-600 dark:text-gray-300 text-sm">
-              <ul>
-                {forecast.districts.map((d: any) => (
-                  <li key={d.district} className="mb-1">
-                    <span className="font-semibold text-gray-900 dark:text-white">{d.district}:</span> {d.total_waste_tonnes.toFixed(1)} tonnes. Composition: {Object.entries(d.composition_percent).map(([type, percent]) => `${percent}% ${type}`).join(', ')}
-                  </li>
-                ))}
-              </ul>
+            
+            <div className="space-y-4 mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 bg-purple-400 rounded-full animate-pulse"></div>
+                <div className="h-4 w-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 bg-blue-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                <div className="h-4 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 bg-green-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                <div className="h-4 w-56 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+              {[1,2,3,4,5].map(i => (
+                <div key={i} className="bg-gray-50/50 dark:bg-gray-700/50 rounded-2xl p-4 text-center">
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse mb-3" style={{ height: `${60 + i*10}px` }}></div>
+                  <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto"></div>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-blue-50/50 dark:bg-blue-900/20 rounded-2xl p-4 border border-blue-200 dark:border-blue-800">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">⏳</span>
+                <div>
+                  <h3 className="font-semibold text-blue-800 dark:text-blue-300">Please Wait</h3>
+                  <p className="text-sm text-blue-600 dark:text-blue-400">
+                    The ML service may take up to 60 seconds to wake up if it's been idle...
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+        
+        {error && (
+          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl border border-red-200 dark:border-red-800 p-8 mb-8">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-red-600 rounded-xl flex items-center justify-center">
+                <span className="text-white text-xl">⚠️</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-red-800 dark:text-red-200 mb-2">
+                  Forecast Unavailable
+                </h3>
+                <p className="text-red-700 dark:text-red-300 mb-4">
+                  {error}
+                </p>
+                <button
+                  onClick={fetchForecast}
+                  className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-2 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 hover:scale-105 flex items-center gap-2"
+                >
+                  <span>🔄</span>
+                  Try Again
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {forecast && (
+          <div className="space-y-8">
+            {/* Forecast Overview */}
+            <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center">
+                  <span className="text-white text-sm">📊</span>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Tomorrow's Forecast</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-2xl p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-3xl">📈</span>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Total Waste Volume</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Predicted for tomorrow</p>
+                    </div>
+                  </div>
+                  <p className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
+                    {forecast.total_waste_tonnes.toFixed(1)} tonnes
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Across Ablekuma North and Ayawaso West districts
+                  </p>
+                </div>
+
+                <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-2xl p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-3xl">🧪</span>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Composition Breakdown</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Material percentages</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {Object.entries(forecast.composition_percent).map(([type, percent]) => (
+                      <div key={type} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: WASTE_COLORS[type] }}
+                          ></div>
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">{type}</span>
+                        </div>
+                        <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{percent}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* District Comparison Chart */}
+            <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center">
+                  <span className="text-white text-sm">📍</span>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">District Comparison</h2>
+              </div>
+              
+              <div className="bg-gray-50/50 dark:bg-gray-700/50 rounded-2xl p-6">
+                <ResponsiveContainer width="100%" height={400}>
+                  <LineChart data={forecast.districts.map((d: any) => ({
+                    name: d.district,
+                    ...d.composition_percent
+                  }))} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                    <XAxis 
+                      dataKey="name" 
+                      stroke={axisColor} 
+                      tick={{ fill: axisColor, fontSize: 12 }}
+                      tickLine={{ stroke: axisColor }}
+                    />
+                    <YAxis 
+                      unit="%" 
+                      stroke={axisColor} 
+                      tick={{ fill: axisColor, fontSize: 12 }}
+                      tickLine={{ stroke: axisColor }}
+                      gridLine={{ stroke: isDarkMode ? '#374151' : '#E5E7EB' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        color: tooltipTextColor, 
+                        backgroundColor: tooltipBg,
+                        border: `1px solid ${isDarkMode ? '#374151' : '#E5E7EB'}`,
+                        borderRadius: '12px',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                      }} 
+                      labelStyle={{ color: tooltipTextColor, fontWeight: 'bold' }} 
+                    />
+                    <Legend wrapperStyle={{ color: axisColor, paddingTop: '20px' }} />
+                    {Object.keys(WASTE_COLORS).map(type => (
+                      <Line 
+                        key={type} 
+                        type="monotone" 
+                        dataKey={type} 
+                        stroke={WASTE_COLORS[type]} 
+                        name={type.charAt(0).toUpperCase() + type.slice(1)} 
+                        strokeWidth={3} 
+                        dot={{ r: 6, fill: WASTE_COLORS[type], strokeWidth: 2, stroke: '#fff' }} 
+                        activeDot={{ r: 8, fill: WASTE_COLORS[type], strokeWidth: 2, stroke: '#fff' }} 
+                      />
+                    ))}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Composition Overview */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Pie Chart */}
+              <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-sm">🥧</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">Overall Composition</h3>
+                </div>
+                
+                <div className="flex justify-center">
+                  <ResponsiveContainer width={320} height={320}>
+                    <PieChart>
+                      <Pie
+                        data={Object.entries(forecast.composition_percent).map(([type, percent]) => ({ 
+                          name: type.charAt(0).toUpperCase() + type.slice(1), 
+                          value: percent 
+                        }))}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={120}
+                        innerRadius={60}
+                        label={({ name, value }) => `${name}: ${value}%`}
+                        labelLine={false}
+                      >
+                        {Object.keys(WASTE_COLORS).map((type) => (
+                          <Cell key={type} fill={WASTE_COLORS[type]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: tooltipBg,
+                          border: 'none',
+                          borderRadius: '12px',
+                          color: tooltipTextColor
+                        }} 
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* District Details */}
+              <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-teal-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-sm">🏘️</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">District Breakdown</h3>
+                </div>
+                
+                <div className="space-y-4">
+                  {forecast.districts.map((d: any) => (
+                    <div key={d.district} className="bg-gray-50/50 dark:bg-gray-700/50 rounded-2xl p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">{d.district}</h4>
+                        <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                          {d.total_waste_tonnes.toFixed(1)}t
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        <div className="grid grid-cols-2 gap-2">
+                          {Object.entries(d.composition_percent).map(([type, percent]) => (
+                            <div key={type} className="flex items-center justify-between">
+                              <span className="capitalize">{type}:</span>
+                              <span className="font-medium">{percent}%</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 } 

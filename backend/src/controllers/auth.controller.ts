@@ -1888,7 +1888,7 @@ export const completeSchedulesByReports = async (req: Request, res: Response) =>
     console.error('Complete Schedules error:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
-};
+}; 
 
 // Check admin status endpoint for debugging
 export const checkAdminStatus = async (req: Request, res: Response) => {

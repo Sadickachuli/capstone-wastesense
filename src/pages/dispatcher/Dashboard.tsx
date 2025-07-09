@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { api } from '../../api/mockApi';
 import { useWasteSites } from '../../hooks/useWasteSites';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
@@ -108,6 +109,7 @@ const mockAlerts: Alert[] = [
 
 export default function DispatcherDashboard() {
   const { user } = useAuth();
+  const { theme } = useTheme();
   const { reports, loading: reportsLoading, error: reportsError } = useReports();
   const { sites, loading: sitesLoading, error: sitesError } = useWasteSites();
   const { updateSiteComposition } = useWasteSites();
@@ -838,86 +840,179 @@ export default function DispatcherDashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-0 md:p-0 font-sans">
-      {/* Topbar (optional, for user info/notifications) */}
-      <div className="flex justify-between items-center px-4 py-4 border-b border-gray-200 bg-white sticky top-0 z-10">
-        <h1 className="text-2xl font-bold text-gray-900">Dispatcher Dashboard</h1>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-indigo-50 dark:from-green-900 dark:via-blue-900 dark:to-indigo-900">
+      {/* Enhanced Top Navigation */}
+      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg border-b border-white/20 dark:border-gray-700/20 sticky top-0 z-10 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <button className="px-4 py-2 rounded bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition text-base">Create New Route</button>
+              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white text-xl font-bold">🚛</span>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dispatcher Dashboard</h1>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Managing waste collection operations</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <button className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-4 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                ➕ Create New Route
+              </button>
           <button 
             onClick={() => setShowConfigModal(true)}
-            className="px-4 py-2 rounded bg-gray-600 text-white font-semibold shadow hover:bg-gray-700 transition text-base"
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
           >
-            Configure System
+                ⚙️ Configure System
           </button>
-          {/* Placeholder for user avatar/profile */}
-          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold">D</div>
+              <div className="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                {user?.name ? user.name.charAt(0).toUpperCase() : 'D'}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Stat Cards */}
+        {/* Enhanced Zone Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* Ablekuma North Zone Card */}
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-3xl p-8 shadow flex flex-col gap-2">
-            <span className="text-sm text-gray-500 dark:text-gray-300 mb-1">Ablekuma North</span>
-            <span className="text-2xl font-bold text-blue-700 dark:text-blue-300 mb-1">
-              Reports: {mlRecommendation?.reportCounts?.North ?? 0}/{configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145}
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-6 border border-white/20 dark:border-gray-700/20 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-indigo-400 rounded-xl flex items-center justify-center">
+                <span className="text-white text-xl">🏙️</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Ablekuma North</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Zone Coverage</p>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Reports</span>
+                <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                  {mlRecommendation?.reportCounts?.North ?? 0}/{configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145}
             </span>
-            <span className="text-base text-gray-700 dark:text-gray-200">
-              Customers Served: {configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145}
+              </div>
+              
+              <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                <div 
+                  className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${Math.min(((mlRecommendation?.reportCounts?.North ?? 0) / (configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145)) * 100, 100)}%` }}
+                />
+              </div>
+              
+              <div className="text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Customers: </span>
+                <span className="font-semibold text-gray-900 dark:text-white">
+                  {configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145}
             </span>
-            <span className={
+              </div>
+              
+              <div className={`text-sm font-medium ${
               (mlRecommendation?.reportCounts?.North ?? 0) >= (configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145)
-                ? 'text-green-700 dark:text-green-300 font-semibold'
-                : 'text-yellow-700 dark:text-yellow-300 font-semibold'
-            }>
+                  ? 'text-green-600 dark:text-green-400'
+                  : 'text-yellow-600 dark:text-yellow-400'
+              }`}>
               {(mlRecommendation?.reportCounts?.North ?? 0) >= (configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145)
-                ? `✓ Threshold reached - Dispatch trucks${mlRecommendation?.allocation?.North ? ` (${mlRecommendation.allocation.North} trucks)` : ''}`
-                : `${(configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145) - (mlRecommendation?.reportCounts?.North ?? 0)} more reports needed`}
-            </span>
+                  ? `✅ Threshold reached - Dispatch trucks${mlRecommendation?.allocation?.North ? ` (${mlRecommendation.allocation.North} trucks)` : ''}`
+                  : `⏳ ${(configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145) - (mlRecommendation?.reportCounts?.North ?? 0)} more reports needed`}
           </div>
+            </div>
+          </div>
+          
           {/* Ayawaso West Zone Card */}
-          <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-3xl p-8 shadow flex flex-col gap-2">
-            <span className="text-sm text-gray-500 dark:text-gray-300 mb-1">Ayawaso West</span>
-            <span className="text-2xl font-bold text-green-700 dark:text-green-300 mb-1">
-              Reports: {mlRecommendation?.reportCounts?.South ?? 0}/{configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82}
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-6 border border-white/20 dark:border-gray-700/20 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-green-400 to-emerald-400 rounded-xl flex items-center justify-center">
+                <span className="text-white text-xl">🌆</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Ayawaso West</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Zone Coverage</p>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Reports</span>
+                <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                  {mlRecommendation?.reportCounts?.South ?? 0}/{configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82}
             </span>
-            <span className="text-base text-gray-700 dark:text-gray-200">
-              Customers Served: {configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82}
+              </div>
+              
+              <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                <div 
+                  className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${Math.min(((mlRecommendation?.reportCounts?.South ?? 0) / (configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82)) * 100, 100)}%` }}
+                />
+              </div>
+              
+              <div className="text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Customers: </span>
+                <span className="font-semibold text-gray-900 dark:text-white">
+                  {configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82}
             </span>
-            <span className={
+              </div>
+              
+              <div className={`text-sm font-medium ${
               (mlRecommendation?.reportCounts?.South ?? 0) >= (configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82)
-                ? 'text-green-700 dark:text-green-300 font-semibold'
-                : 'text-yellow-700 dark:text-yellow-300 font-semibold'
-            }>
+                  ? 'text-green-600 dark:text-green-400'
+                  : 'text-yellow-600 dark:text-yellow-400'
+              }`}>
               {(mlRecommendation?.reportCounts?.South ?? 0) >= (configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82)
-                ? `✓ Threshold reached - Dispatch trucks${mlRecommendation?.allocation?.South ? ` (${mlRecommendation.allocation.South} trucks)` : ''}`
-                : `${(configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82) - (mlRecommendation?.reportCounts?.South ?? 0)} more reports needed`}
-            </span>
+                  ? `✅ Threshold reached - Dispatch trucks${mlRecommendation?.allocation?.South ? ` (${mlRecommendation.allocation.South} trucks)` : ''}`
+                  : `⏳ ${(configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82) - (mlRecommendation?.reportCounts?.South ?? 0)} more reports needed`}
           </div>
+            </div>
+          </div>
+          
           {/* Available Trucks Card */}
-          <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-3xl p-8 shadow flex flex-col gap-2">
-            <span className="text-sm text-gray-500 dark:text-gray-300 mb-1">Available Trucks</span>
-            <span className="text-3xl font-bold text-gray-700 dark:text-white mb-1">{availableTrucks}</span>
-            <label className="font-medium text-gray-700 dark:text-gray-200 mt-2">Set Trucks:</label>
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-6 border border-white/20 dark:border-gray-700/20 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl flex items-center justify-center">
+                <span className="text-white text-xl">🚛</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Available Trucks</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Fleet Management</p>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="text-center">
+                <div className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                  {availableTrucks}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Ready for dispatch</div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  🔧 Set Trucks:
+                </label>
             <input
               type="number"
               min={1}
               value={availableTrucks}
               onChange={e => setAvailableTrucks(Number(e.target.value) || 1)}
-              className="w-20 px-2 py-1 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700"
+                  className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white/70 dark:bg-gray-700/70 backdrop-blur-lg shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-300"
             />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Notifications & ML Recommendation */}
+        {/* Enhanced Notifications & ML Recommendation */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-8 border border-white/20 dark:border-gray-700/20 shadow-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Notifications</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <span>🔔</span> Notifications
+              </h2>
               <button
-                className="btn btn-secondary btn-xs"
+                className="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-3 py-1 rounded-lg text-sm font-medium hover:shadow-lg transform hover:scale-105 transition-all duration-300"
                 onClick={handleToggleArchived}
               >
                 {showArchived ? 'Hide Archived' : 'Show Archived'}
@@ -928,7 +1023,7 @@ export default function DispatcherDashboard() {
             <div className="h-64 overflow-y-auto space-y-3">
               {showArchived && (
                 <div className="pb-3 border-b border-gray-200 dark:border-gray-600">
-                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Archived</h3>
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">📦 Archived</h3>
                   {archivedLoading ? (
                     <p className="text-gray-600 dark:text-gray-400">Loading archived notifications...</p>
                   ) : archivedError ? (
@@ -936,7 +1031,7 @@ export default function DispatcherDashboard() {
                   ) : archivedNotifications.length > 0 ? (
                     <ul className="space-y-2">
                       {archivedNotifications.map((n: any) => (
-                        <li key={n.id} className="p-3 rounded bg-gray-100 dark:bg-gray-800 shadow-sm">
+                        <li key={n.id} className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded-xl p-3 shadow-sm">
                           <div className="font-semibold text-gray-800 dark:text-gray-100">{n.title}</div>
                           <div className="text-sm text-gray-700 dark:text-gray-200 mt-1">{n.message}</div>
                           <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">{new Date(n.created_at).toLocaleString()}</div>
@@ -952,7 +1047,7 @@ export default function DispatcherDashboard() {
               {/* Current notifications */}
               <div>
                 {!showArchived && (
-                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Recent</h3>
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">📬 Recent</h3>
                 )}
                 {notificationsLoading ? (
                   <p className="text-gray-600 dark:text-gray-400">Loading notifications...</p>
@@ -961,7 +1056,7 @@ export default function DispatcherDashboard() {
                 ) : notifications.length > 0 ? (
                   <ul className="space-y-2">
                     {notifications.map((n: any) => (
-                      <li key={n.id} className="p-3 rounded bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 shadow-sm">
+                      <li key={n.id} className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl p-3 border border-blue-200/30 dark:border-blue-700/30 shadow-sm">
                         <div className="font-semibold text-gray-800 dark:text-gray-100">{n.title}</div>
                         <div className="text-sm text-gray-700 dark:text-gray-200 mt-1">{n.message}</div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">{new Date(n.timestamp).toLocaleString()}</div>
@@ -969,20 +1064,32 @@ export default function DispatcherDashboard() {
                     ))}
                   </ul>
                 ) : (
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-2">📭</div>
                   <p className="text-gray-600 dark:text-gray-400">No new notifications.</p>
+                  </div>
                 )}
               </div>
             </div>
           </div>
-          <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Smart Collection Scheduler</h2>
+          
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-8 border border-white/20 dark:border-gray-700/20 shadow-2xl">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <span>🤖</span> Smart Collection Scheduler
+            </h2>
             {mlLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
               <p className="text-gray-600 dark:text-gray-400">Loading recommendation...</p>
+              </div>
             ) : mlError ? (
+              <div className="text-center py-8">
+                <div className="text-4xl mb-2">⚠️</div>
               <p className="text-red-600">{mlError}</p>
+              </div>
             ) : mlRecommendation ? (
               <div>
-                <div className="mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl border border-blue-200/30 dark:border-blue-700/30 shadow-sm">
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-medium text-gray-700 dark:text-gray-300">Available Vehicles:</span>
                     <span className="font-bold text-blue-600 dark:text-blue-400">{mlRecommendation.availableVehicles}</span>
@@ -991,28 +1098,28 @@ export default function DispatcherDashboard() {
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="p-4 rounded-lg bg-white dark:bg-gray-800 shadow">
+                  <div className="p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border border-blue-200/30 dark:border-blue-700/30 shadow-sm">
                     <div className="font-semibold text-blue-700 dark:text-blue-400">Ablekuma North</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Reports: <span className="font-bold text-gray-900 dark:text-white">{mlRecommendation.reportCounts?.North ?? 0}</span></div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Trucks Assigned: <span className="font-bold text-gray-900 dark:text-white">{mlRecommendation.allocation?.North ?? 0}</span></div>
                   </div>
-                  <div className="p-4 rounded-lg bg-white dark:bg-gray-800 shadow">
+                  <div className="p-4 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 border border-green-200/30 dark:border-green-700/30 shadow-sm">
                     <div className="font-semibold text-green-700 dark:text-green-400">Ayawaso West</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Reports: <span className="font-bold text-gray-900 dark:text-white">{mlRecommendation.reportCounts?.South ?? 0}</span></div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Trucks Assigned: <span className="font-bold text-gray-900 dark:text-white">{mlRecommendation.allocation?.South ?? 0}</span></div>
                   </div>
                 </div>
                 
-                <div className="mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                <div className="mb-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl border border-green-200/30 dark:border-green-700/30 shadow-sm">
                   <div className="font-semibold text-gray-900 dark:text-white text-lg">{mlRecommendation.recommendation}</div>
                 </div>
 
                 {/* Collection Schedules */}
                 {mlRecommendation.schedules && mlRecommendation.schedules.length > 0 && (
                   <div className="space-y-3">
-                    <h3 className="font-semibold text-gray-900 dark:text-white">Scheduled Collections:</h3>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">📅 Scheduled Collections:</h3>
                     {mlRecommendation.schedules.map((schedule: any, index: number) => (
-                      <div key={index} className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow border-l-4 border-blue-500">
+                      <div key={index} className="p-4 bg-gradient-to-r from-white/80 to-gray-50/80 dark:from-gray-700/80 dark:to-gray-800/80 rounded-xl border-l-4 border-blue-500 shadow-sm">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
                             <div className="font-semibold text-gray-900 dark:text-white">{schedule.zone}</div>
@@ -1058,157 +1165,90 @@ export default function DispatcherDashboard() {
                   </div>
                 )}
               </div>
-            ) : null}
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-4xl mb-2">🤖</div>
+                <p className="text-gray-600 dark:text-gray-400">No recommendations available.</p>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Waste Detection Section */}
-        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Image-based Waste Detection</h2>
-          <div className="mb-2 flex items-center space-x-4">
-            <label className="font-medium text-gray-700">Detection Method:</label>
-            <label className="inline-flex items-center">
+        {/* Enhanced Waste Detection Section */}
+        <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-8 border border-white/20 dark:border-gray-700/20 shadow-2xl mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <span>📸</span> Image-based Waste Detection
+          </h2>
+          
+          <div className="mb-6 flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Detection Method:</span>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="radio"
-                className="form-radio"
                 name="detectionMethod"
                 value="llm"
                 checked={detectionMethod === 'llm'}
                 onChange={() => setDetectionMethod('llm')}
+                className="w-4 h-4 text-blue-600 focus:ring-blue-500"
               />
-              <span className="ml-2">AI (LLM)</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">🤖 AI (LLM)</span>
             </label>
-            <label className="inline-flex items-center">
+            <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="radio"
-                className="form-radio"
                 name="detectionMethod"
                 value="yolo"
                 checked={detectionMethod === 'yolo'}
                 onChange={() => setDetectionMethod('yolo')}
+                className="w-4 h-4 text-blue-600 focus:ring-blue-500"
               />
-              <span className="ml-2">YOLOv8</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">🎯 YOLOv8</span>
             </label>
           </div>
-          <form onSubmit={handleWasteImageUpload} className="flex flex-col md:flex-row md:items-center md:space-x-4">
+          
+          <form onSubmit={handleWasteImageUpload} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                📷 Select Image
+              </label>
             <input
               type="file"
               accept="image/*"
               onChange={handleWasteImageChange}
-              className="mb-2 md:mb-0"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white/70 dark:bg-gray-700/70 backdrop-blur-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
             />
+            </div>
+            
             <button
               type="submit"
-              className="btn btn-primary"
               disabled={!wasteImage || detectionLoading}
+              className={`w-full px-6 py-3 rounded-xl font-medium transform transition-all duration-300 ${
+                !wasteImage || detectionLoading
+                  ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-green-500 to-blue-500 text-white hover:shadow-lg hover:scale-105'
+              }`}
             >
-              {detectionLoading ? 'Detecting...' : 'Detect Waste Composition'}
+              {detectionLoading ? '🔄 Analyzing...' : '🔍 Analyze Image'}
             </button>
           </form>
-          {detectionError && <p className="text-red-600 mt-2">{detectionError}</p>}
+          
+          {detectionError && (
+            <div className="mt-4 p-4 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-xl">
+              <div className="flex items-center gap-2">
+                <span className="text-red-600 dark:text-red-400">⚠️</span>
+                <span className="text-red-800 dark:text-red-200">{detectionError}</span>
+              </div>
+                    </div>
+                  )}
+          
           {detectionResult && (
-            <div className="mt-4">
-              <h3 className="text-md font-semibold text-gray-900 mb-2">Detected Composition:</h3>
-              <div className="mb-4">
-                <ResponsiveContainer width="100%" height={180}>
-                  <PieChart>
-                    <Pie
-                      data={Object.entries(detectionResult.result).map(([type, percent]) => ({ name: type, value: percent as number }))}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={60}
-                      label={({ name, value }) => `${name}: ${value}%`}
-                    >
-                      {Object.keys(WASTE_COLORS).map((type) => (
-                        <Cell key={type} fill={WASTE_COLORS[type]} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              {detectionMethod === 'llm' && detectionResult.result && (
-                <div className="mb-4">
-                  <ul className="space-y-1">
-                    {Object.entries(detectionResult.result).map(([type, percent]) => (
-                      <li key={type} className="flex items-center space-x-2">
-                        <span className="capitalize font-medium">{type}:</span>
-                        <span>{percent as number}%</span>
-                      </li>
-                    ))}
-                  </ul>
-                  {/* Prompt for total weight if missing */}
-                  {(!detectionResult.total_weight || detectionResult.total_weight === 0) && (
-                    <div className="mt-4">
-                      <label className="block font-medium text-gray-700 mb-1">Enter total weight (kg):</label>
-                      <input
-                        type="number"
-                        min={1}
-                        value={manualTotalWeight}
-                        onChange={e => setManualTotalWeight(e.target.value)}
-                        className="w-32 px-2 py-1 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700"
-                      />
-                    </div>
-                  )}
-                  {wasteImage && (
-                    <div className="mt-4">
-                      <h4 className="text-sm font-semibold mb-1">Uploaded Image:</h4>
-                      <img
-                        src={URL.createObjectURL(wasteImage)}
-                        alt="Uploaded waste pile"
-                        className="w-full max-w-md border rounded shadow"
-                        style={{ maxHeight: 400, objectFit: 'contain' }}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-              {detectionMethod === 'yolo' && (
-                <>
-                  <ul className="space-y-1">
-                    {Object.entries(detectionResult.result).map(([type, percent]) => (
-                      <li key={type} className="flex justify-between">
-                        <span className="capitalize">{type}</span>
-                        <span>{percent as number}%</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-2 text-sm text-gray-700 font-medium">
-                    Total Weight: <span className="font-bold">{detectionResult.total_weight} kg</span>
-                  </div>
-                  {detectionResult.annotated_image && (
-                    <div className="mt-4">
-                      <h4 className="text-sm font-semibold mb-1">Detected Objects:</h4>
-                      <img
-                        src={`data:image/jpeg;base64,${detectionResult.annotated_image}`}
-                        alt="Annotated waste detection"
-                        className="w-full max-w-md border rounded shadow"
-                        style={{ maxHeight: 400, objectFit: 'contain' }}
-                      />
-                    </div>
-                  )}
-                </>
-              )}
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Select Dumping Site</label>
-                <select
-                  className="block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                  value={selectedSiteForDetection}
-                  onChange={e => setSelectedSiteForDetection(e.target.value)}
-                >
-                  <option value="">Select a site</option>
-                  <option value="WS001">North Dumping Site</option>
-                  <option value="WS002">South Dumping Site</option>
-                </select>
-              </div>
-              <button
-                className="btn btn-primary mt-4"
-                disabled={!selectedSiteForDetection || isSubmitting}
-                onClick={handleConfirmDetection}
-              >
-                {isSubmitting ? 'Updating...' : 'Confirm & Update Site'}
-              </button>
+            <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl border border-green-200/30 dark:border-green-700/30">
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">🎯 Detection Results:</h3>
+              <pre className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                {JSON.stringify(detectionResult, null, 2)}
+              </pre>
             </div>
           )}
         </div>

@@ -60,13 +60,13 @@ export default function SignupResident() {
                 <span className="text-white font-bold text-xl">🗂️</span>
               </div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-                WasteSense
-              </h1>
+            WasteSense
+          </h1>
             </div>
             
             <h2 className={`text-3xl font-bold mb-6 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
               Join the waste management revolution
-            </h2>
+          </h2>
             
             <p className={`text-lg mb-8 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               Connect with your community, report bin statuses, and help create a cleaner Ghana
@@ -97,7 +97,7 @@ export default function SignupResident() {
             </div>
           </div>
         </div>
-        
+
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
           <img
@@ -148,32 +148,32 @@ export default function SignupResident() {
             {/* Form */}
             <form onSubmit={formik.handleSubmit} className="space-y-6">
               {/* Name Field */}
-              <div>
+            <div>
                 <label htmlFor="name" className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Full Name
-                </label>
+                Full Name
+              </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <span className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>👤</span>
                   </div>
-                  <input
-                    id="name"
-                    type="text"
-                    autoComplete="name"
+              <input
+                id="name"
+                type="text"
+                autoComplete="name"
                     className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
                       isDarkMode 
                         ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                         : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                     } ${
-                      formik.touched.name && formik.errors.name
+                  formik.touched.name && formik.errors.name
                         ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                        : ''
-                    }`}
+                    : ''
+                }`}
                     placeholder="Enter your full name"
-                    {...formik.getFieldProps('name')}
-                  />
+                {...formik.getFieldProps('name')}
+              />
                 </div>
-                {formik.touched.name && formik.errors.name && (
+              {formik.touched.name && formik.errors.name && (
                   <p className="mt-1 text-sm text-red-500 flex items-center">
                     <span className="mr-1">❌</span>
                     {formik.errors.name}
@@ -212,55 +212,55 @@ export default function SignupResident() {
                     <span className="mr-1">❌</span>
                     {formik.errors.email}
                   </p>
-                )}
-              </div>
+              )}
+            </div>
 
               {/* Phone Field */}
-              <div>
+            <div>
                 <label htmlFor="phone" className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Phone Number
+                Phone Number
                   <span className={`text-sm font-normal ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}> (optional)</span>
-                </label>
+              </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <span className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>📱</span>
                   </div>
-                  <input
-                    id="phone"
-                    type="tel"
-                    autoComplete="tel"
+              <input
+                id="phone"
+                type="tel"
+                autoComplete="tel"
                     className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
                       isDarkMode 
                         ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                         : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                     } ${
-                      formik.touched.phone && formik.errors.phone
+                  formik.touched.phone && formik.errors.phone
                         ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                        : ''
-                    }`}
+                    : ''
+                }`}
                     placeholder="Enter your phone number"
-                    {...formik.getFieldProps('phone')}
-                  />
+                {...formik.getFieldProps('phone')}
+              />
                 </div>
-                {formik.touched.phone && formik.errors.phone && (
+              {formik.touched.phone && formik.errors.phone && (
                   <p className="mt-1 text-sm text-red-500 flex items-center">
                     <span className="mr-1">❌</span>
                     {formik.errors.phone}
                   </p>
-                )}
-              </div>
+              )}
+            </div>
 
               {/* Zone Field */}
-              <div>
+            <div>
                 <label htmlFor="zone" className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Zone/Area
-                </label>
+              </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <span className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>🏘️</span>
                   </div>
-                  <select
-                    id="zone"
+              <select
+                id="zone"
                     className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
                       isDarkMode 
                         ? 'bg-gray-700 border-gray-600 text-white' 
@@ -269,20 +269,20 @@ export default function SignupResident() {
                       formik.touched.zone && formik.errors.zone
                         ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
                         : ''
-                    }`}
-                    {...formik.getFieldProps('zone')}
-                  >
-                    <option value="Ablekuma North">Ablekuma North</option>
-                    <option value="Ayawaso West">Ayawaso West</option>
-                  </select>
+                }`}
+                {...formik.getFieldProps('zone')}
+              >
+                <option value="Ablekuma North">Ablekuma North</option>
+                <option value="Ayawaso West">Ayawaso West</option>
+              </select>
                 </div>
-                {formik.touched.zone && formik.errors.zone && (
+              {formik.touched.zone && formik.errors.zone && (
                   <p className="mt-1 text-sm text-red-500 flex items-center">
                     <span className="mr-1">❌</span>
                     {formik.errors.zone}
                   </p>
-                )}
-              </div>
+              )}
+            </div>
 
               {/* Password Field */}
               <div>
@@ -292,7 +292,7 @@ export default function SignupResident() {
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <span className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>🔒</span>
-                  </div>
+          </div>
                   <input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
@@ -334,14 +334,14 @@ export default function SignupResident() {
                   <div className="flex items-center">
                     <span className="text-red-500 mr-2">⚠️</span>
                     <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
-                  </div>
-                </div>
-              )}
+              </div>
+            </div>
+          )}
 
               {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={formik.isSubmitting}
+            <button
+              type="submit"
+              disabled={formik.isSubmitting}
                 className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
                 {formik.isSubmitting ? (

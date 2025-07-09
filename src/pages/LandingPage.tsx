@@ -100,7 +100,7 @@ export default function LandingPage() {
       <nav className={`sticky top-0 z-50 ${isDarkMode ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-sm border-b ${isDarkMode ? 'border-gray-800' : 'border-gray-200'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-blue-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">🗂️</span>
               </div>
@@ -114,15 +114,15 @@ export default function LandingPage() {
               <a href="#services" className={`hover:text-green-600 transition-colors ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Services</a>
               <a href="#features" className={`hover:text-green-600 transition-colors ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Features</a>
               <a href="#about" className={`hover:text-green-600 transition-colors ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>About</a>
-            </div>
+        </div>
 
-            <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4">
               <button
                 onClick={toggleDarkMode}
                 className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'}`}
               >
                 {isDarkMode ? '☀️' : '🌙'}
-              </button>
+          </button>
               <Link
                 to="/auth/signin"
                 className={`px-4 py-2 rounded-lg transition-colors ${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900'}`}
@@ -272,8 +272,8 @@ export default function LandingPage() {
                 <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
                   {feature.description}
                 </p>
-              </div>
-            ))}
+          </div>
+        ))}
           </div>
         </div>
       </section>

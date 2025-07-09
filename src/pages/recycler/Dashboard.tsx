@@ -291,11 +291,28 @@ export default function RecyclerDashboard() {
   };
 
   if (sitesLoading || notificationsLoading) {
-    return <div className="text-center py-4">Loading dashboard data...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+            <p className="text-lg font-medium text-gray-700 dark:text-gray-300">Loading dashboard data...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (sitesError) {
-    return <div className="text-red-600 text-center py-4">{sitesError}</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <p className="text-lg font-medium text-red-600 dark:text-red-400">{sitesError}</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const wasteUpdateNotifications = unreadNotifications.filter(
@@ -303,230 +320,312 @@ export default function RecyclerDashboard() {
   );
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto py-8 px-4">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-        <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">Recycling Facility Dashboard</h1>
-        <div className="flex items-center gap-2">
-          <span className="inline-block w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-blue-400 dark:from-green-700 dark:to-blue-700 flex items-center justify-center text-white text-xl font-bold shadow-lg">
-            {user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : 'U'}
-              </span>
-        </div>
-      </div>
-
-      {/* Aggregate Pie Chart */}
-      <div className="card bg-white shadow mb-6 dark:shadow-white">
-        <h2 className="text-lg font-bold text-gray-900 mb-2">Total Waste Composition (All Sites)</h2>
-        <div className="flex flex-col md:flex-row md:items-center md:space-x-8">
-          <div className="flex-1 min-w-[220px] p-8">
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie
-                  data={allTypes.map(type => ({ name: type, value: aggregateComposition[type] || 0 }))}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={70}
-                  label={({ name, value }) => `${name}: ${value}%`}
-                >
-                  {allTypes.map((type) => (
-                    <Cell key={type} fill={WASTE_COLORS[type] || '#8884d8'} />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="flex-1 text-gray-600 text-sm">
-            <div className="mb-2">
-              <span className="font-semibold text-gray-900">
-                {totalWeight ? `${totalWeight} kg` : ''} of waste was generated across all sites
-              </span>
-            </div>
-            <ul>
-              {allTypes.map((type) => (
-                <li key={type} className="mb-1">
-                  <span className="font-semibold text-gray-900 capitalize">{type}:</span> {aggregateComposition[type]}%
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* Per-Site Bar Charts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {northSite && northComp && (
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-2">North Dumping Site Composition</h2>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={allTypes.map(type => ({ type, percent: northComp[`${type}_percent`] ?? 0 }))}>
-                <XAxis dataKey="type" />
-                <YAxis unit="%" domain={[0, 100]} />
-                <Tooltip />
-                {allTypes.map(type => (
-                  <Bar key={type} dataKey={d => d.type === type ? d.percent : 0} name={type} fill={WASTE_COLORS[type] || '#8884d8'} />
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
-            {currentImages[northSite.id] && (
-              <div className="mt-4">
-                <h4 className="text-sm font-semibold mb-1">Latest Annotated Image:</h4>
-                <img
-                  src={`data:image/jpeg;base64,${currentImages[northSite.id]}`}
-                  alt="Annotated waste detection"
-                  className="w-full max-w-md border rounded shadow"
-                  style={{ maxHeight: 400, objectFit: 'contain' }}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Updated: {northComp.created_at ? (() => {
-                    const date = new Date(northComp.created_at);
-                    return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
-                  })() : 'Unknown time'}
-                </p>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Enhanced Header */}
+        <div className="mb-8">
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-6">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center shadow-lg">
+                    <span className="text-white text-xl font-bold">
+                      {user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : 'RC'}
+                    </span>
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center">
+                    <span className="text-white text-xs">♻️</span>
+                  </div>
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+                    Recycling Analytics Dashboard
+                  </h1>
+                  <p className="text-gray-600 dark:text-gray-300 mt-1">
+                    Welcome back, {user?.name || 'Recycler'} • Real-time waste composition analysis
+                  </p>
+                </div>
               </div>
-            )}
-            <div className="mt-2 text-gray-600 text-sm">
-              <span className="font-semibold text-gray-900">{Math.round(northComp.current_capacity)} kg</span> of waste{' '}
-              {(() => {
-                if (!northSite.lastUpdated) return '';
-                const last = new Date(northSite.lastUpdated);
-                const now = new Date();
-                const isToday = last.toDateString() === now.toDateString();
-                return isToday
-                  ? 'today'
-                  : `last updated on ${last.toLocaleDateString()} at ${last.toLocaleTimeString()}`;
-              })()}
-            </div>
-          </div>
-        )}
-        {southSite && southComp && (
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-2">South Dumping Site Composition</h2>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={allTypes.map(type => ({ type, percent: southComp[`${type}_percent`] ?? 0 }))}>
-                <XAxis dataKey="type" />
-                <YAxis unit="%" domain={[0, 100]} />
-                <Tooltip />
-                {allTypes.map(type => (
-                  <Bar key={type} dataKey={d => d.type === type ? d.percent : 0} name={type} fill={WASTE_COLORS[type] || '#8884d8'} />
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
-            {currentImages[southSite.id] && (
-              <div className="mt-4">
-                <h4 className="text-sm font-semibold mb-1">Latest Annotated Image:</h4>
-                <img
-                  src={`data:image/jpeg;base64,${currentImages[southSite.id]}`}
-                  alt="Annotated waste detection"
-                  className="w-full max-w-md border rounded shadow"
-                  style={{ maxHeight: 400, objectFit: 'contain' }}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Updated: {southComp.created_at ? (() => {
-                    const date = new Date(southComp.created_at);
-                    return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
-                  })() : 'Unknown time'}
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="bg-green-100 dark:bg-green-900/30 px-4 py-2 rounded-full">
+                  <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                    🌱 {sites.length} Sites Active
+                  </span>
+                </div>
+                <div className="bg-blue-100 dark:bg-blue-900/30 px-4 py-2 rounded-full">
+                  <span className="text-sm font-medium text-blue-700 dark:text-blue-400">
+                    📊 Live Analytics
+                  </span>
+                </div>
               </div>
-            )}
-            <div className="mt-2 text-gray-600 text-sm">
-              <span className="font-semibold text-gray-900">{Math.round(southComp.current_capacity)} kg</span> of waste{' '}
-              {(() => {
-                if (!southSite.lastUpdated) return '';
-                const last = new Date(southSite.lastUpdated);
-                const now = new Date();
-                const isToday = last.toDateString() === now.toDateString();
-                return isToday
-                  ? 'today'
-                  : `last updated on ${last.toLocaleDateString()} at ${last.toLocaleTimeString()}`;
-              })()}
             </div>
           </div>
-        )}
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)] flex flex-col items-center">
-          <h3 className="text-lg font-bold text-green-800 dark:text-green-300 mb-2">Total Processed Today</h3>
-          <p className="text-3xl font-extrabold text-green-600 dark:text-green-300">{Math.round(totalWeight)} kg</p>
         </div>
-        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)] flex flex-col items-center">
-          <h3 className="text-lg font-bold text-blue-800 dark:text-blue-300 mb-2">Recycling Rate</h3>
-          <p className="text-3xl font-extrabold text-blue-600 dark:text-blue-300">{Math.round(recyclingRate)}%</p>
-        </div>
-        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)] flex flex-col items-center">
-          <h3 className="text-lg font-bold text-purple-800 dark:text-purple-300 mb-2">Energy Saved</h3>
-          <p className="text-3xl font-extrabold text-purple-600 dark:text-purple-300">{Math.round(energySaved)} kWh</p>
-        </div>
-      </div>
 
-      {/* Environmental Impact */}
-      <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">
-          🌍 Environmental Impact Today
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="text-center bg-white/80 dark:bg-gray-800/80 rounded-xl p-4">
-            <div className="text-3xl mb-2">🌱</div>
-            <p className="text-3xl font-bold text-green-600 dark:text-green-300">
-              {Object.keys(currentCompositions).length > 0 ? calculateEnvironmentalImpact(currentCompositions).co2Avoided.toFixed(1) : '0.0'}
-            </p>
-            <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">Tons CO₂ Avoided</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Equivalent to {Object.keys(currentCompositions).length > 0 ? Math.round(calculateEnvironmentalImpact(currentCompositions).co2Avoided * 2174) : 0} miles driven
-            </p>
+        {/* Modern Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-6 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center">
+                <span className="text-white text-xl">⚖️</span>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-bold text-green-600 dark:text-green-400">{Math.round(totalWeight)}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">kg</p>
+              </div>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">Total Processed Today</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Across all waste sites</p>
           </div>
-          <div className="text-center bg-white/80 dark:bg-gray-800/80 rounded-xl p-4">
-            <div className="text-3xl mb-2">🌳</div>
-            <p className="text-3xl font-bold text-green-600 dark:text-green-300">
-              {Object.keys(currentCompositions).length > 0 ? calculateEnvironmentalImpact(currentCompositions).treesSaved : 0}
-            </p>
-            <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">Trees Saved</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Through paper recycling
-            </p>
+
+          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-6 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center">
+                <span className="text-white text-xl">♻️</span>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{Math.round(recyclingRate)}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">%</p>
+              </div>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">Recycling Rate</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Recyclable materials</p>
           </div>
-          <div className="text-center bg-white/80 dark:bg-gray-800/80 rounded-xl p-4">
-            <div className="text-3xl mb-2">💧</div>
-            <p className="text-3xl font-bold text-green-600 dark:text-green-300">
-              {Object.keys(currentCompositions).length > 0 ? Math.round(calculateEnvironmentalImpact(currentCompositions).waterSaved).toLocaleString() : '0'}
-            </p>
-            <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">Liters Water Saved</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Enough for {Object.keys(currentCompositions).length > 0 ? Math.round(calculateEnvironmentalImpact(currentCompositions).waterSaved / 150) : 0} people/day
-            </p>
+
+          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-6 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center">
+                <span className="text-white text-xl">⚡</span>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">{Math.round(energySaved)}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">kWh</p>
+              </div>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">Energy Saved</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Through recycling</p>
           </div>
         </div>
-        
-        {/* Impact Breakdown */}
-        <div className="bg-white/60 dark:bg-gray-800/60 rounded-xl p-4">
-          <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">
-            💡 Impact Calculation Based on Real Data
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-            <div className="text-center">
-              <div className="font-medium text-blue-600">Paper</div>
-              <div className="text-gray-600">3.3kg CO₂/kg</div>
-              <div className="text-gray-600">60L H₂O/kg</div>
+
+        {/* Modernized Aggregate Pie Chart */}
+        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-8 mb-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm">📊</span>
             </div>
-            <div className="text-center">
-              <div className="font-medium text-purple-600">Plastic</div>
-              <div className="text-gray-600">2.0kg CO₂/kg</div>
-              <div className="text-gray-600">40L H₂O/kg</div>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Total Waste Composition</h2>
+            <span className="text-sm text-gray-500 dark:text-gray-400">• All Sites Combined</span>
+          </div>
+          <div className="flex flex-col lg:flex-row lg:items-center lg:gap-12">
+            <div className="flex-1 min-w-[300px]">
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={allTypes.map(type => ({ name: type, value: aggregateComposition[type] || 0 }))}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    label={({ name, value }) => `${name}: ${value}%`}
+                  >
+                    {allTypes.map((type) => (
+                      <Cell key={type} fill={WASTE_COLORS[type] || '#8884d8'} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
-            <div className="text-center">
-              <div className="font-medium text-gray-600">Metal</div>
-              <div className="text-gray-600">6.0kg CO₂/kg</div>
-              <div className="text-gray-600">95L H₂O/kg</div>
-            </div>
-            <div className="text-center">
-              <div className="font-medium text-green-600">Glass</div>
-              <div className="text-gray-600">0.5kg CO₂/kg</div>
-              <div className="text-gray-600">20L H₂O/kg</div>
+            <div className="flex-1 bg-gray-50/50 dark:bg-gray-700/50 rounded-2xl p-6">
+              <div className="mb-4">
+                <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                  📈 {totalWeight ? `${totalWeight} kg` : 'No data'} total waste processed
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Breakdown by material type</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {allTypes.map((type) => (
+                  <div key={type} className="flex items-center gap-2">
+                    <div 
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: WASTE_COLORS[type] || '#8884d8' }}
+                    ></div>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">{type}:</span>
+                    <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{aggregateComposition[type] || 0}%</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
-            * Based on EPA and recycling industry research data
-          </p>
+        </div>
+
+        {/* Per-Site Bar Charts */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
+          {northSite && northComp && (
+            <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-6 h-6 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white text-xs">🏢</span>
+                </div>
+                <h2 className="text-lg font-bold text-gray-800 dark:text-gray-200">North Dumping Site</h2>
+              </div>
+              <div className="mb-4">
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={allTypes.map(type => ({ type, percent: northComp[`${type}_percent`] ?? 0 }))}>
+                    <XAxis dataKey="type" />
+                    <YAxis unit="%" domain={[0, 100]} />
+                    <Tooltip />
+                    {allTypes.map(type => (
+                      <Bar key={type} dataKey={d => d.type === type ? d.percent : 0} name={type} fill={WASTE_COLORS[type] || '#8884d8'} />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              {currentImages[northSite.id] && (
+                <div className="bg-gray-50/50 dark:bg-gray-700/50 rounded-2xl p-4">
+                  <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">🖼️ Latest Analysis</h4>
+                  <img
+                    src={`data:image/jpeg;base64,${currentImages[northSite.id]}`}
+                    alt="Annotated waste detection"
+                    className="w-full rounded-lg shadow-sm"
+                    style={{ maxHeight: 200, objectFit: 'contain' }}
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    Updated: {northComp.created_at ? (() => {
+                      const date = new Date(northComp.created_at);
+                      return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
+                    })() : 'Unknown time'}
+                  </p>
+                </div>
+              )}
+              <div className="mt-4 flex items-center gap-2">
+                <span className="text-lg font-bold text-gray-800 dark:text-gray-200">{Math.round(northComp.current_capacity)} kg</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">processed today</span>
+              </div>
+            </div>
+          )}
+
+          {southSite && southComp && (
+            <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-6 h-6 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white text-xs">🏢</span>
+                </div>
+                <h2 className="text-lg font-bold text-gray-800 dark:text-gray-200">South Dumping Site</h2>
+              </div>
+              <div className="mb-4">
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={allTypes.map(type => ({ type, percent: southComp[`${type}_percent`] ?? 0 }))}>
+                    <XAxis dataKey="type" />
+                    <YAxis unit="%" domain={[0, 100]} />
+                    <Tooltip />
+                    {allTypes.map(type => (
+                      <Bar key={type} dataKey={d => d.type === type ? d.percent : 0} name={type} fill={WASTE_COLORS[type] || '#8884d8'} />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              {currentImages[southSite.id] && (
+                <div className="bg-gray-50/50 dark:bg-gray-700/50 rounded-2xl p-4">
+                  <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">🖼️ Latest Analysis</h4>
+                  <img
+                    src={`data:image/jpeg;base64,${currentImages[southSite.id]}`}
+                    alt="Annotated waste detection"
+                    className="w-full rounded-lg shadow-sm"
+                    style={{ maxHeight: 200, objectFit: 'contain' }}
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    Updated: {southComp.created_at ? (() => {
+                      const date = new Date(southComp.created_at);
+                      return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
+                    })() : 'Unknown time'}
+                  </p>
+                </div>
+              )}
+              <div className="mt-4 flex items-center gap-2">
+                <span className="text-lg font-bold text-gray-800 dark:text-gray-200">{Math.round(southComp.current_capacity)} kg</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">processed today</span>
+              </div>
+            </div>
+          )}
+        </div>
+        {/* Enhanced Environmental Impact */}
+        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm">🌍</span>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Environmental Impact Today</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-2xl p-6 text-center">
+              <div className="text-4xl mb-3">🌱</div>
+              <p className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
+                {Object.keys(currentCompositions).length > 0 ? calculateEnvironmentalImpact(currentCompositions).co2Avoided.toFixed(1) : '0.0'}
+              </p>
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Tons CO₂ Avoided</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                = {Object.keys(currentCompositions).length > 0 ? Math.round(calculateEnvironmentalImpact(currentCompositions).co2Avoided * 2174) : 0} miles driving
+              </p>
+            </div>
+            
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-2xl p-6 text-center">
+              <div className="text-4xl mb-3">🌳</div>
+              <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+                {Object.keys(currentCompositions).length > 0 ? calculateEnvironmentalImpact(currentCompositions).treesSaved : 0}
+              </p>
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Trees Saved</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Through paper recycling
+              </p>
+            </div>
+            
+            <div className="bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20 rounded-2xl p-6 text-center">
+              <div className="text-4xl mb-3">💧</div>
+              <p className="text-3xl font-bold text-teal-600 dark:text-teal-400 mb-2">
+                {Object.keys(currentCompositions).length > 0 ? Math.round(calculateEnvironmentalImpact(currentCompositions).waterSaved).toLocaleString() : '0'}
+              </p>
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Liters Water Saved</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                = {Object.keys(currentCompositions).length > 0 ? Math.round(calculateEnvironmentalImpact(currentCompositions).waterSaved / 150) : 0} people/day
+              </p>
+            </div>
+          </div>
+          
+          {/* Impact Calculation Details */}
+          <div className="bg-gray-50/50 dark:bg-gray-700/50 rounded-2xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-lg">💡</span>
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Impact Calculation Methodology</h3>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center bg-white/60 dark:bg-gray-600/60 rounded-xl p-3">
+                <div className="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-1">Paper</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">3.3kg CO₂/kg</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">60L H₂O/kg</div>
+              </div>
+              <div className="text-center bg-white/60 dark:bg-gray-600/60 rounded-xl p-3">
+                <div className="text-sm font-semibold text-purple-600 dark:text-purple-400 mb-1">Plastic</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">2.0kg CO₂/kg</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">40L H₂O/kg</div>
+              </div>
+              <div className="text-center bg-white/60 dark:bg-gray-600/60 rounded-xl p-3">
+                <div className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Metal</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">6.0kg CO₂/kg</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">95L H₂O/kg</div>
+              </div>
+              <div className="text-center bg-white/60 dark:bg-gray-600/60 rounded-xl p-3">
+                <div className="text-sm font-semibold text-green-600 dark:text-green-400 mb-1">Glass</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">0.5kg CO₂/kg</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">20L H₂O/kg</div>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
+              * Based on EPA and recycling industry research data
+            </p>
+          </div>
         </div>
       </div>
     </div>

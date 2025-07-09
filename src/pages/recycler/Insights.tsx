@@ -12,24 +12,28 @@ import { environment } from '../../config/environment';
 // Get API base URL from environment configuration
 const API_BASE_URL = environment.getApiUrl();
 
-// Helper function to format dates consistently in local timezone
+// Helper function to format dates consistently in Rwanda timezone (UTC+2)
 const formatDateLocal = (date: Date | string): string => {
   const d = new Date(date);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
+  // Convert to Rwanda timezone (UTC+2)
+  const rwandaDate = new Date(d.getTime() + (2 * 60 * 60 * 1000));
+  const year = rwandaDate.getFullYear();
+  const month = String(rwandaDate.getMonth() + 1).padStart(2, '0');
+  const day = String(rwandaDate.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
 
-// Helper function to create a date at start of day in local timezone
+// Helper function to create a date at start of day in Rwanda timezone
 const createLocalDate = (dateStr: string): Date => {
-  // Parse the date string as local time (not UTC)
+  // Parse the date string as local time in Rwanda timezone
   const parts = dateStr.split('-');
   if (parts.length === 3) {
     const year = parseInt(parts[0]);
     const month = parseInt(parts[1]) - 1; // Month is 0-based
     const day = parseInt(parts[2]);
-    return new Date(year, month, day);
+    // Create date in Rwanda timezone
+    const localDate = new Date(year, month, day);
+    return localDate;
   }
   return new Date(dateStr);
 };

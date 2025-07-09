@@ -266,7 +266,8 @@ app.post('/setup-database', async (req: Request, res: Response) => {
       // Add test waste sites with compositions
       await db('waste_sites').insert([
         {
-          name: 'Ablekuma North Collection Point',
+          id: 'WS001',
+          name: 'North Dumping Site',
           location: 'Ablekuma North',
           current_capacity: 75.5,
           max_capacity: 100,
@@ -277,7 +278,8 @@ app.post('/setup-database', async (req: Request, res: Response) => {
           composition_organic: 30.0
         },
         {
-          name: 'Ayawaso West Collection Point',
+          id: 'WS002',
+          name: 'South Dumping Site',
           location: 'Ayawaso West',
           current_capacity: 45.2,
           max_capacity: 150,

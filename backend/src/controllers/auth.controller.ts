@@ -1177,6 +1177,11 @@ export const updateWasteComposition = async (req: Request, res: Response) => {
       console.error('Missing or invalid currentCapacity for site', id);
       return res.status(400).json({ message: 'Current capacity (total weight) is required and must be a positive number.' });
     }
+    
+    // Create timestamp in local timezone (Rwanda UTC+2)
+    const now = new Date();
+    const localTimestamp = new Date(now.getTime() + (2 * 60 * 60 * 1000)).toISOString();
+    
     // Generate a unique id for the new composition
     const newId = uuidv4();
     console.log('DEBUG: About to insert into waste_compositions', {
@@ -1192,8 +1197,8 @@ export const updateWasteComposition = async (req: Request, res: Response) => {
       other_percent: other ?? null,
       current_capacity: Number(currentCapacity),
       annotated_image: annotated_image || null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      created_at: localTimestamp,
+      updated_at: localTimestamp,
     });
     let insertResult = null;
     try {
@@ -1211,8 +1216,8 @@ export const updateWasteComposition = async (req: Request, res: Response) => {
           other_percent: other ?? null,
           current_capacity: Number(currentCapacity),
           annotated_image: annotated_image || null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          created_at: localTimestamp,
+          updated_at: localTimestamp,
         })
         .returning(['id', 'site_id', 'plastic_percent', 'paper_percent', 'glass_percent', 'metal_percent', 'organic_percent', 'textile_percent', 'other_percent', 'current_capacity', 'created_at', 'annotated_image']);
       if (!insertResult || insertResult.length === 0) {
@@ -1235,14 +1240,14 @@ export const updateWasteComposition = async (req: Request, res: Response) => {
         other_percent: other ?? null,
         current_capacity: Number(currentCapacity),
         annotated_image: annotated_image || null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        created_at: localTimestamp,
+        updated_at: localTimestamp,
       });
     }
 
     // Update waste_sites table for current values and capacity
     const updateFields: any = {
-      last_updated: new Date().toISOString(),
+      last_updated: localTimestamp,
       'composition_plastic': plastic,
       'composition_paper': paper,
       'composition_glass': glass,
@@ -1265,7 +1270,7 @@ export const updateWasteComposition = async (req: Request, res: Response) => {
         .where('status', 'scheduled')
         .update({
           status: 'in-transit',
-          updated_at: new Date().toISOString()
+          updated_at: localTimestamp
         });
       
       console.log(`DEBUG: Updated ${vehiclesUpdated} vehicles from 'scheduled' to 'in-transit' after waste composition update`);
@@ -1285,7 +1290,7 @@ export const updateWasteComposition = async (req: Request, res: Response) => {
             truck_id: vehicle.id,
             facility_id: id,
             zone: 'Unknown', // Will be updated based on vehicle's last route
-            estimated_arrival: new Date().toISOString(),
+            estimated_arrival: localTimestamp,
             status: 'in-transit',
             weight: Number(currentCapacity),
             composition: JSON.stringify({ plastic, paper, glass, metal, organic }),
@@ -1300,7 +1305,7 @@ export const updateWasteComposition = async (req: Request, res: Response) => {
               status: 'in-transit',
               weight: Number(currentCapacity),
               composition: JSON.stringify({ plastic, paper, glass, metal, organic }),
-              updated_at: new Date().toISOString()
+              updated_at: localTimestamp
             });
           console.log(`DEBUG: Updated existing delivery for vehicle ${vehicle.id} to in-transit status`);
         }
@@ -1315,7 +1320,7 @@ export const updateWasteComposition = async (req: Request, res: Response) => {
           .whereIn('status', ['scheduled', 'in-progress'])
           .update({
             status: 'completed',
-            updated_at: new Date().toISOString()
+            updated_at: localTimestamp
           });
         
         console.log(`DEBUG: Completed ${completedSchedules} schedules for vehicles ${vehicleIds.join(', ')} after waste composition update`);
@@ -1335,7 +1340,7 @@ export const updateWasteComposition = async (req: Request, res: Response) => {
         .whereIn('status', ['scheduled', 'in-progress'])
         .update({
           status: 'completed',
-          updated_at: new Date().toISOString()
+          updated_at: localTimestamp
         });
       
       console.log(`DEBUG: Completed ${completedSchedules} schedules for in-transit vehicles ${inTransitVehicleIds.join(', ')} after waste composition update`);
@@ -1348,63 +1353,53 @@ export const updateWasteComposition = async (req: Request, res: Response) => {
         .where('status', 'in-transit')
         .update({ 
           status: 'arrived',
-          actual_arrival: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          actual_arrival: localTimestamp,
+          updated_at: localTimestamp
         });
       
       console.log(`DEBUG: Updated ${deliveriesUpdated} deliveries from 'in-transit' to 'arrived' for site ${id}`);
       
-      // UPDATE VEHICLE STATUS: in-transit → available (final step in workflow)
-      if (deliveriesUpdated > 0) {
-        // Get truck IDs from the updated deliveries
-        const arrivedDeliveries = await db('deliveries')
-          .where('facility_id', id)
-          .where('status', 'arrived')
-          .where('updated_at', '>', new Date(Date.now() - 5 * 60 * 1000).toISOString()) // Updated in last 5 minutes
-          .select('truck_id');
+      // Also update vehicles to available
+      const vehiclesFromDeliveries = await db('deliveries')
+        .where('facility_id', id)
+        .where('status', 'arrived')
+        .select('truck_id');
+      
+      if (vehiclesFromDeliveries.length > 0) {
+        const vehicleIdsFromDeliveries = vehiclesFromDeliveries.map(d => d.truck_id);
+        await db('vehicles')
+          .whereIn('id', vehicleIdsFromDeliveries)
+          .update({ 
+            status: 'available',
+            updated_at: localTimestamp
+          });
         
-        const truckIds = arrivedDeliveries.map(d => d.truck_id);
-        
-        if (truckIds.length > 0) {
-          const vehiclesUpdated = await db('vehicles')
-            .whereIn('id', truckIds)
-            .where('status', 'in-transit')
-            .update({
-              status: 'available',
-              updated_at: new Date().toISOString()
-            });
-          
-          console.log(`DEBUG: Updated ${vehiclesUpdated} vehicles from 'in-transit' to 'available' after composition update`);
-        }
+        console.log(`DEBUG: Updated ${vehicleIdsFromDeliveries.length} vehicles to 'available' after arrival confirmation`);
       }
     }
 
-    // Get site info for notification
-    const site = await db('waste_sites').where({ id }).first();
-
-    // Create notification for recyclers
-    await db('notifications').insert({
-      type: 'info',
-      title: 'New Waste Composition Update',
-      message: `Waste composition updated at ${site.name}`,
-      for_role: 'recycler',
-      metadata: {
-        siteId: id,
-        siteName: site.name,
-        updateType: 'composition',
-        composition: { plastic, paper, glass, metal, organic },
-        currentCapacity: Number(currentCapacity),
-      },
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      archived: false,
+    console.log(`✅ Successfully updated waste composition for site ${id}`);
+    
+    // Always return success response
+    res.json({
+      success: true,
+      message: 'Waste site composition updated successfully',
+      data: {
+        site_id: id,
+        composition: { plastic, paper, glass, metal, organic, textile, other },
+        current_capacity: Number(currentCapacity),
+        timestamp: localTimestamp,
+        has_image: !!annotated_image
+      }
     });
 
-    console.log('Waste composition updated for site', id, { plastic, paper, glass, metal, organic, currentCapacity });
-    res.status(200).json({ message: 'Waste composition updated and recyclers notified', composition: insertResult });
   } catch (err) {
     console.error('Update Waste Composition error:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to update waste composition', 
+      error: err instanceof Error ? err.message : 'Unknown error' 
+    });
   }
 };
 
@@ -1589,16 +1584,16 @@ export const getWasteCompositionHistory = async (req: Request, res: Response) =>
     
     // Process dates to ensure consistent YYYY-MM-DD format
     const processedRows = rows.map(row => {
-      // Extract date from the created_at timestamp preserving the local date
-      // Use substring to get YYYY-MM-DD directly from the timestamp string
+      // Create local date string from timestamp for user's timezone (Rwanda UTC+2)
       let dateStr = row.date;
       if (row.created_at) {
-        // If we have the full timestamp, extract date more reliably
-        const timestampStr = row.created_at.toString();
-        const dateMatch = timestampStr.match(/(\d{4}-\d{2}-\d{2})/);
-        if (dateMatch) {
-          dateStr = dateMatch[1];
-        }
+        // Convert to local timezone (assume Rwanda UTC+2)
+        const utcDate = new Date(row.created_at);
+        const localDate = new Date(utcDate.getTime() + (2 * 60 * 60 * 1000)); // Add 2 hours for UTC+2
+        const year = localDate.getFullYear();
+        const month = String(localDate.getMonth() + 1).padStart(2, '0');
+        const day = String(localDate.getDate()).padStart(2, '0');
+        dateStr = `${year}-${month}-${day}`;
       }
       
       return {

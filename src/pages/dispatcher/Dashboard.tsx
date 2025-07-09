@@ -152,7 +152,6 @@ export default function DispatcherDashboard() {
   const [detectionError, setDetectionError] = useState('');
   const [selectedSiteForDetection, setSelectedSiteForDetection] = useState('');
   const [detectionMethod, setDetectionMethod] = useState<'llm' | 'yolo'>('llm');
-  const [availableTrucks, setAvailableTrucks] = useState(5);
   const [manualTotalWeight, setManualTotalWeight] = useState('');
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [showDumpingSiteModal, setShowDumpingSiteModal] = useState(false);
@@ -215,6 +214,9 @@ export default function DispatcherDashboard() {
     },
     fuelPricePerLiter: 10.0
   });
+
+  // Calculate available trucks dynamically from fleet management
+  const availableTrucks = vehicles.filter(v => v.status === 'available').length;
 
   // Calculate total percentage
   const totalPercentage = Object.values(composition).reduce((sum, value) => sum + value, 0);
@@ -1020,23 +1022,13 @@ export default function DispatcherDashboard() {
                 <div className="text-sm text-gray-600 dark:text-gray-400">Ready for dispatch</div>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            Set Trucks:
-          </div>
-                </label>
-            <input
-              type="number"
-              min={1}
-              value={availableTrucks}
-              onChange={e => setAvailableTrucks(Number(e.target.value) || 1)}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white/70 dark:bg-gray-700/70 backdrop-blur-lg shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-300"
-            />
+              <div className="mt-4 p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-xl border border-purple-200/30 dark:border-purple-700/30">
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Automatically synced from Fleet Management
+                </div>
               </div>
             </div>
           </div>

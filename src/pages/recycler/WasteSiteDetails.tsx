@@ -134,17 +134,6 @@ export default function WasteSiteDetails() {
             <p className="text-gray-600 dark:text-gray-400 mb-6">
               The requested waste site could not be found or may have been removed.
             </p>
-<<<<<<< HEAD
-          <button
-            onClick={() => navigate('/recycler/dashboard')}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-all duration-200 hover:scale-105 flex items-center gap-2 mx-auto"
-          >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-            Return to Dashboard
-          </button>
-=======
             <button
               onClick={() => navigate('/recycler/dashboard')}
               className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-all duration-200 hover:scale-105 flex items-center gap-2 mx-auto"
@@ -154,7 +143,6 @@ export default function WasteSiteDetails() {
               </svg>
               Return to Dashboard
             </button>
->>>>>>> cb9b67429e180f105033ba2cb3fcdfb73d77a0f0
           </div>
         </div>
       </div>
@@ -170,16 +158,6 @@ export default function WasteSiteDetails() {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8" style={fadeInAnimation}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-<<<<<<< HEAD
-        <button
-          onClick={() => navigate(-1)}
-                className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 hover:scale-105"
-        >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-        </button>
-=======
               <button
                 onClick={() => navigate(-1)}
                 className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 hover:scale-105"
@@ -188,18 +166,12 @@ export default function WasteSiteDetails() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
               </button>
->>>>>>> cb9b67429e180f105033ba2cb3fcdfb73d77a0f0
               <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
                 <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h4a1 1 0 011 1v5m-6 0h6" />
                 </svg>
-<<<<<<< HEAD
-      </div>
-            <div>
-=======
               </div>
               <div>
->>>>>>> cb9b67429e180f105033ba2cb3fcdfb73d77a0f0
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                   {site.name}
                 </h1>
@@ -220,7 +192,6 @@ export default function WasteSiteDetails() {
                   : 'Never'}
               </p>
             </div>
-            </div>
           </div>
         </div>
 
@@ -236,188 +207,9 @@ export default function WasteSiteDetails() {
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Capacity Status</h2>
                   <p className="text-gray-600 dark:text-gray-400">Current site utilization</p>
-<<<<<<< HEAD
                 </div>
               </div>
 
-              <div className="space-y-6">
-                {/* Capacity Progress */}
-                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-lg font-semibold text-gray-900 dark:text-white">Current Usage</span>
-                    <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {capacityPercentage}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-4 mb-4">
-                    <div
-                      className={`h-4 rounded-full ${getCapacityColor(capacityPercentage)} transition-all duration-500`}
-                      style={{ width: `${capacityPercentage}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                    <span>0 tons</span>
-                    <span>{site.maxCapacity} tons</span>
-                  </div>
-                </div>
-
-                {/* Capacity Details */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 hover:shadow-md transition-shadow duration-200">
-                    <div className="flex items-center gap-3 mb-3">
-                      <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                  <div>
-                        <h3 className="font-semibold text-gray-900 dark:text-white">Current Load</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Active waste volume</p>
-                      </div>
-                    </div>
-                    <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                      {site.currentCapacity} tons
-                    </p>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 hover:shadow-md transition-shadow duration-200">
-                    <div className="flex items-center gap-3 mb-3">
-                      <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-                      </svg>
-                  <div>
-                        <h3 className="font-semibold text-gray-900 dark:text-white">Maximum Capacity</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Site limit</p>
-                      </div>
-                    </div>
-                    <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                      {site.maxCapacity} tons
-                    </p>
-                  </div>
-                </div>
-
-                {/* Remaining Capacity */}
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 border border-yellow-200 dark:border-yellow-700">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                      </svg>
-                      <span className="font-semibold text-gray-900 dark:text-white">Remaining Capacity</span>
-                    </div>
-                    <span className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
-                      {site.maxCapacity - site.currentCapacity} tons
-                    </span>
-                  </div>
-                  </div>
-=======
->>>>>>> cb9b67429e180f105033ba2cb3fcdfb73d77a0f0
-                </div>
-              </div>
-
-<<<<<<< HEAD
-          {/* Site Info */}
-          <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6" style={slideInAnimation(0.2)}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Site Information</h3>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Site ID</p>
-                  <p className="font-medium text-gray-900 dark:text-white">{site.id}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Location</p>
-                  <p className="font-medium text-gray-900 dark:text-white">{site.location}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Status</p>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                    capacityPercentage > 90 ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' :
-                    capacityPercentage > 70 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
-                    'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                  }`}>
-                    {capacityPercentage > 90 ? 'Critical' :
-                     capacityPercentage > 70 ? 'High' :
-                     'Normal'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6" style={slideInAnimation(0.3)}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Quick Stats</h3>
-              </div>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Utilization</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{capacityPercentage}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Free Space</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{100 - capacityPercentage}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Waste Types</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{Object.keys(site.composition).length}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Waste Composition */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 mb-8" style={slideInAnimation(0.4)}>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m0 0v4l5-5-5-5v4zm8-8V7a2 2 0 00-2-2H8a2 2 0 00-2 2v6a2 2 0 002 2h1" />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Waste Composition</h2>
-              <p className="text-gray-600 dark:text-gray-400">Material breakdown by type</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Object.entries(site.composition).map(([type, percentage]) => (
-              <div key={type} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 hover:shadow-md transition-all duration-200">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className={`w-10 h-10 ${getWasteColor(type)} rounded-lg flex items-center justify-center`}>
-                    {getWasteIcon(type)}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white capitalize">{type}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Material type</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Percentage</span>
-                    <span className="text-xl font-bold text-gray-900 dark:text-white">{percentage}%</span>
-                    </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3">
-                      <div
-                      className={`h-3 rounded-full ${getWasteColor(type)} transition-all duration-500`}
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    ≈ {((percentage / 100) * site.currentCapacity).toFixed(1)} tons
-                  </div>
-=======
               <div className="space-y-6">
                 {/* Capacity Progress */}
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
@@ -485,29 +277,11 @@ export default function WasteSiteDetails() {
                       {site.maxCapacity - site.currentCapacity} tons
                     </span>
                   </div>
->>>>>>> cb9b67429e180f105033ba2cb3fcdfb73d77a0f0
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Historical Data Placeholder */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8" style={slideInAnimation(0.5)}>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Historical Data</h2>
-              <p className="text-gray-600 dark:text-gray-400">Trends and analytics over time</p>
             </div>
           </div>
 
-<<<<<<< HEAD
-=======
           {/* Site Info */}
           <div className="space-y-6">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6" style={slideInAnimation(0.2)}>
@@ -631,7 +405,6 @@ export default function WasteSiteDetails() {
             </div>
           </div>
           
->>>>>>> cb9b67429e180f105033ba2cb3fcdfb73d77a0f0
           <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-12 text-center">
             <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

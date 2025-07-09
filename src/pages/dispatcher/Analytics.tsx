@@ -43,7 +43,7 @@ export default function Analytics() {
   const [period, setPeriod] = useState('7');
 
   // Animation states
-  const [animationInView, setAnimationInView] = useState(false);
+  const [animationInView, setAnimationInView] = useState(true); // Set to true by default
   const analyticsRef = useRef<HTMLDivElement>(null);
 
   // Real analytics summary calculated from actual data
@@ -61,6 +61,9 @@ export default function Analytics() {
   }, [period]);
 
   useEffect(() => {
+    // Ensure content is visible immediately, then set up observer for animations
+    setAnimationInView(true);
+    
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -82,6 +85,8 @@ export default function Analytics() {
     setError('');
     
     try {
+      console.log('Starting to fetch analytics data...');
+      
       // Fetch all data concurrently
       const [fuelRes, vehiclesRes, reportsRes] = await Promise.allSettled([
         fetchAnalytics(),
@@ -89,19 +94,30 @@ export default function Analytics() {
         fetchReports()
       ]);
 
+      console.log('API results:', { fuelRes, vehiclesRes, reportsRes });
+
       // Handle fuel analytics
       if (fuelRes.status === 'fulfilled' && fuelRes.value) {
+        console.log('Setting fuel analytics:', fuelRes.value);
         setFuelAnalytics(fuelRes.value);
+      } else {
+        console.log('Fuel analytics failed or empty:', fuelRes);
       }
 
       // Handle vehicles
       if (vehiclesRes.status === 'fulfilled' && vehiclesRes.value) {
+        console.log('Setting vehicles:', vehiclesRes.value);
         setVehicles(vehiclesRes.value);
+      } else {
+        console.log('Vehicles failed or empty:', vehiclesRes);
       }
 
       // Handle reports and calculate analytics
       const reports = reportsRes.status === 'fulfilled' ? reportsRes.value || [] : [];
       const fuelData = fuelRes.status === 'fulfilled' ? fuelRes.value : null;
+      
+      console.log('Reports data:', reports);
+      console.log('Fuel data for calculations:', fuelData);
       
       const analytics: AnalyticsSummary = {
         totalCollections: reports.length,
@@ -113,12 +129,14 @@ export default function Analytics() {
         complaints: 0,
       };
       
+      console.log('Calculated analytics summary:', analytics);
       setAnalyticsSummary(analytics);
       
     } catch (err) {
       console.error('Failed to fetch analytics data:', err);
       setError('Failed to load analytics data. Please try again.');
     } finally {
+      console.log('Finished fetching data, setting loading to false');
       setLoading(false);
     }
   };
@@ -243,6 +261,19 @@ export default function Analytics() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+        
+        {/* Debug Section - Remove after testing */}
+        <div className="bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-2xl p-4 mb-8">
+          <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">Debug Info</h3>
+          <div className="text-sm text-yellow-700 dark:text-yellow-300">
+            <p>Loading: {loading ? 'true' : 'false'}</p>
+            <p>Error: {error || 'none'}</p>
+            <p>Animation in view: {animationInView ? 'true' : 'false'}</p>
+            <p>Analytics summary: {JSON.stringify(analyticsSummary, null, 2)}</p>
+            <p>Fuel analytics: {fuelAnalytics ? JSON.stringify(fuelAnalytics, null, 2) : 'null'}</p>
+            <p>Vehicles count: {vehicles.length}</p>
+          </div>
+        </div>
         
         {/* Error Display */}
       {error && (

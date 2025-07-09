@@ -24,11 +24,10 @@
 
 WasteSense is a **smart waste management system** designed specifically for Ghana's urban waste challenges. The system connects residents, dispatchers, and recyclers through an integrated platform that optimizes collection routes, reduces fuel consumption, and provides real-time waste composition analysis using AI.
 
-### 🎯 **Key Objectives Achieved:**
-- ✅ **60% fuel savings** through smart truck allocation algorithms
+### 🎯 **Key Objectives To Be Achieved:**
+- ✅ **Increase in fuel savings** through smart truck allocation algorithms
 - ✅ **Real-time synchronization** across all user dashboards
-- ✅ **Dual AI detection** (YOLO + LLM) for 95% waste composition accuracy
-- ✅ **Mobile-first design** optimized for Ghana's mobile infrastructure
+- ✅ **Dual AI waste Image analysis** (YOLO + LLM) for waste composition accuracy
 - ✅ **Complete workflow automation** from reporting to recycling
 
 ## 1.3 Project's Main Objective
@@ -44,7 +43,7 @@ Implement a secure, web-based interface for residents to submit "Bin Full" repor
 Provide dispatchers with a dashboard to monitor active bin reports, manage vehicle fleets (status: available, scheduled, in-transit), and utilize a smart scheduler that automatically allocates trucks and generates optimized collection routes when zone thresholds are reached.
 
 **O3: AI/LLM Waste Image Analysis**  
-Enable dispatchers to upload waste images from collection sites and utilize integrated AI (YOLO and LLM models) for automated, accurate waste composition analysis, supporting data-driven decision-making.
+Enable dispatchers to upload waste images from collection or waste sites and utilize integrated AI (YOLO and LLM models) for automated, accurate waste composition analysis, supporting data-driven decision-making.
 
 **O4: Recycler Notifications & Insights Dashboard**  
 Deliver real-time notifications to recyclers about incoming deliveries, and provide dashboards with up-to-date facility composition analytics, delivery tracking, and historical waste trends for operational planning.

@@ -113,6 +113,12 @@ export default function DispatcherDashboard() {
   const { reports, loading: reportsLoading, error: reportsError } = useReports();
   const { sites, loading: sitesLoading, error: sitesError } = useWasteSites();
   const { updateSiteComposition } = useWasteSites();
+  
+  // Animation states
+  const [animationInView, setAnimationInView] = useState(false);
+  const dashboardRef = useRef<HTMLDivElement>(null);
+  
+  // Dashboard states
   const [selectedRoute, setSelectedRoute] = useState<TruckRoute | null>(null);
   const [showCompositionModal, setShowCompositionModal] = useState(false);
   const [selectedSite, setSelectedSite] = useState<string>('');

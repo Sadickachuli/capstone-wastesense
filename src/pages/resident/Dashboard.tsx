@@ -174,7 +174,9 @@ export default function ResidentDashboard() {
           <div className={`${isDarkMode ? 'bg-gray-800/50' : 'bg-white/80'} backdrop-blur-lg rounded-2xl p-6 border ${isDarkMode ? 'border-gray-700' : 'border-white/20'} shadow-2xl`}>
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-pink-600 rounded-xl flex items-center justify-center">
-                <span className="text-white text-xl">🗑️</span>
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
               </div>
               <div className={`text-right ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                 <div className="text-sm font-medium">Quick Report</div>
@@ -346,7 +348,9 @@ export default function ResidentDashboard() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-2">
-                          <span className="text-lg">🗑️</span>
+                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
                           <span className={`font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
                             Bin Full Report
                           </span>

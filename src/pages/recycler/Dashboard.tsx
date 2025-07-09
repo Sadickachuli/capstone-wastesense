@@ -773,7 +773,7 @@ export default function RecyclerDashboard() {
                 <Bar dataKey="value">
                   {allTypes.map((type, index) => (
                     <Cell key={`cell-${index}`} fill={WASTE_COLORS[type] || '#8884d8'} />
-                  ))}
+                ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -917,7 +917,7 @@ export default function RecyclerDashboard() {
                 <Bar dataKey="value">
                   {allTypes.map((type, index) => (
                     <Cell key={`cell-${index}`} fill={WASTE_COLORS[type] || '#8884d8'} />
-                  ))}
+                ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>

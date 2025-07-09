@@ -147,12 +147,21 @@ export default function Insights() {
         const history = res.data.history || [];
         setDetectionHistory(history);
         
-        // Get unique dates and sort them, using local date parsing
+        console.log('📊 Raw detection history:', history.slice(0, 3)); // Show first 3 records
+        
+        // Get unique dates and sort them, using more robust date parsing
         const uniqueDateStrings = Array.from(new Set(history.map((record: any) => {
-          // Ensure we get the date part only, avoiding timezone issues
-          const dateStr = record.date.split('T')[0]; // Remove time part if present
+          // Handle different date formats from backend
+          let dateStr = record.date;
+          if (typeof dateStr === 'string') {
+            // Remove time part and any timezone info
+            dateStr = dateStr.split('T')[0];
+          } else if (dateStr instanceof Date) {
+            dateStr = formatDateLocal(dateStr);
+          }
           return dateStr;
         })))
+          .filter((date): date is string => typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/) !== null) // Only valid YYYY-MM-DD format
           .sort()
           .reverse();
         
@@ -161,6 +170,8 @@ export default function Insights() {
         setAvailableDates(dates);
         
         console.log('📅 Available dates:', uniqueDateStrings);
+        console.log('📅 Current date:', formatDateLocal(new Date()));
+        console.log('📅 Today should be available:', uniqueDateStrings.includes(formatDateLocal(new Date())));
       } catch (error) {
         console.error('Failed to fetch detection history:', error);
       }
@@ -216,6 +227,7 @@ export default function Insights() {
     try {
       // Use local date formatting to avoid timezone issues
       const dateStr = formatDateLocal(selectedDate!);
+      console.log(`🔍 Fetching composition data for date: ${dateStr}`);
       
       if (selectedSite === 'all') {
         // Aggregate all sites for the selected date
@@ -224,19 +236,34 @@ export default function Insights() {
             try {
               const res = await axios.get(`${API_BASE_URL}/auth/waste-compositions/history?site_id=${site.id}`);
               const records = res.data.history || [];
-              return records.find((record: any) => {
+              console.log(`📊 Site ${site.id} has ${records.length} records`);
+              
+              const record = records.find((record: any) => {
                 // Use consistent date formatting for comparison
                 const recordDate = record.date;
-                const recordDateStr = formatDateLocal(recordDate);
-                return recordDateStr === dateStr;
+                let recordDateStr = recordDate;
+                if (typeof recordDate === 'string') {
+                  recordDateStr = recordDate.split('T')[0];
+                } else if (recordDate instanceof Date) {
+                  recordDateStr = formatDateLocal(recordDate);
+                }
+                const matches = recordDateStr === dateStr;
+                if (matches) {
+                  console.log(`✅ Found matching record for ${site.id} on ${dateStr}`);
+                }
+                return matches;
               });
-            } catch {
+              
+              return record;
+            } catch (error) {
+              console.error(`❌ Failed to fetch data for site ${site.id}:`, error);
               return null;
             }
           })
         );
 
         const validRecords = allSiteData.filter(record => record !== null);
+        console.log(`📊 Found ${validRecords.length} valid records for ${dateStr}`);
         
         if (validRecords.length > 0) {
           // Aggregate composition across all sites
@@ -292,6 +319,7 @@ export default function Insights() {
           setAnnotatedImage(null); // Don't show single image for aggregate
           setAllSiteImages(siteImages); // Store all site images
         } else {
+          console.log(`❌ No valid records found for ${dateStr}`);
           setComposition(null);
           setTotalWeight(0);
           setAnnotatedImage(null);
@@ -302,11 +330,22 @@ export default function Insights() {
         try {
           const res = await axios.get(`${API_BASE_URL}/auth/waste-compositions/history?site_id=${selectedSite}`);
           const records = res.data.history || [];
+          console.log(`📊 Single site ${selectedSite} has ${records.length} records`);
+          
           const record = records.find((r: any) => {
             // Use consistent date formatting for comparison
             const recordDate = r.date;
-            const recordDateStr = formatDateLocal(recordDate);
-            return recordDateStr === dateStr;
+            let recordDateStr = recordDate;
+            if (typeof recordDate === 'string') {
+              recordDateStr = recordDate.split('T')[0];
+            } else if (recordDate instanceof Date) {
+              recordDateStr = formatDateLocal(recordDate);
+            }
+            const matches = recordDateStr === dateStr;
+            if (matches) {
+              console.log(`✅ Found matching record for ${selectedSite} on ${dateStr}`);
+            }
+            return matches;
           });
           
           if (record) {
@@ -332,6 +371,7 @@ export default function Insights() {
             setAllSiteImages({}); // Clear all site images for single site view
           } else {
             console.log(`❌ No record found for date ${dateStr} on site ${selectedSite}`);
+            console.log(`📊 Available dates for site ${selectedSite}:`, records.map(r => r.date));
             setComposition(null);
             setTotalWeight(0);
             setAnnotatedImage(null);

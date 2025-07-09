@@ -486,7 +486,7 @@ export default function RecyclerDashboard() {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'unset';
-    };
+  };
   }, [isZoomModalOpen]);
 
   if (sitesLoading || notificationsLoading) {
@@ -739,7 +739,7 @@ export default function RecyclerDashboard() {
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">{type}:</span>
                     <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{aggregateComposition[type] || 0}%</span>
                   </div>
-                ))}
+              ))}
               </div>
           </div>
         </div>
@@ -763,14 +763,14 @@ export default function RecyclerDashboard() {
               <div className="mb-4">
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={allTypes.map(type => ({ 
-                type: type.charAt(0).toUpperCase() + type.slice(1), 
-                percent: northComp[`${type}_percent`] ?? 0,
+                name: type.charAt(0).toUpperCase() + type.slice(1), 
+                value: northComp[`${type}_percent`] ?? 0,
                 fill: WASTE_COLORS[type] || '#8884d8'
               }))}>
-                <XAxis dataKey="type" />
+                <XAxis dataKey="name" />
                 <YAxis unit="%" domain={[0, 100]} />
                 <Tooltip />
-                <Bar dataKey="percent" fill="#8884d8">
+                <Bar dataKey="value">
                   {allTypes.map((type, index) => (
                     <Cell key={`cell-${index}`} fill={WASTE_COLORS[type] || '#8884d8'} />
                   ))}
@@ -907,14 +907,14 @@ export default function RecyclerDashboard() {
               <div className="mb-4">
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={allTypes.map(type => ({ 
-                type: type.charAt(0).toUpperCase() + type.slice(1), 
-                percent: southComp[`${type}_percent`] ?? 0,
+                name: type.charAt(0).toUpperCase() + type.slice(1), 
+                value: southComp[`${type}_percent`] ?? 0,
                 fill: WASTE_COLORS[type] || '#8884d8'
               }))}>
-                <XAxis dataKey="type" />
+                <XAxis dataKey="name" />
                 <YAxis unit="%" domain={[0, 100]} />
                 <Tooltip />
-                <Bar dataKey="percent" fill="#8884d8">
+                <Bar dataKey="value">
                   {allTypes.map((type, index) => (
                     <Cell key={`cell-${index}`} fill={WASTE_COLORS[type] || '#8884d8'} />
                   ))}
@@ -1059,7 +1059,7 @@ export default function RecyclerDashboard() {
                   decimals={1}
                   duration={2500}
                 />
-              </p>
+            </p>
               <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Tons CO₂ Avoided</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 = <AnimatedCounter 
@@ -1082,7 +1082,7 @@ export default function RecyclerDashboard() {
                   decimals={0}
                   duration={2500}
                 />
-              </p>
+            </p>
               <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Trees Saved</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
               Through paper recycling
@@ -1101,7 +1101,7 @@ export default function RecyclerDashboard() {
                   decimals={0}
                   duration={2500}
                 />
-              </p>
+            </p>
               <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Liters Water Saved</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 = <AnimatedCounter 

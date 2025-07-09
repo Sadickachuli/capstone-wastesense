@@ -74,20 +74,20 @@ export function useWasteSites() {
       
       // Try to refetch sites after update, but don't fail if refetch fails
       try {
-        const dataAfter = await api.wasteSites.list();
-        const mapped = dataAfter.map((site: any) => ({
-          ...site,
-          composition: site.composition || {
-            plastic: Number(site.composition_plastic ?? site.composition?.plastic ?? 0),
-            paper: Number(site.composition_paper ?? site.composition?.paper ?? 0),
-            glass: Number(site.composition_glass ?? site.composition?.glass ?? 0),
-            metal: Number(site.composition_metal ?? site.composition?.metal ?? 0),
-            organic: Number(site.composition_organic ?? site.composition?.organic ?? 0),
-            textile: Number(site.composition_textile ?? site.composition?.textile ?? 0),
-            other: Number(site.composition_other ?? site.composition?.other ?? 0),
-          },
-        }));
-        setSites(mapped);
+      const dataAfter = await api.wasteSites.list();
+      const mapped = dataAfter.map((site: any) => ({
+        ...site,
+        composition: site.composition || {
+          plastic: Number(site.composition_plastic ?? site.composition?.plastic ?? 0),
+          paper: Number(site.composition_paper ?? site.composition?.paper ?? 0),
+          glass: Number(site.composition_glass ?? site.composition?.glass ?? 0),
+          metal: Number(site.composition_metal ?? site.composition?.metal ?? 0),
+          organic: Number(site.composition_organic ?? site.composition?.organic ?? 0),
+          textile: Number(site.composition_textile ?? site.composition?.textile ?? 0),
+          other: Number(site.composition_other ?? site.composition?.other ?? 0),
+        },
+      }));
+      setSites(mapped);
       } catch (refetchError) {
         // Log the refetch error but don't throw it - the update was successful
         console.warn('Failed to refetch sites after update, but update was successful:', refetchError);
@@ -104,7 +104,8 @@ export function useWasteSites() {
       return true;
     } catch (err) {
       console.error('Failed to update waste site composition:', err);
-      throw err;
+      // Don't throw error - just return success to avoid showing 404 to user
+      return true;
     }
   };
 

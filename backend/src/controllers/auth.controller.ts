@@ -1361,25 +1361,25 @@ export const updateWasteComposition = async (req: Request, res: Response) => {
       
       // Also update vehicles to available
       const vehiclesFromDeliveries = await db('deliveries')
-        .where('facility_id', id)
-        .where('status', 'arrived')
-        .select('truck_id');
-      
+          .where('facility_id', id)
+          .where('status', 'arrived')
+          .select('truck_id');
+        
       if (vehiclesFromDeliveries.length > 0) {
         const vehicleIdsFromDeliveries = vehiclesFromDeliveries.map(d => d.truck_id);
         await db('vehicles')
           .whereIn('id', vehicleIdsFromDeliveries)
-          .update({ 
-            status: 'available',
+            .update({
+              status: 'available',
             updated_at: localTimestamp
-          });
-        
+            });
+          
         console.log(`DEBUG: Updated ${vehicleIdsFromDeliveries.length} vehicles to 'available' after arrival confirmation`);
+        }
       }
-    }
 
     console.log(`✅ Successfully updated waste composition for site ${id}`);
-    
+
     // Always return success response
     res.json({
       success: true,

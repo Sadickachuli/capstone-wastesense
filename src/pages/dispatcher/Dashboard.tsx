@@ -1049,7 +1049,9 @@ export default function DispatcherDashboard() {
             <div className="flex items-center gap-3 mb-4">
               <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m3 0h4a1 1 0 011 1v4a1 1 0 01-1 1h-1l-1 10a2 2 0 01-2 2H5a2 2 0 01-2-2L2 10H1a1 1 0 01-1-1V5a1 1 0 011-1h4zM6 8v8m4-8v8m4-8v8" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12l4 5v6h-3a2 2 0 11-4 0H9a2 2 0 11-4 0H2v-6l4-5z" />
+                  <circle cx="7" cy="17" r="2" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+                  <circle cx="17" cy="17" r="2" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
                 </svg>
               </div>
               <div>

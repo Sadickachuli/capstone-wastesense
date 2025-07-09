@@ -2394,5 +2394,6 @@ export default function DispatcherDashboard() {
         ))}
       </div>
     </div>
+    </div>
   );
 } 

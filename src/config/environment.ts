@@ -1,7 +1,9 @@
 // Environment configuration for WasteSense
 export const environment = {
   // API URLs
-  API_URL: (import.meta as any).env.VITE_API_URL || 'http://localhost:3001/api',
+  API_BASE_URL: (import.meta as any).env.PROD === true
+    ? 'https://wastesense-app.onrender.com'
+    : 'http://localhost:3002',
   ML_SERVICE_URL: (import.meta as any).env.VITE_ML_SERVICE_URL || 'http://localhost:8000',
   YOLO_API_URL: (import.meta as any).env.VITE_YOLO_API_URL || 'https://waste-sense-api.onrender.com',
   
@@ -42,7 +44,7 @@ export const environment = {
     }
     
     // Otherwise use localhost
-    return 'http://localhost:3001/api';
+    return 'http://localhost:3002/api';
   },
   
   // Get the appropriate ML service URL

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { api } from '../../api/mockApi';
 import { useWasteSites } from '../../hooks/useWasteSites';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
@@ -108,6 +109,7 @@ const mockAlerts: Alert[] = [
 
 export default function DispatcherDashboard() {
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
   const { reports, loading: reportsLoading, error: reportsError } = useReports();
   const { sites, loading: sitesLoading, error: sitesError } = useWasteSites();
   const { updateSiteComposition } = useWasteSites();
@@ -838,86 +840,220 @@ export default function DispatcherDashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-0 md:p-0 font-sans">
-      {/* Topbar (optional, for user info/notifications) */}
-      <div className="flex justify-between items-center px-4 py-4 border-b border-gray-200 bg-white sticky top-0 z-10">
-        <h1 className="text-2xl font-bold text-gray-900">Dispatcher Dashboard</h1>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-indigo-50 dark:bg-gradient-to-br dark:from-green-950 dark:via-gray-900 dark:to-green-900">
+      {/* Header */}
+      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-b border-white/20 dark:border-gray-700/20 sticky top-0 z-10 shadow-xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button className="px-4 py-2 rounded bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition text-base">Create New Route</button>
+              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg animate-pulse">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dispatcher Dashboard</h1>
+                <p className="text-gray-600 dark:text-gray-400">Manage routes, vehicles, and operations</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <button className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Route
+              </button>
           <button 
             onClick={() => setShowConfigModal(true)}
-            className="px-4 py-2 rounded bg-gray-600 text-white font-semibold shadow hover:bg-gray-700 transition text-base"
-          >
-            Configure System
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Settings
           </button>
-          {/* Placeholder for user avatar/profile */}
-          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold">D</div>
+              <div className="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Stat Cards */}
+        {/* Enhanced Zone Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* Ablekuma North Zone Card */}
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-3xl p-8 shadow flex flex-col gap-2">
-            <span className="text-sm text-gray-500 dark:text-gray-300 mb-1">Ablekuma North</span>
-            <span className="text-2xl font-bold text-blue-700 dark:text-blue-300 mb-1">
-              Reports: {mlRecommendation?.reportCounts?.North ?? 0}/{configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145}
+        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl p-6 border border-white/20 dark:border-gray-700/20 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] group">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-indigo-400 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Ablekuma North</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Zone Coverage</p>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Reports</span>
+                <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                  {mlRecommendation?.reportCounts?.North ?? 0}/{configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145}
             </span>
-            <span className="text-base text-gray-700 dark:text-gray-200">
-              Customers Served: {configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145}
+              </div>
+              
+              <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                <div 
+                  className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${Math.min(((mlRecommendation?.reportCounts?.North ?? 0) / (configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145)) * 100, 100)}%` }}
+                />
+              </div>
+              
+              <div className="text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Customers: </span>
+                <span className="font-semibold text-gray-900 dark:text-white">
+                  {configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145}
             </span>
-            <span className={
+              </div>
+              
+              <div className={`text-sm font-medium ${
               (mlRecommendation?.reportCounts?.North ?? 0) >= (configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145)
-                ? 'text-green-700 dark:text-green-300 font-semibold'
-                : 'text-yellow-700 dark:text-yellow-300 font-semibold'
-            }>
+                  ? 'text-green-600 dark:text-green-400'
+                  : 'text-yellow-600 dark:text-yellow-400'
+              }`}>
               {(mlRecommendation?.reportCounts?.North ?? 0) >= (configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145)
-                ? `✓ Threshold reached - Dispatch trucks${mlRecommendation?.allocation?.North ? ` (${mlRecommendation.allocation.North} trucks)` : ''}`
-                : `${(configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145) - (mlRecommendation?.reportCounts?.North ?? 0)} more reports needed`}
+                  ? `✅ Threshold reached - Dispatch trucks${mlRecommendation?.allocation?.North ? ` (${mlRecommendation.allocation.North} trucks)` : ''}`
+                  : (
+                      <span className="flex items-center gap-1">
+                        <svg className="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {(configData.zoneCustomers['Ablekuma North']?.totalCustomers ?? 145) - (mlRecommendation?.reportCounts?.North ?? 0)} more reports needed
             </span>
+                    )}
           </div>
+            </div>
+          </div>
+          
           {/* Ayawaso West Zone Card */}
-          <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-3xl p-8 shadow flex flex-col gap-2">
-            <span className="text-sm text-gray-500 dark:text-gray-300 mb-1">Ayawaso West</span>
-            <span className="text-2xl font-bold text-green-700 dark:text-green-300 mb-1">
-              Reports: {mlRecommendation?.reportCounts?.South ?? 0}/{configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82}
+        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl p-6 border border-white/20 dark:border-gray-700/20 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] group">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-green-400 to-emerald-400 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Ayawaso West</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Zone Coverage</p>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Reports</span>
+                <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                  {mlRecommendation?.reportCounts?.South ?? 0}/{configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82}
             </span>
-            <span className="text-base text-gray-700 dark:text-gray-200">
-              Customers Served: {configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82}
+              </div>
+              
+              <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                <div 
+                  className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${Math.min(((mlRecommendation?.reportCounts?.South ?? 0) / (configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82)) * 100, 100)}%` }}
+                />
+              </div>
+              
+              <div className="text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Customers: </span>
+                <span className="font-semibold text-gray-900 dark:text-white">
+                  {configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82}
             </span>
-            <span className={
+              </div>
+              
+              <div className={`text-sm font-medium ${
               (mlRecommendation?.reportCounts?.South ?? 0) >= (configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82)
-                ? 'text-green-700 dark:text-green-300 font-semibold'
-                : 'text-yellow-700 dark:text-yellow-300 font-semibold'
-            }>
+                  ? 'text-green-600 dark:text-green-400'
+                  : 'text-yellow-600 dark:text-yellow-400'
+              }`}>
               {(mlRecommendation?.reportCounts?.South ?? 0) >= (configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82)
-                ? `✓ Threshold reached - Dispatch trucks${mlRecommendation?.allocation?.South ? ` (${mlRecommendation.allocation.South} trucks)` : ''}`
-                : `${(configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82) - (mlRecommendation?.reportCounts?.South ?? 0)} more reports needed`}
+                  ? `✅ Threshold reached - Dispatch trucks${mlRecommendation?.allocation?.South ? ` (${mlRecommendation.allocation.South} trucks)` : ''}`
+                  : (
+                      <span className="flex items-center gap-1">
+                        <svg className="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {(configData.zoneCustomers['Ayawaso West']?.totalCustomers ?? 82) - (mlRecommendation?.reportCounts?.South ?? 0)} more reports needed
             </span>
+                    )}
           </div>
+            </div>
+          </div>
+          
           {/* Available Trucks Card */}
-          <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-3xl p-8 shadow flex flex-col gap-2">
-            <span className="text-sm text-gray-500 dark:text-gray-300 mb-1">Available Trucks</span>
-            <span className="text-3xl font-bold text-gray-700 dark:text-white mb-1">{availableTrucks}</span>
-            <label className="font-medium text-gray-700 dark:text-gray-200 mt-2">Set Trucks:</label>
+          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl p-6 border border-white/20 dark:border-gray-700/20 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] group">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Available Trucks</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Fleet Management</p>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="text-center">
+                <div className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                  {availableTrucks}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Ready for dispatch</div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Set Trucks:
+          </div>
+                </label>
             <input
               type="number"
               min={1}
               value={availableTrucks}
               onChange={e => setAvailableTrucks(Number(e.target.value) || 1)}
-              className="w-20 px-2 py-1 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700"
+                  className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white/70 dark:bg-gray-700/70 backdrop-blur-lg shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-300"
             />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Notifications & ML Recommendation */}
+        {/* Enhanced Notifications & ML Recommendation */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-8 border border-white/20 dark:border-gray-700/20 shadow-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Notifications</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                Notifications
+              </h2>
               <button
-                className="btn btn-secondary btn-xs"
+                className="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-3 py-1 rounded-lg text-sm font-medium hover:shadow-lg transform hover:scale-105 transition-all duration-300"
                 onClick={handleToggleArchived}
               >
                 {showArchived ? 'Hide Archived' : 'Show Archived'}
@@ -928,7 +1064,12 @@ export default function DispatcherDashboard() {
             <div className="h-64 overflow-y-auto space-y-3">
               {showArchived && (
                 <div className="pb-3 border-b border-gray-200 dark:border-gray-600">
-                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Archived</h3>
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8l6 6 6-6" />
+                    </svg>
+                    Archived
+                  </h3>
                   {archivedLoading ? (
                     <p className="text-gray-600 dark:text-gray-400">Loading archived notifications...</p>
                   ) : archivedError ? (
@@ -936,7 +1077,7 @@ export default function DispatcherDashboard() {
                   ) : archivedNotifications.length > 0 ? (
                     <ul className="space-y-2">
                       {archivedNotifications.map((n: any) => (
-                        <li key={n.id} className="p-3 rounded bg-gray-100 dark:bg-gray-800 shadow-sm">
+                        <li key={n.id} className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded-xl p-3 shadow-sm">
                           <div className="font-semibold text-gray-800 dark:text-gray-100">{n.title}</div>
                           <div className="text-sm text-gray-700 dark:text-gray-200 mt-1">{n.message}</div>
                           <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">{new Date(n.created_at).toLocaleString()}</div>
@@ -952,7 +1093,12 @@ export default function DispatcherDashboard() {
               {/* Current notifications */}
               <div>
                 {!showArchived && (
-                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Recent</h3>
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Recent
+                </h3>
                 )}
                 {notificationsLoading ? (
                   <p className="text-gray-600 dark:text-gray-400">Loading notifications...</p>
@@ -961,7 +1107,7 @@ export default function DispatcherDashboard() {
                 ) : notifications.length > 0 ? (
                   <ul className="space-y-2">
                     {notifications.map((n: any) => (
-                      <li key={n.id} className="p-3 rounded bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 shadow-sm">
+                      <li key={n.id} className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl p-3 border border-blue-200/30 dark:border-blue-700/30 shadow-sm">
                         <div className="font-semibold text-gray-800 dark:text-gray-100">{n.title}</div>
                         <div className="text-sm text-gray-700 dark:text-gray-200 mt-1">{n.message}</div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">{new Date(n.timestamp).toLocaleString()}</div>
@@ -969,20 +1115,36 @@ export default function DispatcherDashboard() {
                     ))}
                   </ul>
                 ) : (
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-2">📭</div>
                   <p className="text-gray-600 dark:text-gray-400">No new notifications.</p>
+                  </div>
                 )}
               </div>
             </div>
           </div>
-          <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Smart Collection Scheduler</h2>
+          
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-8 border border-white/20 dark:border-gray-700/20 shadow-2xl">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <span>🤖</span> Smart Collection Scheduler
+            </h2>
             {mlLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
               <p className="text-gray-600 dark:text-gray-400">Loading recommendation...</p>
+              </div>
             ) : mlError ? (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
               <p className="text-red-600">{mlError}</p>
+              </div>
             ) : mlRecommendation ? (
               <div>
-                <div className="mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl border border-blue-200/30 dark:border-blue-700/30 shadow-sm">
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-medium text-gray-700 dark:text-gray-300">Available Vehicles:</span>
                     <span className="font-bold text-blue-600 dark:text-blue-400">{mlRecommendation.availableVehicles}</span>
@@ -991,28 +1153,33 @@ export default function DispatcherDashboard() {
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="p-4 rounded-lg bg-white dark:bg-gray-800 shadow">
+                  <div className="p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border border-blue-200/30 dark:border-blue-700/30 shadow-sm">
                     <div className="font-semibold text-blue-700 dark:text-blue-400">Ablekuma North</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Reports: <span className="font-bold text-gray-900 dark:text-white">{mlRecommendation.reportCounts?.North ?? 0}</span></div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Trucks Assigned: <span className="font-bold text-gray-900 dark:text-white">{mlRecommendation.allocation?.North ?? 0}</span></div>
                   </div>
-                  <div className="p-4 rounded-lg bg-white dark:bg-gray-800 shadow">
+                  <div className="p-4 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 border border-green-200/30 dark:border-green-700/30 shadow-sm">
                     <div className="font-semibold text-green-700 dark:text-green-400">Ayawaso West</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Reports: <span className="font-bold text-gray-900 dark:text-white">{mlRecommendation.reportCounts?.South ?? 0}</span></div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Trucks Assigned: <span className="font-bold text-gray-900 dark:text-white">{mlRecommendation.allocation?.South ?? 0}</span></div>
                   </div>
                 </div>
                 
-                <div className="mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                <div className="mb-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl border border-green-200/30 dark:border-green-700/30 shadow-sm">
                   <div className="font-semibold text-gray-900 dark:text-white text-lg">{mlRecommendation.recommendation}</div>
                 </div>
 
                 {/* Collection Schedules */}
                 {mlRecommendation.schedules && mlRecommendation.schedules.length > 0 && (
                   <div className="space-y-3">
-                    <h3 className="font-semibold text-gray-900 dark:text-white">Scheduled Collections:</h3>
+                    <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  Scheduled Collections:
+                </h3>
                     {mlRecommendation.schedules.map((schedule: any, index: number) => (
-                      <div key={index} className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow border-l-4 border-blue-500">
+                      <div key={index} className="p-4 bg-gradient-to-r from-white/80 to-gray-50/80 dark:from-gray-700/80 dark:to-gray-800/80 rounded-xl border-l-4 border-blue-500 shadow-sm">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
                             <div className="font-semibold text-gray-900 dark:text-white">{schedule.zone}</div>
@@ -1058,157 +1225,282 @@ export default function DispatcherDashboard() {
                   </div>
                 )}
               </div>
-            ) : null}
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-4xl mb-2">🤖</div>
+                <p className="text-gray-600 dark:text-gray-400">No recommendations available.</p>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Waste Detection Section */}
-        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Image-based Waste Detection</h2>
-          <div className="mb-2 flex items-center space-x-4">
-            <label className="font-medium text-gray-700">Detection Method:</label>
-            <label className="inline-flex items-center">
+        {/* Enhanced Waste Detection Section */}
+        <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-8 border border-white/20 dark:border-gray-700/20 shadow-2xl mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <span>📸</span> Image-based Waste Detection
+          </h2>
+          
+          <div className="mb-6 flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Detection Method:</span>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="radio"
-                className="form-radio"
                 name="detectionMethod"
                 value="llm"
                 checked={detectionMethod === 'llm'}
                 onChange={() => setDetectionMethod('llm')}
+                className="w-4 h-4 text-blue-600 focus:ring-blue-500"
               />
-              <span className="ml-2">AI (LLM)</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">🤖 AI (LLM)</span>
             </label>
-            <label className="inline-flex items-center">
+            <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="radio"
-                className="form-radio"
                 name="detectionMethod"
                 value="yolo"
                 checked={detectionMethod === 'yolo'}
                 onChange={() => setDetectionMethod('yolo')}
+                className="w-4 h-4 text-blue-600 focus:ring-blue-500"
               />
-              <span className="ml-2">YOLOv8</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                YOLOv8
+              </span>
             </label>
           </div>
-          <form onSubmit={handleWasteImageUpload} className="flex flex-col md:flex-row md:items-center md:space-x-4">
+          
+          <form onSubmit={handleWasteImageUpload} className="space-y-4">
+            {/* Site Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Target Site for Analysis
+              </label>
+              <select
+                value={selectedSiteForDetection}
+                onChange={(e) => setSelectedSiteForDetection(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                required
+              >
+                <option value="">Select site for this waste image...</option>
+                <option value="WS001">North Dumping Site (WS001)</option>
+                <option value="WS002">South Dumping Site (WS002)</option>
+              </select>
+            </div>
+
+            {/* Image Upload */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Upload Waste Image
+              </label>
             <input
               type="file"
               accept="image/*"
               onChange={handleWasteImageChange}
-              className="mb-2 md:mb-0"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
             />
+            </div>
+            
             <button
               type="submit"
-              className="btn btn-primary"
-              disabled={!wasteImage || detectionLoading}
+              disabled={!wasteImage || !selectedSiteForDetection || detectionLoading}
+              className={`w-full px-6 py-3 rounded-xl font-medium transform transition-all duration-300 flex items-center justify-center gap-2 ${
+                !wasteImage || !selectedSiteForDetection || detectionLoading
+                  ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-green-500 to-blue-500 text-white hover:shadow-lg hover:scale-105'
+              }`}
             >
-              {detectionLoading ? 'Detecting...' : 'Detect Waste Composition'}
+              {detectionLoading ? (
+                <span className="flex items-center gap-2">
+                  <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Analyzing...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  Analyze Image
+                </span>
+              )}
             </button>
           </form>
-          {detectionError && <p className="text-red-600 mt-2">{detectionError}</p>}
+          
+          {detectionError && (
+            <div className="mt-4 p-4 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-xl">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <span className="text-red-800 dark:text-red-200">{detectionError}</span>
+              </div>
+                    </div>
+                  )}
+          
           {detectionResult && (
-            <div className="mt-4">
-              <h3 className="text-md font-semibold text-gray-900 mb-2">Detected Composition:</h3>
-              <div className="mb-4">
-                <ResponsiveContainer width="100%" height={180}>
+            <div className="mt-6 space-y-6">
+              {/* Detection Results Header */}
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl border border-green-200/30 dark:border-green-700/30 p-6">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  AI Detection Results
+                </h3>
+
+                {/* Weight Display */}
+                {detectionResult.total_weight && (
+                  <div className="mb-6 p-4 bg-white/60 dark:bg-gray-800/60 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                      </svg>
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        Total Weight Detected
+                      </h4>
+                    </div>
+                    <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                      {detectionResult.total_weight.toFixed(2)} kg
+                    </p>
+                  </div>
+                )}
+
+                {/* Composition Breakdown */}
+                {detectionResult.result && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Pie Chart */}
+                    <div className="bg-white/60 dark:bg-gray-800/60 rounded-lg p-4">
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        Composition Breakdown
+                      </h4>
+                      <ResponsiveContainer width="100%" height={200}>
                   <PieChart>
                     <Pie
-                      data={Object.entries(detectionResult.result).map(([type, percent]) => ({ name: type, value: percent as number }))}
-                      dataKey="value"
-                      nameKey="name"
+                            data={Object.entries(detectionResult.result)
+                              .filter(([_, value]) => value > 0)
+                              .map(([name, value]) => ({
+                                name: name.charAt(0).toUpperCase() + name.slice(1),
+                                value: Number(value),
+                                color: WASTE_COLORS[name] || '#8884d8'
+                              }))}
                       cx="50%"
                       cy="50%"
-                      outerRadius={60}
+                            outerRadius={80}
+                            dataKey="value"
                       label={({ name, value }) => `${name}: ${value}%`}
                     >
-                      {Object.keys(WASTE_COLORS).map((type) => (
-                        <Cell key={type} fill={WASTE_COLORS[type]} />
+                            {Object.entries(detectionResult.result)
+                              .filter(([_, value]) => value > 0)
+                              .map(([name, _], index) => (
+                                <Cell key={index} fill={WASTE_COLORS[name] || '#8884d8'} />
                       ))}
                     </Pie>
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              {detectionMethod === 'llm' && detectionResult.result && (
-                <div className="mb-4">
-                  <ul className="space-y-1">
-                    {Object.entries(detectionResult.result).map(([type, percent]) => (
-                      <li key={type} className="flex items-center space-x-2">
-                        <span className="capitalize font-medium">{type}:</span>
-                        <span>{percent as number}%</span>
-                      </li>
-                    ))}
-                  </ul>
-                  {/* Prompt for total weight if missing */}
-                  {(!detectionResult.total_weight || detectionResult.total_weight === 0) && (
-                    <div className="mt-4">
-                      <label className="block font-medium text-gray-700 mb-1">Enter total weight (kg):</label>
-                      <input
-                        type="number"
-                        min={1}
-                        value={manualTotalWeight}
-                        onChange={e => setManualTotalWeight(e.target.value)}
-                        className="w-32 px-2 py-1 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700"
-                      />
+
+                    {/* Composition Details */}
+                    <div className="bg-white/60 dark:bg-gray-800/60 rounded-lg p-4">
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Detailed Breakdown
+                      </h4>
+                      <div className="space-y-2">
+                        {Object.entries(detectionResult.result)
+                          .filter(([_, value]) => value > 0)
+                          .sort(([, a], [, b]) => Number(b) - Number(a))
+                          .map(([type, percentage]) => (
+                            <div key={type} className="flex justify-between items-center">
+                              <div className="flex items-center gap-2">
+                                <div 
+                                  className="w-4 h-4 rounded-full" 
+                                  style={{ backgroundColor: WASTE_COLORS[type] || '#8884d8' }}
+                                ></div>
+                                <span className="capitalize text-gray-700 dark:text-gray-300">
+                                  {type}
+                                </span>
+                              </div>
+                              <span className="font-semibold text-gray-900 dark:text-white">
+                                {Number(percentage)}%
+                              </span>
+                            </div>
+                          ))}
                     </div>
-                  )}
-                  {wasteImage && (
-                    <div className="mt-4">
-                      <h4 className="text-sm font-semibold mb-1">Uploaded Image:</h4>
-                      <img
-                        src={URL.createObjectURL(wasteImage)}
-                        alt="Uploaded waste pile"
-                        className="w-full max-w-md border rounded shadow"
-                        style={{ maxHeight: 400, objectFit: 'contain' }}
-                      />
                     </div>
-                  )}
                 </div>
               )}
-              {detectionMethod === 'yolo' && (
-                <>
-                  <ul className="space-y-1">
-                    {Object.entries(detectionResult.result).map(([type, percent]) => (
-                      <li key={type} className="flex justify-between">
-                        <span className="capitalize">{type}</span>
-                        <span>{percent as number}%</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-2 text-sm text-gray-700 font-medium">
-                    Total Weight: <span className="font-bold">{detectionResult.total_weight} kg</span>
-                  </div>
+
+                {/* Annotated Image */}
                   {detectionResult.annotated_image && (
-                    <div className="mt-4">
-                      <h4 className="text-sm font-semibold mb-1">Detected Objects:</h4>
+                  <div className="mt-6">
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      AI Annotated Detection Image
+                    </h4>
+                    <div className="bg-white/60 dark:bg-gray-800/60 rounded-lg p-4">
                       <img
                         src={`data:image/jpeg;base64,${detectionResult.annotated_image}`}
-                        alt="Annotated waste detection"
-                        className="w-full max-w-md border rounded shadow"
-                        style={{ maxHeight: 400, objectFit: 'contain' }}
+                        alt="AI Waste Detection Results"
+                        className="w-full h-auto rounded-lg shadow-lg"
                       />
                     </div>
+                    </div>
                   )}
-                </>
-              )}
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Select Dumping Site</label>
-                <select
-                  className="block w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                  value={selectedSiteForDetection}
-                  onChange={e => setSelectedSiteForDetection(e.target.value)}
-                >
-                  <option value="">Select a site</option>
-                  <option value="WS001">North Dumping Site</option>
-                  <option value="WS002">South Dumping Site</option>
-                </select>
+
+                {/* Manual Weight Input Section */}
+                <div className="mt-6 p-4 bg-blue-50/60 dark:bg-blue-900/20 rounded-lg border border-blue-200/30 dark:border-blue-700/30">
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Manual Weight Adjustment
+                  </h4>
+                  <div className="flex gap-4 items-end">
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Override Total Weight (kg)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={manualTotalWeight}
+                        onChange={(e) => setManualTotalWeight(e.target.value)}
+                        placeholder="Enter manual weight..."
+                        className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                      />
               </div>
               <button
-                className="btn btn-primary mt-4"
-                disabled={!selectedSiteForDetection || isSubmitting}
                 onClick={handleConfirmDetection}
+                      disabled={!selectedSiteForDetection}
+                      className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-2 rounded-lg font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                {isSubmitting ? 'Updating...' : 'Confirm & Update Site'}
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Confirm & Update Site
               </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>

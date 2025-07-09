@@ -20,6 +20,67 @@ const WASTE_COLORS: Record<string, string> = {
   glass: '#10b981',   // teal
   textile: '#a21caf', // purple
   other: '#f43f5e',   // pink/red
+  // Capitalized versions for pie chart
+  Plastic: '#2563eb',
+  Metal: '#6b7280',
+  Organic: '#22c55e',
+  Paper: '#eab308',
+  Glass: '#10b981',
+  Textile: '#a21caf',
+  Other: '#f43f5e',
+};
+
+const getWasteIcon = (type: string) => {
+  switch (type) {
+    case 'plastic': 
+      return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2 M 19 8 L 5 8 M 10 8 L 10 18 M 14 8 L 14 18" />
+        </svg>
+      );
+    case 'paper':
+      return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      );
+    case 'glass':
+      return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 2l3 7h6l3-7M9 9v13a1 1 0 001 1h4a1 1 0 001-1V9" />
+        </svg>
+      );
+    case 'metal':
+      return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
+        </svg>
+      );
+    case 'organic':
+      return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.25 4.5l7.5 7.5-7.5 7.5-7.5-7.5z" />
+        </svg>
+      );
+    case 'textile':
+      return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      );
+    case 'other':
+      return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      );
+    default: 
+      return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+      );
+  }
 };
 
 export default function Insights() {
@@ -41,6 +102,20 @@ export default function Insights() {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [selectedSiteForDeliveries, setSelectedSiteForDeliveries] = useState<string | null>(null);
   const [loadingDeliveries, setLoadingDeliveries] = useState(false);
+
+  // Add new state for zoom modal and download functionality
+  const [isZoomModalOpen, setIsZoomModalOpen] = useState(false);
+  const [zoomedImageData, setZoomedImageData] = useState<{
+    src: string;
+    alt: string;
+    siteName: string;
+  } | null>(null);
+
+  // Add state for download status
+  const [downloadStatus, setDownloadStatus] = useState<{
+    isDownloading: boolean;
+    message: string;
+  }>({ isDownloading: false, message: '' });
 
   // Fetch detection history to get available dates
   useEffect(() => {
@@ -166,11 +241,19 @@ export default function Insights() {
             }
           });
           
-          // Convert back to percentages
+          // Convert back to percentages and ensure they add up to 100%
           if (totalWeight > 0) {
             Object.keys(aggregateComposition).forEach(type => {
-              aggregateComposition[type] = Math.round((aggregateComposition[type] / totalWeight));
+              aggregateComposition[type] = (aggregateComposition[type] / totalWeight);
             });
+            
+            // Normalize to ensure percentages add up to 100%
+            const total = Object.values(aggregateComposition).reduce((sum, val) => sum + val, 0);
+            if (total > 0) {
+              Object.keys(aggregateComposition).forEach(type => {
+                aggregateComposition[type] = Math.round((aggregateComposition[type] / total) * 100 * 100) / 100;
+              });
+            }
           }
           
           setComposition(aggregateComposition);
@@ -259,62 +342,58 @@ export default function Insights() {
 
         // Flatten and group by date
         const allRecords = allSiteData.flat();
-        const groupedByDate: Record<string, any[]> = {};
-        
-        allRecords.forEach(record => {
-          if (!groupedByDate[record.date]) {
-            groupedByDate[record.date] = [];
+        const groupedByDate = allRecords.reduce((acc, record) => {
+          const date = record.date;
+          if (!acc[date]) {
+            acc[date] = [];
           }
-          groupedByDate[record.date].push(record);
-        });
+          acc[date].push(record);
+          return acc;
+        }, {} as Record<string, any[]>);
 
-        // Calculate aggregate composition for each date
-        const trendPoints = Object.entries(groupedByDate).map(([date, records]) => {
-          let totalCapacity = 0;
-          const aggregateComp: Record<string, number> = {
-            plastic: 0, paper: 0, glass: 0, metal: 0, organic: 0, textile: 0, other: 0
-          };
-
-          records.forEach(record => {
-            const capacity = record.current_capacity || 0;
-            totalCapacity += capacity;
+        // Aggregate by date
+        const trendData = Object.entries(groupedByDate)
+          .map(([date, records]: [string, any[]]) => {
+            const totalWeight = records.reduce((sum, record) => sum + (record.current_capacity || 0), 0);
+            const aggregateComposition: Record<string, number> = {};
             
-            Object.keys(aggregateComp).forEach(type => {
+            // Calculate weighted averages
+            records.forEach((record: any) => {
+              const weight = record.current_capacity || 0;
+              if (weight > 0) {
+                ['plastic', 'paper', 'glass', 'metal', 'organic', 'textile', 'other'].forEach(type => {
               const percent = record[`${type}_percent`] || 0;
-              aggregateComp[type] += (percent * capacity) / 100;
+                  aggregateComposition[type] = (aggregateComposition[type] || 0) + (percent * weight);
+                });
+              }
             });
-          });
 
-          if (totalCapacity > 0) {
-            Object.keys(aggregateComp).forEach(type => {
-              aggregateComp[type] = Math.round((aggregateComp[type] / totalCapacity) * 100);
+            // Convert back to percentages
+            if (totalWeight > 0) {
+              Object.keys(aggregateComposition).forEach(type => {
+                aggregateComposition[type] = Math.round((aggregateComposition[type] / totalWeight) * 100) / 100;
             });
           }
 
           return {
             date,
-            displayDate: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            plastic: aggregateComp.plastic,
-            paper: aggregateComp.paper,
-            glass: aggregateComp.glass,
-            metal: aggregateComp.metal,
-            organic: aggregateComp.organic,
-            textile: aggregateComp.textile,
-            other: aggregateComp.other,
-            totalWeight: totalCapacity
-          };
-        }).sort((a, b) => a.date.localeCompare(b.date));
+              totalWeight,
+              ...aggregateComposition
+            };
+          })
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+          .slice(-30); // Last 30 days
 
-        setTrendData(trendPoints);
+        setTrendData(trendData);
       } else {
-        // Single site trend
+        // Single site
         try {
           const res = await axios.get(`${API_BASE_URL}/auth/waste-compositions/history?site_id=${selectedSite}`);
-          const history = res.data.history || [];
-          
-          const trendPoints = history.map((record: any) => ({
+          const records = res.data.history || [];
+          const trendData = records
+            .map((record: any) => ({
             date: record.date,
-            displayDate: new Date(record.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+              totalWeight: record.current_capacity || 0,
             plastic: record.plastic_percent || 0,
             paper: record.paper_percent || 0,
             glass: record.glass_percent || 0,
@@ -322,10 +401,11 @@ export default function Insights() {
             organic: record.organic_percent || 0,
             textile: record.textile_percent || 0,
             other: record.other_percent || 0,
-            totalWeight: record.current_capacity || 0
-          })).sort((a, b) => a.date.localeCompare(b.date));
+            }))
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+            .slice(-30); // Last 30 days
 
-          setTrendData(trendPoints);
+          setTrendData(trendData);
         } catch (error) {
           console.error('Failed to fetch trend data:', error);
           setTrendData([]);
@@ -339,32 +419,179 @@ export default function Insights() {
     }
   };
 
-  // Get site name for display
   const getSiteName = (siteId: string) => {
-    if (siteId === 'all') return 'All Sites';
     const site = sites.find(s => s.id === siteId);
-    return site?.name || siteId;
+    return site ? site.name : siteId;
   };
 
+  const formatDate = (date: Date | null) => {
+    if (!date) return '';
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+
+  const getCompositionData = () => {
+    if (!composition) return [];
+    
+    const data = Object.entries(composition)
+      .filter(([, value]) => value > 0)
+      .map(([name, value]) => ({ 
+        name: name.charAt(0).toUpperCase() + name.slice(1), 
+        value: Math.round(value * 100) / 100 
+      }))
+      .sort((a, b) => b.value - a.value);
+    
+    console.log('Pie chart data:', data);
+    console.log('Total percentage:', data.reduce((sum, item) => sum + item.value, 0));
+    
+    return data;
+  };
+
+  // Add zoom functionality
+  const handleZoomImage = (imageData: string, siteName: string) => {
+    setZoomedImageData({
+      src: `data:image/jpeg;base64,${imageData}`,
+      alt: `AI Annotated Waste Detection - ${siteName}`,
+      siteName
+    });
+    setIsZoomModalOpen(true);
+  };
+
+  // Add download functionality
+  const handleDownloadImage = (imageData: string, siteName: string) => {
+    setDownloadStatus({ isDownloading: true, message: 'Preparing download...' });
+    
+    try {
+      // Create a temporary anchor element to trigger download
+      const link = document.createElement('a');
+      link.href = `data:image/jpeg;base64,${imageData}`;
+      link.download = `waste-analysis-${siteName.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setDownloadStatus({ isDownloading: false, message: 'Download completed!' });
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setDownloadStatus({ isDownloading: false, message: '' });
+      }, 3000);
+    } catch (error) {
+      setDownloadStatus({ isDownloading: false, message: 'Download failed. Please try again.' });
+      console.error('Download failed:', error);
+      
+      // Clear error message after 3 seconds
+      setTimeout(() => {
+        setDownloadStatus({ isDownloading: false, message: '' });
+      }, 3000);
+    }
+  };
+
+  // Close zoom modal
+  const handleCloseZoomModal = () => {
+    setIsZoomModalOpen(false);
+    setZoomedImageData(null);
+  };
+
+  // Add keyboard shortcut for closing modal
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isZoomModalOpen) {
+        handleCloseZoomModal();
+      }
+    };
+
+    if (isZoomModalOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      // Prevent body scrolling when modal is open
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isZoomModalOpen]);
+
+  const axisColor = isDarkMode ? '#E5E7EB' : '#374151';
+  const tooltipBg = isDarkMode ? '#1F2937' : '#FFFFFF';
+  const tooltipTextColor = isDarkMode ? '#F9FAFB' : '#111827';
+
   return (
-    <div className="space-y-6 max-w-6xl mx-auto py-8 px-4">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-        <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">Waste Composition Insights</h1>
+    <div className="min-h-screen bg-gray-50 dark:bg-gradient-to-br dark:from-green-950 dark:via-gray-900 dark:to-green-900">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Enhanced Header */}
+        <div className="relative z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-6 mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center">
+                <span className="text-white text-xl">🧠</span>
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  Advanced Insights
+                </h1>
+                <p className="text-gray-600 dark:text-gray-300 mt-1">
+                  AI-powered waste analytics and trend analysis
+                </p>
+              </div>
       </div>
 
-      {/* Waste Site Cards with Deliveries */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Controls */}
+            <div className="flex flex-col sm:flex-row gap-4 lg:ml-auto relative z-50">
+              <div className="relative z-50 bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm rounded-2xl p-3 border border-white/20 dark:border-gray-600/20">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  📅 Analysis Date
+                </label>
+                <DatePicker
+                  selected={selectedDate}
+                  onChange={(date: Date | null) => setSelectedDate(date)}
+                  includeDates={availableDates}
+                  placeholderText="Select date"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white relative z-50 cursor-pointer"
+                  dateFormat="MMM d, yyyy"
+                  popperClassName="z-50"
+                  popperPlacement="bottom-start"
+                />
+              </div>
+              
+              <div className="relative z-40 bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm rounded-2xl p-3 border border-white/20 dark:border-gray-600/20">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  🏢 Site Filter
+                </label>
+                <select
+                  value={selectedSite}
+                  onChange={(e) => setSelectedSite(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  <option value="all">All Sites</option>
+                  {sites.map(site => (
+                    <option key={site.id} value={site.id}>
+                      {site.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Waste Site Cards with Background Images */}
+        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         {sites.map((site) => {
           const siteDeliveries = getDeliveriesForSite(site.id);
           const isSelected = selectedSiteForDeliveries === site.id;
           
           return (
             <div key={site.id} className="relative group">
-              {/* Site Card */}
+                {/* Site Card with Background Image */}
               <div
                 onClick={() => handleSiteCardClick(site.id)}
-                className={`relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 transform hover:scale-105 hover:shadow-2xl ${
-                  isSelected ? 'ring-4 ring-blue-500 shadow-2xl scale-105' : 'shadow-lg'
+                  className={`relative overflow-hidden rounded-3xl cursor-pointer transition-all duration-300 transform hover:scale-105 hover:shadow-2xl ${
+                    isSelected ? 'ring-4 ring-blue-500 shadow-2xl scale-105' : 'shadow-xl'
                 }`}
                 style={{ height: '300px' }}
               >
@@ -378,79 +605,98 @@ export default function Insights() {
                   }}
                 />
                 
-                {/* Dark Overlay */}
-                <div className="absolute inset-0 bg-black/60" />
+                  {/* Modern Glassmorphism Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-black/40 to-black/60 backdrop-blur-sm" />
                 
                 {/* Card Content */}
                 <div className="relative z-10 p-6 h-full flex flex-col justify-between text-white">
                   <div>
-                    <h2 className="text-2xl font-bold mb-2">{site.name}</h2>
-                    <p className="text-gray-300 mb-4">{site.location}</p>
+                      <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+                        {site.name}
+                      </h2>
+                      <p className="text-gray-200 mb-4 flex items-center gap-2">
+                        <span className="text-sm">📍</span>
+                        {site.location}
+                      </p>
                     
-                    {/* Quick Stats */}
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3">
-                        <div className="text-sm text-gray-300">Current Capacity</div>
-                        <div className="text-lg font-bold">{site.currentCapacity} kg</div>
+                      {/* Enhanced Stats with Modern Cards */}
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-3 border border-white/10">
+                          <div className="text-xs text-gray-200 mb-1">Current Capacity</div>
+                          <div className="text-lg font-bold text-blue-200">{site.currentCapacity} kg</div>
                       </div>
-                      <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3">
-                        <div className="text-sm text-gray-300">Incoming Deliveries</div>
-                        <div className="text-lg font-bold text-yellow-400">{siteDeliveries.length}</div>
+                        <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-3 border border-white/10">
+                          <div className="text-xs text-gray-200 mb-1">Incoming Deliveries</div>
+                          <div className="text-lg font-bold text-yellow-300">{siteDeliveries.length}</div>
                       </div>
           </div>
         </div>
 
                   {/* Click Indicator */}
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-gray-300">
+                    <div className="flex items-center justify-between bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+                      <div className="text-sm text-gray-200 flex items-center gap-2">
+                        <span className="text-xs">👆</span>
                       Click to view deliveries
                     </div>
-                    <div className={`transform transition-transform duration-300 ${isSelected ? 'rotate-180' : ''}`}>
+                      <div className={`transform transition-transform duration-300 text-white ${isSelected ? 'rotate-180' : ''}`}>
                       ↓
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Deliveries Panel */}
+                {/* Enhanced Deliveries Panel */}
               {isSelected && (
-                <div className="mt-4 bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden animate-fadeIn">
+                  <div className="mt-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 overflow-hidden animate-fadeIn">
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                        🚚 Incoming Deliveries to {site.name}
+                          <span className="text-xl">🚚</span> 
+                          Incoming Deliveries to {site.name}
                       </h3>
                       <button
                         onClick={() => setSelectedSiteForDeliveries(null)}
-                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                          className="w-8 h-8 bg-gradient-to-br from-red-400 to-red-600 rounded-xl flex items-center justify-center text-white hover:shadow-lg transition-all duration-300 hover:scale-105"
                       >
                         ✕
                       </button>
                     </div>
                     
                     {siteDeliveries.length === 0 ? (
-                      <div className="text-center py-8">
-                        <div className="text-4xl mb-2">📦</div>
-                        <p className="text-gray-600 dark:text-gray-400">No deliveries scheduled for this site</p>
+                        <div className="text-center py-8 bg-gray-50/50 dark:bg-gray-700/50 rounded-2xl">
+                          <div className="w-16 h-16 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span className="text-white text-2xl">📦</span>
+                          </div>
+                          <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">No Deliveries Scheduled</h4>
+                          <p className="text-gray-600 dark:text-gray-400">No deliveries currently scheduled for this site</p>
                       </div>
                     ) : (
                       <div className="space-y-4">
                         {siteDeliveries.map((delivery, index) => (
                           <div
                             key={delivery.id}
-                            className="flex justify-between items-center p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
+                              className="bg-gray-50/50 dark:bg-gray-700/50 rounded-2xl p-4 hover:shadow-lg transition-all duration-300"
                           >
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center">
+                                    <span className="text-white text-sm">#{index + 1}</span>
+                                  </div>
+                                  <div>
                                 <p className="font-medium text-gray-900 dark:text-white">
-                                  Delivery #{index + 1} - {new Date(delivery.estimatedArrival).toLocaleDateString()}
+                                      Delivery #{index + 1}
+                                    </p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                      {new Date(delivery.estimatedArrival).toLocaleDateString()}
                                 </p>
-                                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                  </div>
+                                </div>
+                                <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
                                   delivery.status === 'completed' || delivery.status === 'arrived'
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                                     : delivery.status === 'in-transit'
-                                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
-                                    : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+                                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                                    : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
                                 }`}>
                                   {delivery.status === 'in-transit' ? 'In Transit' : 
                                    delivery.status === 'arrived' ? 'Arrived' :
@@ -459,10 +705,15 @@ export default function Insights() {
                               </div>
                               
                               <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-lg">🚛</span>
                                 <div>
                                   <span className="text-gray-500 dark:text-gray-400">Truck:</span>
                                   <div className="font-medium text-gray-900 dark:text-white">{delivery.truckId}</div>
                                 </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-lg">🗺️</span>
                                 <div>
                                   <span className="text-gray-500 dark:text-gray-400">Zone:</span>
                                   <div className="font-medium text-gray-900 dark:text-white">{delivery.zone}</div>
@@ -481,384 +732,511 @@ export default function Insights() {
         })}
       </div>
 
-      {/* Date and Site Selection */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-        <div className="flex flex-col md:flex-row md:items-end gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Select Date
-            </label>
-            <DatePicker
-              selected={selectedDate}
-              onChange={(date) => setSelectedDate(Array.isArray(date) ? date[0] : date)}
-              includeDates={availableDates}
-              placeholderText="Choose a date"
-              className={`form-input rounded-lg border-2 border-blue-300 focus:border-blue-500 focus:ring focus:ring-blue-200/50 shadow-sm text-center bg-white hover:bg-gray-50 transition-colors duration-200 ${
-                isDarkMode ? 'bg-gray-800 text-white border-gray-600 placeholder-gray-400' : ''
-              } cursor-pointer px-4 py-2`}
-              calendarClassName={`rounded-lg shadow-lg p-2 border-2 ${
-                isDarkMode ? 'bg-gray-900 text-white border-gray-700' : 'bg-white border-blue-200'
-              }`}
-              dayClassName={date => 'rounded-full hover:bg-blue-200 cursor-pointer'}
-              popperPlacement="bottom"
-              dateFormat="yyyy-MM-dd"
-              popperClassName={isDarkMode ? 'dark-datepicker-popper' : ''}
-              disabled={availableDates.length === 0}
-            />
-            {availableDates.length === 0 && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                No composition data available
-              </p>
-            )}
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Select Site
-            </label>
-            <select
-              value={selectedSite}
-              onChange={e => setSelectedSite(e.target.value)}
-              className={`form-select rounded-lg border-2 border-blue-300 focus:border-blue-500 focus:ring focus:ring-blue-200/50 shadow-sm ${
-                isDarkMode ? 'bg-gray-800 text-white border-gray-600' : 'bg-white text-gray-900'
-              } cursor-pointer px-4 py-2`}
-            >
-              <option value="all">All Sites (Aggregate)</option>
-              {sites.map(site => (
-                <option key={site.id} value={site.id}>
-                  {site.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
+        {/* Analysis Results */}
         {selectedDate && (
-          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <p className="text-sm text-blue-800 dark:text-blue-300">
-              📅 Viewing composition data for <strong>{getSiteName(selectedSite)}</strong> on{' '}
-              <strong>{selectedDate.toLocaleDateString()}</strong>
+          <div className="space-y-8">
+            {/* Composition Analysis */}
+            <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl flex items-center justify-center">
+                  <span className="text-white text-xl">📊</span>
+          </div>
+          <div>
+                  <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+                    Composition Analysis - {formatDate(selectedDate)}
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {selectedSite === 'all' ? 'Aggregated across all sites' : `For ${getSiteName(selectedSite)}`}
             </p>
           </div>
-        )}
       </div>
 
-      {/* Loading State */}
-      {loading && (
-        <div className="text-center py-8">
-          <div className="text-lg text-gray-600 dark:text-gray-300">Loading composition data...</div>
+              {loading ? (
+                <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl p-12 text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                    <span className="text-white text-2xl">🤖</span>
         </div>
-      )}
-
-      {/* Composition Display */}
-      {!loading && selectedDate && composition && (
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-            Waste Composition - {getSiteName(selectedSite)}
-          </h2>
-          
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">
+                    Analyzing Waste Composition...
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Running AI analysis on selected date
+                  </p>
+                </div>
+              ) : composition && totalWeight ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Composition Chart */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                Composition Breakdown
+                  <div className="bg-gray-50/50 dark:bg-gray-700/50 rounded-2xl p-6">
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
+                      <span className="text-lg">🥧</span>
+                      Material Breakdown
           </h3>
               <ResponsiveContainer width="100%" height={300}>
-                {selectedSite === 'all' ? (
                   <PieChart>
                     <Pie
-                      data={Object.entries(composition).map(([type, percent]) => ({ 
-                        name: type.charAt(0).toUpperCase() + type.slice(1), 
-                        value: percent 
-                      }))}
+                          data={getCompositionData()}
                       dataKey="value"
                       nameKey="name"
                       cx="50%"
                       cy="50%"
-                      outerRadius={80}
+                          outerRadius={100}
                       label={({ name, value }) => `${name}: ${value}%`}
                     >
-                      {Object.keys(composition).map((type) => (
-                        <Cell key={type} fill={WASTE_COLORS[type] || '#8884d8'} />
+                          {getCompositionData().map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={WASTE_COLORS[entry.name]} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: tooltipBg,
+                            border: 'none',
+                            borderRadius: '12px',
+                            color: tooltipTextColor,
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                          }} 
+                        />
                   </PieChart>
-                ) : (
-                  <BarChart data={Object.entries(composition).map(([type, percent]) => ({ 
-                    type: type.charAt(0).toUpperCase() + type.slice(1), 
-                    percent 
-                  }))}>
-                    <XAxis dataKey="type" />
-                    <YAxis unit="%" domain={[0, 100]} />
-                    <Tooltip />
-                    <Bar dataKey="percent" fill="#3B82F6" />
-                  </BarChart>
-                )}
               </ResponsiveContainer>
+                  </div>
               
               {/* Composition Details */}
-              <div className="mt-4 space-y-2">
-                <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Total Weight: {totalWeight ? `${totalWeight.toFixed(1)} kg` : 'N/A'}
+                  <div className="space-y-4">
+                    <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-2xl p-6">
+                      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+                        <span className="text-lg">⚖️</span>
+                        Total Weight
+                      </h3>
+                      <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                        {totalWeight.toFixed(1)} tons
+                      </p>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  {Object.entries(composition).map(([type, percent]) => (
-                    <div key={type} className="flex justify-between">
-                      <span className="capitalize text-gray-700 dark:text-gray-300">{type}:</span>
-                      <span className="font-medium text-gray-900 dark:text-white">{percent}%</span>
+
+                    <div className="grid grid-cols-1 gap-3">
+                      {Object.entries(composition)
+                        .filter(([, value]) => value > 0)
+                        .sort(([, a], [, b]) => b - a)
+                        .map(([type, percentage]) => (
+                          <div key={type} className="bg-gray-50/50 dark:bg-gray-700/50 rounded-xl p-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-lg">{getWasteIcon(type)}</span>
+                                <span className="font-medium text-gray-800 dark:text-gray-200 capitalize">
+                                  {type}
+                                </span>
+                              </div>
+                              <span className="text-lg font-bold text-gray-800 dark:text-gray-200">
+                                {(Math.round(percentage * 100) / 100).toFixed(1)}%
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                              <div
+                                className="h-2 rounded-full transition-all duration-500"
+                                style={{ 
+                                  width: `${percentage}%`,
+                                  backgroundColor: WASTE_COLORS[type]
+                                }}
+                              />
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                              ≈ {((percentage / 100) * totalWeight).toFixed(1)} tons
+                            </p>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-
-            {/* Annotated Image */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                Detection Image{selectedSite === 'all' ? 's' : ''}
+              ) : (
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700/20 dark:to-gray-800/20 rounded-2xl p-12 text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-white text-2xl">📭</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">
+                    No Data Available
               </h3>
-              {selectedSite === 'all' ? (
-                // Show both images when All Sites is selected
-                <div className="space-y-4">
-                  {sites.map(site => {
-                    const siteImage = allSiteImages[site.id];
-                    return siteImage ? (
-                      <div key={site.id} className="text-center">
-                        <h4 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {site.name}
-                        </h4>
-                        <img
-                          src={`data:image/jpeg;base64,${siteImage}`}
-                          alt={`Annotated waste detection for ${site.name}`}
-                          className="w-full max-w-sm border rounded-lg shadow-lg mx-auto"
-                          style={{ maxHeight: 300, objectFit: 'contain' }}
-                        />
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          {site.name} - {selectedDate.toLocaleDateString()}
+                  <p className="text-gray-600 dark:text-gray-400">
+                    No waste composition data found for the selected date and site.
                         </p>
                       </div>
-                    ) : null;
-                  })}
-                  {!sites.some(site => allSiteImages[site.id]) && (
-                    <div className="flex items-center justify-center h-64 bg-gray-100 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
-                      <div className="text-center">
-                        <div className="text-4xl mb-2">📷</div>
-                        <p className="text-gray-600 dark:text-gray-400">No images available for this date</p>
+              )}
                       </div>
+
+            {/* AI Analysis Image */}
+            {annotatedImage && (
+              <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-teal-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
                     </div>
-                  )}
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+                      AI Visual Analysis
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Machine learning detected waste objects
+                    </p>
                 </div>
-              ) : (
-                // Show single image for specific site
-                annotatedImage ? (
-                  <div className="text-center">
+                </div>
+                
+                {/* Enhanced Image Container */}
+                <div className="relative group overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-700">
+                  {/* Glassmorphism overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-black/5 dark:from-black/30 dark:via-transparent dark:to-black/10 pointer-events-none"></div>
+                  
+                  {/* Main Image */}
+                  <div className="relative p-6">
                     <img
                       src={`data:image/jpeg;base64,${annotatedImage}`}
-                      alt="Annotated waste detection"
-                      className="w-full max-w-md border rounded-lg shadow-lg mx-auto"
-                      style={{ maxHeight: 400, objectFit: 'contain' }}
+                      alt="AI Annotated Waste Analysis"
+                      className="w-full h-auto rounded-xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-[1.02] cursor-pointer border border-white/20 dark:border-gray-600/20"
                     />
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                      Waste composition analysis from {selectedDate.toLocaleDateString()}
-                    </p>
+                    
+                    {/* Hover overlay with action buttons */}
+                    <div className="absolute inset-6 bg-black/50 backdrop-blur-sm rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4">
+                      <button 
+                        onClick={() => handleZoomImage(annotatedImage, selectedSite === 'all' ? 'All Sites Analysis' : getSiteName(selectedSite))}
+                        className="bg-white/20 backdrop-blur-sm border border-white/30 text-white px-6 py-3 rounded-lg hover:bg-white/30 transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        Zoom
+                      </button>
+                      <button 
+                        onClick={() => handleDownloadImage(annotatedImage, selectedSite === 'all' ? 'All Sites Analysis' : getSiteName(selectedSite))}
+                        className="bg-white/20 backdrop-blur-sm border border-white/30 text-white px-6 py-3 rounded-lg hover:bg-white/30 transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
+                        disabled={downloadStatus.isDownloading}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        {downloadStatus.isDownloading ? 'Downloading...' : 'Download'}
+                      </button>
                   </div>
-                ) : (
-                  <div className="flex items-center justify-center h-64 bg-gray-100 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
-                    <div className="text-center">
-                      <div className="text-4xl mb-2">📷</div>
-                      <p className="text-gray-600 dark:text-gray-400">No image available for this date</p>
                     </div>
+                  
+                  {/* Analysis Status Bar */}
+                  <div className="bg-gradient-to-r from-green-500/10 to-teal-500/10 dark:from-green-500/20 dark:to-teal-500/20 p-4 backdrop-blur-sm">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-green-500 rounded-full animate-pulse"></div>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Analysis Complete</span>
                   </div>
-                )
-              )}
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1">
+                          <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          <span className="text-xs text-gray-600 dark:text-gray-400">Objects Detected</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                          <span className="text-xs text-gray-600 dark:text-gray-400">Classified</span>
+                        </div>
+                      </div>
+                    </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* No Data State */}
-      {!loading && selectedDate && !composition && (
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700 text-center">
-          <div className="text-4xl mb-4">📊</div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            No Data Available
-          </h3>
+            {/* Site Images for All Sites View */}
+            {selectedSite === 'all' && Object.keys(allSiteImages).length > 0 && (
+              <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+                      Site-by-Site Analysis
+                    </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            No composition data found for <strong>{getSiteName(selectedSite)}</strong> on{' '}
-            <strong>{selectedDate.toLocaleDateString()}</strong>
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-            Try selecting a different date or site.
+                      AI analysis for each individual site
           </p>
         </div>
-      )}
-
-      {/* Initial State */}
-      {!selectedDate && (
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700 text-center">
-          <div className="text-4xl mb-4">📅</div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            Select a Date to View Insights
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {Object.entries(allSiteImages).map(([siteId, image]) => (
+                    <div key={siteId} className="relative group overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-700 shadow-lg hover:shadow-xl transition-all duration-300">
+                      {/* Glassmorphism overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-black/5 dark:from-black/30 dark:via-transparent dark:to-black/10 pointer-events-none"></div>
+                      
+                      {/* Site Header */}
+                      <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20 p-4 backdrop-blur-sm">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-sm">
+                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                              {getSiteName(siteId)}
           </h3>
-          <p className="text-gray-600 dark:text-gray-400">
-            Choose a date from the date picker above to view waste composition data and images.
-          </p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Site ID: {siteId}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Enhanced Image Container */}
+                      <div className="relative p-4">
+                        <img 
+                          src={`data:image/jpeg;base64,${image}`}
+                          alt={`AI Analysis for ${getSiteName(siteId)}`}
+                          className="w-full h-auto rounded-xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-[1.02] cursor-pointer border border-white/20 dark:border-gray-600/20"
+                        />
+                        
+                        {/* Hover overlay with action buttons */}
+                        <div className="absolute inset-4 bg-black/50 backdrop-blur-sm rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-3">
+                          <button 
+                            onClick={() => handleZoomImage(image, getSiteName(siteId))}
+                            className="bg-white/20 backdrop-blur-sm border border-white/30 text-white px-5 py-2.5 rounded-lg hover:bg-white/30 transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            Zoom
+                          </button>
+                          <button 
+                            onClick={() => handleDownloadImage(image, getSiteName(siteId))}
+                            className="bg-white/20 backdrop-blur-sm border border-white/30 text-white px-5 py-2.5 rounded-lg hover:bg-white/30 transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
+                            disabled={downloadStatus.isDownloading}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            {downloadStatus.isDownloading ? 'Downloading...' : 'Download'}
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* Analysis Status Bar */}
+                      <div className="bg-gradient-to-r from-green-500/10 to-teal-500/10 dark:from-green-500/20 dark:to-teal-500/20 p-3 backdrop-blur-sm">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Analysis Complete</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1">
+                              <svg className="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                              <span className="text-xs text-gray-600 dark:text-gray-400">Objects Detected</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <svg className="w-3 h-3 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                              </svg>
+                              <span className="text-xs text-gray-600 dark:text-gray-400">Classified</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
               </div>
       )}
 
-      {/* Trend Analysis Charts - Real Composition Changes Over Time */}
-      {!trendLoading && trendData.length > 0 && (
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-            Composition Trends - {getSiteName(selectedSite)}
-          </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-            Real composition changes based on your actual updates ({trendData.length} data points)
-          </p>
-          
-          <div className="space-y-8">
-            {/* Composition Percentages Trend */}
+        {/* Trend Analysis */}
+        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl flex items-center justify-center">
+              <span className="text-white text-xl">📈</span>
+            </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                Waste Type Percentages Over Time
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+                Trend Analysis (30 Days)
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400">
+                {selectedSite === 'all' ? 'Aggregated trends across all sites' : `Trends for ${getSiteName(selectedSite)}`}
+          </p>
+        </div>
+          </div>
+
+          {trendLoading ? (
+            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-12 text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                <span className="text-white text-2xl">📊</span>
+              </div>
+              <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">
+                Analyzing Trends...
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400">
+                Processing historical data patterns
+          </p>
+              </div>
+          ) : trendData.length > 0 ? (
+          <div className="space-y-8">
+              {/* Weight Trend */}
+              <div className="bg-gray-50/50 dark:bg-gray-700/50 rounded-2xl p-6">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
+                  <span className="text-lg">⚖️</span>
+                  Weight Trend
               </h3>
-              <ResponsiveContainer width="100%" height={400}>
-                <LineChart data={trendData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={trendData}>
                   <XAxis 
-                    dataKey="displayDate" 
-                    stroke={isDarkMode ? '#fff' : '#000'} 
-                    tick={{ fill: isDarkMode ? '#fff' : '#000', fontSize: 11 }}
-                    angle={-45}
-                    textAnchor="end"
-                    height={60}
-                    interval={0}
+                      dataKey="date" 
+                      stroke={axisColor}
+                      tick={{ fill: axisColor, fontSize: 12 }}
+                      tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   />
                   <YAxis 
-                    stroke={isDarkMode ? '#fff' : '#000'} 
-                    tick={{ fill: isDarkMode ? '#fff' : '#000', fontSize: 11 }}
-                    label={{ value: 'Percentage (%)', angle: -90, position: 'insideLeft' }}
+                      stroke={axisColor}
+                      tick={{ fill: axisColor, fontSize: 12 }}
+                      label={{ value: 'Weight (tons)', angle: -90, position: 'insideLeft' }}
                   />
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: isDarkMode ? '#1f2937' : '#fff',
-                      border: `1px solid ${isDarkMode ? '#374151' : '#e5e7eb'}`,
-                      borderRadius: '8px',
-                      fontSize: '12px'
-                    }}
-                    labelStyle={{ color: isDarkMode ? '#fff' : '#000' }}
-                    labelFormatter={(label, payload) => {
-                      if (payload && payload[0] && payload[0].payload) {
-                        return new Date(payload[0].payload.date).toLocaleDateString();
-                      }
-                      return label;
-                    }}
+                        backgroundColor: tooltipBg,
+                        border: 'none',
+                        borderRadius: '12px',
+                        color: tooltipTextColor,
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                      }}
+                      labelFormatter={(value) => new Date(value).toLocaleDateString()}
                   />
-                  <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                  <Line type="monotone" dataKey="plastic" stroke={WASTE_COLORS.plastic} name="Plastic" strokeWidth={2} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="paper" stroke={WASTE_COLORS.paper} name="Paper" strokeWidth={2} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="glass" stroke={WASTE_COLORS.glass} name="Glass" strokeWidth={2} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="metal" stroke={WASTE_COLORS.metal} name="Metal" strokeWidth={2} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="organic" stroke={WASTE_COLORS.organic} name="Organic" strokeWidth={2} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="textile" stroke={WASTE_COLORS.textile} name="Textile" strokeWidth={2} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="other" stroke={WASTE_COLORS.other} name="Other" strokeWidth={2} dot={{ r: 3 }} />
+                    <Line 
+                      type="monotone" 
+                      dataKey="totalWeight" 
+                      stroke="#3B82F6" 
+                      strokeWidth={3}
+                      dot={{ fill: '#3B82F6', strokeWidth: 2, r: 6 }}
+                      activeDot={{ r: 8, stroke: '#3B82F6', strokeWidth: 2 }}
+                    />
                 </LineChart>
               </ResponsiveContainer>
             </div>
 
-            {/* Total Weight Trend */}
-                <div>
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                Total Waste Weight Over Time
+              {/* Composition Trend */}
+              <div className="bg-gray-50/50 dark:bg-gray-700/50 rounded-2xl p-6">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
+                  <span className="text-lg">🧪</span>
+                  Composition Trend
               </h3>
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={trendData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                <ResponsiveContainer width="100%" height={400}>
+                  <LineChart data={trendData}>
                   <XAxis 
-                    dataKey="displayDate" 
-                    stroke={isDarkMode ? '#fff' : '#000'} 
-                    tick={{ fill: isDarkMode ? '#fff' : '#000', fontSize: 11 }}
-                    angle={-45}
-                    textAnchor="end"
-                    height={60}
-                    interval={0}
+                      dataKey="date" 
+                      stroke={axisColor}
+                      tick={{ fill: axisColor, fontSize: 12 }}
+                      tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   />
                   <YAxis 
-                    stroke={isDarkMode ? '#fff' : '#000'} 
-                    tick={{ fill: isDarkMode ? '#fff' : '#000', fontSize: 11 }}
-                    label={{ value: 'Weight (kg)', angle: -90, position: 'insideLeft' }}
+                      stroke={axisColor}
+                      tick={{ fill: axisColor, fontSize: 12 }}
+                      label={{ value: 'Percentage (%)', angle: -90, position: 'insideLeft' }}
                   />
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: isDarkMode ? '#1f2937' : '#fff',
-                      border: `1px solid ${isDarkMode ? '#374151' : '#e5e7eb'}`,
-                      borderRadius: '8px',
-                      fontSize: '12px'
-                    }}
-                    labelStyle={{ color: isDarkMode ? '#fff' : '#000' }}
-                    formatter={(value) => [`${value} kg`, 'Total Weight']}
-                    labelFormatter={(label, payload) => {
-                      if (payload && payload[0] && payload[0].payload) {
-                        return new Date(payload[0].payload.date).toLocaleDateString();
-                      }
-                      return label;
-                    }}
-                  />
-                  <Line type="monotone" dataKey="totalWeight" stroke="#3B82F6" name="Total Weight" strokeWidth={3} dot={{ r: 4 }} />
+                        backgroundColor: tooltipBg,
+                        border: 'none',
+                        borderRadius: '12px',
+                        color: tooltipTextColor,
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                      }}
+                      labelFormatter={(value) => new Date(value).toLocaleDateString()}
+                    />
+                    <Legend />
+                    {Object.keys(WASTE_COLORS).map(type => (
+                      <Line
+                        key={type}
+                        type="monotone"
+                        dataKey={type}
+                        stroke={WASTE_COLORS[type]}
+                        strokeWidth={2}
+                        dot={{ fill: WASTE_COLORS[type], strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6, stroke: WASTE_COLORS[type], strokeWidth: 2 }}
+                        name={type.charAt(0).toUpperCase() + type.slice(1)}
+                      />
+                    ))}
                 </LineChart>
               </ResponsiveContainer>
             </div>
+              </div>
+          ) : (
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700/20 dark:to-gray-800/20 rounded-2xl p-12 text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-white text-2xl">📊</span>
+                </div>
+              <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">
+                No Trend Data Available
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400">
+                Insufficient historical data to generate trends.
+          </p>
+              </div>
+      )}
+                </div>
 
-            {/* Trend Summary Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                <div className="text-sm text-blue-600 dark:text-blue-400">Total Updates</div>
-                <div className="text-2xl font-bold text-blue-900 dark:text-blue-300">{trendData.length}</div>
+
               </div>
-              <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-                <div className="text-sm text-green-600 dark:text-green-400">Latest Weight</div>
-                <div className="text-2xl font-bold text-green-900 dark:text-green-300">
-                  {trendData[trendData.length - 1]?.totalWeight?.toFixed(1) || '0'} kg
-                </div>
-              </div>
-              <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
-                <div className="text-sm text-purple-600 dark:text-purple-400">Date Range</div>
-                <div className="text-lg font-bold text-purple-900 dark:text-purple-300">
-                  {trendData.length > 0 ? `${trendData.length} day${trendData.length > 1 ? 's' : ''}` : 'N/A'}
-                </div>
-              </div>
-              <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
-                <div className="text-sm text-orange-600 dark:text-orange-400">Avg Weight</div>
-                <div className="text-2xl font-bold text-orange-900 dark:text-orange-300">
-                  {trendData.length > 0 ? 
-                    (trendData.reduce((sum, point) => sum + (point.totalWeight || 0), 0) / trendData.length).toFixed(1) 
-                    : '0'} kg
-                </div>
-              </div>
+
+      {/* Zoom Modal */}
+      {isZoomModalOpen && zoomedImageData && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="relative max-w-[90vw] max-h-[90vh] w-full h-full flex items-center justify-center">
+            {/* Close Button */}
+            <button 
+              onClick={handleCloseZoomModal}
+              className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm border border-white/30 text-white w-12 h-12 rounded-full hover:bg-white/30 transition-all duration-200 flex items-center justify-center z-10"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            {/* Image */}
+            <img 
+              src={zoomedImageData.src}
+              alt={zoomedImageData.alt}
+              className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+            />
+            
+            {/* Image Info */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 backdrop-blur-sm text-white px-6 py-3 rounded-full">
+              <p className="text-sm font-medium">
+                {zoomedImageData.siteName} - Waste Analysis
+              </p>
+              <p className="text-xs text-gray-300 mt-1">
+                Press ESC to close
+              </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Trend Loading State */}
-      {trendLoading && (
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700 text-center">
-          <div className="text-lg text-gray-600 dark:text-gray-300">Loading trend data...</div>
+      {/* Download Notification */}
+      {downloadStatus.message && (
+        <div className="fixed bottom-4 right-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-white/20 dark:border-gray-700/20 rounded-xl shadow-xl p-4 flex items-center gap-3 z-50">
+          {downloadStatus.isDownloading ? (
+            <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          ) : (
+            <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
       </div>
       )}
-
-      {/* No Trend Data */}
-      {!trendLoading && trendData.length === 0 && selectedSite !== 'all' && (
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700 text-center">
-          <div className="text-4xl mb-4">📈</div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            No Trend Data Yet
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400">
-            Start updating compositions for <strong>{getSiteName(selectedSite)}</strong> to see trends appear here.
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-            Trends will show how composition changes with each update you make.
-          </p>
+          <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
+            {downloadStatus.message}
+          </span>
         </div>
       )}
     </div>

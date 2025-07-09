@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../../context/ThemeContext';
 import { environment } from '../../config/environment';
 import axios from 'axios';
 
@@ -43,6 +44,7 @@ interface FuelLog {
 }
 
 export default function FuelTracking() {
+  const { isDarkMode } = useTheme();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [fuelAnalytics, setFuelAnalytics] = useState<FuelAnalytics | null>(null);
   const [fuelLogs, setFuelLogs] = useState<FuelLog[]>([]);
@@ -137,88 +139,263 @@ export default function FuelTracking() {
     }
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'available':
+        return 'bg-gradient-to-r from-green-500 to-emerald-500 text-white';
+      case 'on-route':
+        return 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white';
+      case 'maintenance':
+        return 'bg-gradient-to-r from-red-500 to-pink-500 text-white';
+      default:
+        return 'bg-gradient-to-r from-gray-500 to-gray-600 text-white';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'available':
+        return (
+          <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        );
+      case 'on-route':
+        return (
+          <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 13v-1a2 2 0 012-2h6a2 2 0 012 2v1m0 0v3a2 2 0 01-2 2H10a2 2 0 01-2-2v-3zm0 0l2-2m0 0l2 2m-2-2v6" />
+          </svg>
+        );
+      case 'maintenance':
+        return (
+          <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        );
+      default:
+        return (
+          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
+    }
+  };
+
+  const getFuelLevelColor = (percentage: number) => {
+    if (percentage > 60) return 'from-green-500 to-emerald-500';
+    if (percentage > 30) return 'from-yellow-500 to-orange-500';
+    return 'from-red-500 to-pink-500';
+  };
+
   if (loading) {
-    return <div className="p-4">Loading fuel tracking data...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-indigo-50 dark:from-green-950 dark:via-gray-900 dark:to-green-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-green-500 to-blue-500 animate-pulse mb-4 mx-auto flex items-center justify-center">
+              <svg className="w-8 h-8 text-white animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div className="animate-bounce">
+              <svg className="w-6 h-6 text-blue-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+          </div>
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">Loading Fuel Analytics</h3>
+          <p className="text-gray-600 dark:text-gray-300">Retrieving vehicle data and fuel tracking information...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-indigo-50 dark:from-green-950 dark:via-gray-900 dark:to-green-900">
+      <div className="max-w-7xl mx-auto py-8 px-4 space-y-8">
+        
+        {/* Page Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+              Fuel Tracking
+            </h1>
+          </div>
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            Monitor fuel consumption and vehicle efficiency with advanced analytics
+          </p>
+        </div>
+
       {/* Fuel Analytics Summary */}
-      <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Fuel Analytics (Last 7 Days)</h2>
+        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-3xl p-8 border border-white/20 dark:border-gray-700/20 shadow-2xl hover:shadow-3xl transition-all duration-300">
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Fuel Analytics Summary
+              </h2>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Updated now
+            </div>
           <button
             onClick={() => setShowLogModal(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2"
           >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
             Log Fuel Usage
           </button>
         </div>
         
         {fuelAnalytics && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{fuelAnalytics.total_distance.toFixed(1)}</div>
-              <div className="text-sm text-gray-600">Total Distance (km)</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/50 dark:to-indigo-900/50 rounded-2xl p-6 border border-blue-200/30 dark:border-blue-700/30">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-indigo-400 rounded-xl flex items-center justify-center">
+                    <span className="text-white text-xl">📏</span>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{fuelAnalytics.total_fuel_consumed.toFixed(1)}</div>
-              <div className="text-sm text-gray-600">Fuel Used (L)</div>
+                  <div>
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                      {fuelAnalytics.total_distance.toFixed(1)}
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">₵{fuelAnalytics.total_cost.toFixed(2)}</div>
-              <div className="text-sm text-gray-600">Total Cost</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">₵{fuelAnalytics.avg_cost_per_km.toFixed(2)}</div>
-              <div className="text-sm text-gray-600">Cost per km</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">Total Distance (km)</div>
             </div>
           </div>
-        )}
       </div>
 
-      {/* Vehicle Status */}
-      <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Vehicle Status</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {vehicles.map(vehicle => (
-            <div key={vehicle.id} className={`p-4 rounded-lg border-2 ${vehicle.needs_refuel ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50'}`}>
-              <div className="flex justify-between items-start mb-2">
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/50 dark:to-emerald-900/50 rounded-2xl p-6 border border-green-200/30 dark:border-green-700/30">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-400 rounded-xl flex items-center justify-center">
+                    <span className="text-white text-xl">⛽</span>
+                  </div>
                 <div>
-                  <div className="font-bold text-gray-900">{vehicle.id}</div>
-                  <div className="text-sm text-gray-600">{vehicle.make} {vehicle.model}</div>
-                </div>
-                <div className={`px-2 py-1 rounded text-xs font-medium ${
-                  vehicle.status === 'available' ? 'bg-green-100 text-green-800' :
-                  vehicle.status === 'on-route' ? 'bg-blue-100 text-blue-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
-                  {vehicle.status}
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                      {fuelAnalytics.total_fuel_consumed.toFixed(1)}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">Fuel Used (L)</div>
+                  </div>
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Fuel Level:</span>
-                  <span className={vehicle.needs_refuel ? 'text-red-600 font-bold' : 'text-gray-900'}>
-                    {vehicle.fuel_percentage}%
-                  </span>
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/50 dark:to-pink-900/50 rounded-2xl p-6 border border-purple-200/30 dark:border-purple-700/30">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl flex items-center justify-center">
+                    <span className="text-white text-xl">💰</span>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                      ₵{fuelAnalytics.total_cost.toFixed(2)}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">Total Cost</div>
+                  </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className={`h-2 rounded-full ${
-                      vehicle.fuel_percentage < 25 ? 'bg-red-500' :
-                      vehicle.fuel_percentage < 50 ? 'bg-yellow-500' : 'bg-green-500'
-                    }`}
+              </div>
+              
+              <div className="bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-900/50 dark:to-yellow-900/50 rounded-2xl p-6 border border-orange-200/30 dark:border-orange-700/30">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-xl flex items-center justify-center">
+                    <span className="text-white text-xl">📊</span>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                      ₵{fuelAnalytics.avg_cost_per_km.toFixed(2)}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">Cost per km</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Vehicle Status */}
+        <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-8 border border-white/20 dark:border-gray-700/20 shadow-2xl">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+            🚛 Vehicle Status
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {vehicles.map(vehicle => (
+              <div key={vehicle.id} className={`bg-gradient-to-br from-white/80 to-gray-50/80 dark:from-gray-700/80 dark:to-gray-800/80 rounded-2xl p-6 border-2 backdrop-blur-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${
+                vehicle.needs_refuel 
+                  ? 'border-red-300 dark:border-red-700 bg-red-50/50 dark:bg-red-900/20' 
+                  : 'border-gray-200/30 dark:border-gray-600/30'
+              }`}>
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-14 h-14 bg-gradient-to-br from-gray-400 to-gray-600 rounded-xl flex items-center justify-center">
+                      <span className="text-white text-xl">{getStatusIcon(vehicle.status)}</span>
+                    </div>
+                    <div>
+                      <div className="font-bold text-lg text-gray-900 dark:text-white">{vehicle.id}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">{vehicle.make} {vehicle.model}</div>
+                    </div>
+                  </div>
+                  
+                  <div className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(vehicle.status)}`}>
+                    {vehicle.status}
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  {/* Fuel Level */}
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Fuel Level</span>
+                      <span className="text-sm font-bold text-gray-900 dark:text-white">{vehicle.fuel_percentage}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3">
+                      <div
+                        className={`h-3 rounded-full bg-gradient-to-r ${getFuelLevelColor(vehicle.fuel_percentage)} transition-all duration-300`}
                     style={{ width: `${vehicle.fuel_percentage}%` }}
                   />
                 </div>
-                <div className="flex justify-between text-xs text-gray-600">
-                  <span>Range: {vehicle.estimated_range_km}km</span>
-                  <span>Efficiency: {vehicle.fuel_efficiency_kmpl} km/L</span>
+                  </div>
+                  
+                  {/* Vehicle Stats */}
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <div className="text-gray-500 dark:text-gray-400">Range</div>
+                      <div className="font-semibold text-gray-900 dark:text-white">{vehicle.estimated_range_km}km</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 dark:text-gray-400">Efficiency</div>
+                      <div className="font-semibold text-gray-900 dark:text-white">{vehicle.fuel_efficiency_kmpl}km/L</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 dark:text-gray-400">Total Distance</div>
+                      <div className="font-semibold text-gray-900 dark:text-white">{vehicle.total_distance_km}km</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 dark:text-gray-400">Tank Capacity</div>
+                      <div className="font-semibold text-gray-900 dark:text-white">{vehicle.tank_capacity_liters}L</div>
+                    </div>
                 </div>
+                  
                 {vehicle.needs_refuel && (
-                  <div className="text-xs text-red-600 font-medium">⚠️ Needs Refuel</div>
+                    <div className="bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg p-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-red-600 dark:text-red-400">⚠️</span>
+                        <span className="text-sm font-medium text-red-700 dark:text-red-300">
+                          Needs Refuel
+                        </span>
+                      </div>
+                    </div>
                 )}
               </div>
             </div>
@@ -227,58 +404,98 @@ export default function FuelTracking() {
       </div>
 
       {/* Recent Fuel Logs */}
-      <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Fuel Logs</h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead>
-              <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Vehicle</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Distance</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Fuel Used</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Efficiency</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Cost</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {fuelLogs.map(log => (
-                <tr key={log.id}>
-                  <td className="px-4 py-2 text-sm text-gray-900">
-                    {log.vehicle_id} ({log.make} {log.model})
-                  </td>
-                  <td className="px-4 py-2 text-sm text-gray-900">{log.distance_km} km</td>
-                  <td className="px-4 py-2 text-sm text-gray-900">{log.fuel_consumed_liters.toFixed(1)} L</td>
-                  <td className="px-4 py-2 text-sm text-gray-900">{log.actual_efficiency_kmpl.toFixed(1)} km/L</td>
-                  <td className="px-4 py-2 text-sm text-gray-900">
-                    {log.fuel_cost ? `₵${log.fuel_cost.toFixed(2)}` : '-'}
-                  </td>
-                  <td className="px-4 py-2 text-sm text-gray-500">
+        <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-8 border border-white/20 dark:border-gray-700/20 shadow-2xl">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+            📋 Recent Fuel Logs
+          </h2>
+          
+          {fuelLogs.length > 0 ? (
+            <div className="space-y-4">
+              {fuelLogs.map((log) => (
+                <div key={log.id} className="bg-gradient-to-r from-white/80 to-gray-50/80 dark:from-gray-700/80 dark:to-gray-800/80 rounded-2xl p-6 border border-gray-200/30 dark:border-gray-600/30 backdrop-blur-lg shadow-lg">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-indigo-400 rounded-xl flex items-center justify-center">
+                        <span className="text-white text-lg">⛽</span>
+                      </div>
+                      <div>
+                        <div className="font-bold text-lg text-gray-900 dark:text-white">
+                          {log.vehicle_id} - {log.make} {log.model}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-300">
+                          {log.route_description || 'Collection Route'}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
                     {new Date(log.created_at).toLocaleDateString()}
-                  </td>
-                </tr>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    <div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">Distance</div>
+                      <div className="font-semibold text-gray-900 dark:text-white">{log.distance_km}km</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">Fuel Consumed</div>
+                      <div className="font-semibold text-gray-900 dark:text-white">{log.fuel_consumed_liters}L</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">Efficiency</div>
+                      <div className="font-semibold text-gray-900 dark:text-white">{log.actual_efficiency_kmpl}km/L</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">Cost</div>
+                      <div className="font-semibold text-gray-900 dark:text-white">
+                        {log.fuel_cost ? `₵${log.fuel_cost.toFixed(2)}` : 'N/A'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">📊</div>
+              <p className="text-gray-600 dark:text-gray-300 text-lg">No fuel logs available</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
+                Start logging fuel usage to see efficiency trends
+              </p>
+            </div>
+          )}
         </div>
+
+        {/* Fuel Logging Modal */}
+        {showLogModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-3xl p-8 w-full max-w-md shadow-2xl border border-white/20 dark:border-gray-700/20">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  📝 Log Fuel Usage
+                </h3>
+                <button
+                  onClick={() => setShowLogModal(false)}
+                  className="w-8 h-8 rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-white flex items-center justify-center hover:shadow-lg transform hover:scale-110 transition-all duration-300"
+                >
+                  ✕
+                </button>
       </div>
 
-      {/* Log Fuel Modal */}
-      {showLogModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Log Fuel Consumption</h3>
-            
-            <form onSubmit={handleLogFuel} className="space-y-4">
+              <form onSubmit={handleLogFuel} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Vehicle</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    🚛 Select Vehicle
+                  </label>
                 <select
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white/70 dark:bg-gray-700/70 backdrop-blur-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
                   value={selectedVehicle}
-                  onChange={e => setSelectedVehicle(e.target.value)}
+                    onChange={(e) => setSelectedVehicle(e.target.value)}
                   required
                 >
-                  <option value="">Select Vehicle</option>
+                    <option value="">Choose a vehicle...</option>
                   {vehicles.map(vehicle => (
                     <option key={vehicle.id} value={vehicle.id}>
                       {vehicle.id} - {vehicle.make} {vehicle.model}
@@ -288,82 +505,94 @@ export default function FuelTracking() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Distance (km)</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    📏 Distance (km)
+                  </label>
                 <input
                   type="number"
                   step="0.1"
-                  min="0"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white/70 dark:bg-gray-700/70 backdrop-blur-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
                   value={tripData.distance_km}
-                  onChange={e => setTripData(prev => ({ ...prev, distance_km: e.target.value }))}
+                    onChange={(e) => setTripData({...tripData, distance_km: e.target.value})}
+                    placeholder="Enter distance"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Trip Start</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      🕐 Trip Start
+                    </label>
                   <input
                     type="datetime-local"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white/70 dark:bg-gray-700/70 backdrop-blur-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
                     value={tripData.trip_start}
-                    onChange={e => setTripData(prev => ({ ...prev, trip_start: e.target.value }))}
+                      onChange={(e) => setTripData({...tripData, trip_start: e.target.value})}
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Trip End</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      🕐 Trip End
+                    </label>
                   <input
                     type="datetime-local"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white/70 dark:bg-gray-700/70 backdrop-blur-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
                     value={tripData.trip_end}
-                    onChange={e => setTripData(prev => ({ ...prev, trip_end: e.target.value }))}
+                      onChange={(e) => setTripData({...tripData, trip_end: e.target.value})}
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Fuel Cost (₵) - Optional</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    💰 Fuel Cost (₵) - Optional
+                  </label>
                 <input
                   type="number"
                   step="0.01"
-                  min="0"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white/70 dark:bg-gray-700/70 backdrop-blur-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
                   value={tripData.fuel_cost}
-                  onChange={e => setTripData(prev => ({ ...prev, fuel_cost: e.target.value }))}
+                    onChange={(e) => setTripData({...tripData, fuel_cost: e.target.value})}
+                    placeholder="Enter fuel cost"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Route Description</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    📝 Route Description - Optional
+                  </label>
                 <textarea
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white/70 dark:bg-gray-700/70 backdrop-blur-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
                   value={tripData.route_description}
-                  onChange={e => setTripData(prev => ({ ...prev, route_description: e.target.value }))}
-                  placeholder="e.g., Collection route from Ablekuma North to North Dumping Site"
+                    onChange={(e) => setTripData({...tripData, route_description: e.target.value})}
+                    placeholder="Describe the route..."
+                    rows={3}
                 />
               </div>
 
-              <div className="flex justify-end space-x-3">
+                <div className="flex justify-end gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowLogModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-gray-500 to-gray-600 text-white font-medium hover:shadow-lg transform hover:scale-105 transition-all duration-300"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 text-white font-medium hover:shadow-lg transform hover:scale-105 transition-all duration-300"
                 >
-                  Log Fuel Usage
+                    📊 Log Fuel Data
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 } 

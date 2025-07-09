@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { environment } from '../../config/environment';
 import axios from 'axios';
 
@@ -32,9 +33,9 @@ interface Vehicle {
   status: string;
 }
 
-// Real data fetching instead of mock
 export default function Analytics() {
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
   const [fuelAnalytics, setFuelAnalytics] = useState<FuelAnalytics | null>(null);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -111,204 +112,367 @@ export default function Analytics() {
 
   const vehiclesNeedingRefuel = vehicles.filter(v => v.needs_refuel).length;
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'available':
+        return 'bg-gradient-to-r from-green-500 to-emerald-500';
+      case 'on-route':
+        return 'bg-gradient-to-r from-blue-500 to-indigo-500';
+      case 'maintenance':
+        return 'bg-gradient-to-r from-red-500 to-pink-500';
+      default:
+        return 'bg-gradient-to-r from-gray-500 to-gray-600';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'available':
+        return '✅';
+      case 'on-route':
+        return '🚛';
+      case 'maintenance':
+        return '🔧';
+      default:
+        return '❓';
+    }
+  };
+
+  const getPeriodLabel = (period: string) => {
+    switch (period) {
+      case '7':
+        return 'Last 7 Days';
+      case '30':
+        return 'Last 30 Days';
+      case '90':
+        return 'Last 90 Days';
+      default:
+        return `Last ${period} Days`;
+    }
+  };
+
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Analytics Dashboard</h1>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-indigo-50 dark:bg-gradient-to-br dark:from-green-950 dark:via-gray-900 dark:to-green-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 shadow-xl animate-pulse">
+            <svg className="w-8 h-8 text-white animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            Loading Analytics...
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400">
+            Processing operational data and insights
+          </p>
         </div>
-        <div className="text-center py-8">Loading analytics...</div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Analytics Dashboard</h1>
-        <div className="flex space-x-2">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-indigo-50 dark:bg-gradient-to-br dark:from-green-950 dark:via-gray-900 dark:to-green-900">
+      <div className="max-w-7xl mx-auto py-8 px-4 space-y-8">
+        
+        {/* Page Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <div className="text-left">
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
+                Analytics Dashboard
+              </h1>
+              <p className="text-lg text-gray-600 dark:text-gray-400">
+                Comprehensive insights into waste collection operations
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="flex justify-center items-center gap-4 mb-8">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+              <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Time Period:
+            </label>
           <select 
-            className="form-select dark:bg-white dark:text-black"
+              className="px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
           >
-            <option value="7" className="dark:text-black">Last 7 Days</option>
-            <option value="30" className="dark:text-black">Last 30 Days</option>
-            <option value="90" className="dark:text-black">Last 90 Days</option>
+              <option value="7">Last 7 Days</option>
+              <option value="30">Last 30 Days</option>
+              <option value="90">Last 90 Days</option>
           </select>
-          <button className="btn btn-secondary">Export Report</button>
-        </div>
+          </div>
+          <button className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Export Report
+          </button>
       </div>
 
+        {/* Error Display */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="text-red-800">{error}</div>
+          <div className="bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-2xl p-4 mb-8">
+            <div className="flex items-center gap-2">
+              <span className="text-red-600 dark:text-red-400">⚠️</span>
+              <span className="text-red-800 dark:text-red-200">{error}</span>
+            </div>
         </div>
       )}
 
-      {/* Real Stats Grid */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
-          <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-              Active Bin Reports
-            </dt>
-            <dd className="mt-1 text-3xl font-semibold text-gray-900 dark:text-gray-100">
+        {/* Main Analytics Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          
+          {/* Active Bin Reports */}
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-6 border border-white/20 dark:border-gray-700/20 shadow-2xl">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-indigo-400 rounded-xl flex items-center justify-center">
+                <span className="text-white text-xl">📊</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Active Bin Reports</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Current collections</p>
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               {analyticsSummary.totalCollections}
-            </dd>
+            </div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              {getPeriodLabel(period)}
+            </div>
+          </div>
+
+          {/* Active Routes */}
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-6 border border-white/20 dark:border-gray-700/20 shadow-2xl">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-green-400 to-emerald-400 rounded-xl flex items-center justify-center">
+                <span className="text-white text-xl">🚛</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Active Routes</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Currently running</p>
           </div>
         </div>
-
-        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
-          <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-              Active Routes
-            </dt>
-            <dd className="mt-1 text-3xl font-semibold text-gray-900 dark:text-gray-100">
+            <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               {analyticsSummary.activeRoutes}
-            </dd>
+            </div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Routes in progress
+            </div>
+          </div>
+
+          {/* Total Distance */}
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-6 border border-white/20 dark:border-gray-700/20 shadow-2xl">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl flex items-center justify-center">
+                <span className="text-white text-xl">📏</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Total Distance</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{getPeriodLabel(period)}</p>
           </div>
         </div>
-
-        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
-          <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-              Total Distance ({period} days)
-            </dt>
-            <dd className="mt-1 text-3xl font-semibold text-gray-900 dark:text-gray-100">
+            <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               {fuelAnalytics?.total_distance.toFixed(1) || '0'} km
-            </dd>
+            </div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Fleet coverage
+            </div>
+          </div>
+
+          {/* Fuel Consumed */}
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-6 border border-white/20 dark:border-gray-700/20 shadow-2xl">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-xl flex items-center justify-center">
+                <span className="text-white text-xl">⛽</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Fuel Consumed</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{getPeriodLabel(period)}</p>
           </div>
         </div>
-
-        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
-          <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-              Fuel Consumed ({period} days)
-            </dt>
-            <dd className="mt-1 text-3xl font-semibold text-gray-900 dark:text-gray-100">
+            <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               {fuelAnalytics?.total_fuel_consumed.toFixed(1) || '0'} L
-            </dd>
+            </div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Total consumption
+            </div>
+          </div>
+
+          {/* Average Fuel Efficiency */}
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-6 border border-white/20 dark:border-gray-700/20 shadow-2xl">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-red-400 to-pink-400 rounded-xl flex items-center justify-center">
+                <span className="text-white text-xl">📈</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Avg Fuel Efficiency</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Fleet average</p>
           </div>
         </div>
-
-        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
-          <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-              Average Fuel Efficiency
-            </dt>
-            <dd className="mt-1 text-3xl font-semibold text-gray-900 dark:text-gray-100">
+            <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               {averageFuelEfficiency.toFixed(1)} km/L
-            </dd>
+            </div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Efficiency rating
+            </div>
           </div>
+
+          {/* Vehicles Needing Refuel */}
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-6 border border-white/20 dark:border-gray-700/20 shadow-2xl">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-red-400 rounded-xl flex items-center justify-center">
+                <span className="text-white text-xl">⚠️</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Need Refuel</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Vehicles requiring fuel</p>
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              {vehiclesNeedingRefuel}
+            </div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Out of {vehicles.length} vehicles
+        </div>
+          </div>
+
         </div>
 
-        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
-          <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-              Fuel Cost ({period} days)
-            </dt>
-            <dd className="mt-1 text-3xl font-semibold text-gray-900 dark:text-gray-100">
-              ₵{fuelAnalytics?.total_cost.toFixed(2) || '0.00'}
-            </dd>
-          </div>
+        {/* Fuel Cost Analysis */}
+        <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-8 border border-white/20 dark:border-gray-700/20 shadow-2xl">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+            💰 Fuel Cost Analysis
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/50 dark:to-emerald-900/50 rounded-2xl p-6 border border-green-200/30 dark:border-green-700/30">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-400 rounded-xl flex items-center justify-center">
+                  <span className="text-white text-lg">💵</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">Total Cost</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{getPeriodLabel(period)}</p>
+                </div>
+              </div>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                ₵{fuelAnalytics?.total_cost.toFixed(2) || '0.00'}
         </div>
       </div>
 
-      {/* Fuel Efficiency Insights */}
-      <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
-        <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
-            Fuel Efficiency Insights
-          </h3>
-          <div className="mt-4">
-            <ul className="divide-y divide-gray-200">
-              <li className="py-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-600 dark:text-gray-300">
-                    Average cost per kilometer:
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/50 dark:to-indigo-900/50 rounded-2xl p-6 border border-blue-200/30 dark:border-blue-700/30">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-indigo-400 rounded-xl flex items-center justify-center">
+                  <span className="text-white text-lg">📊</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">Cost per km</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Average efficiency</p>
+                </div>
                   </div>
-                  <div className="text-sm text-green-600 font-medium">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     ₵{fuelAnalytics?.avg_cost_per_km.toFixed(2) || '0.00'}
                   </div>
+            </div>
+            
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/50 dark:to-pink-900/50 rounded-2xl p-6 border border-purple-200/30 dark:border-purple-700/30">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl flex items-center justify-center">
+                  <span className="text-white text-lg">🚗</span>
                 </div>
-              </li>
-              <li className="py-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-600 dark:text-gray-300">
-                    Total trips completed: 
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">Total Trips</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Collection rounds</p>
+                </div>
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300 font-medium">
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                     {fuelAnalytics?.total_trips || 0}
                   </div>
                 </div>
-              </li>
-              <li className="py-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-600 dark:text-gray-300">
-                    Vehicles needing refuel:
-                  </div>
-                  <div className={`text-sm font-medium ${vehiclesNeedingRefuel > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                    {vehiclesNeedingRefuel} of {vehicles.length}
                   </div>
                 </div>
-              </li>
-              {fuelAnalytics && fuelAnalytics.total_distance > 0 && (
-                <li className="py-3">
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-gray-600 dark:text-gray-300">
-                      Actual vs rated efficiency:
+
+        {/* Vehicle Status Overview */}
+        <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-8 border border-white/20 dark:border-gray-700/20 shadow-2xl">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+            🚛 Vehicle Status Overview
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {vehicles.map((vehicle) => (
+              <div key={vehicle.id} className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700/50 dark:to-gray-800/50 rounded-2xl p-6 border border-gray-200/30 dark:border-gray-600/30">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-600 rounded-xl flex items-center justify-center">
+                      <span className="text-white text-lg">{getStatusIcon(vehicle.status)}</span>
                     </div>
-                    <div className="text-sm text-blue-600 font-medium">
-                      {((fuelAnalytics.total_distance / fuelAnalytics.total_fuel_consumed) / averageFuelEfficiency * 100).toFixed(1)}%
+                    <div>
+                      <h3 className="font-bold text-gray-900 dark:text-white">{vehicle.id}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">{vehicle.make} {vehicle.model}</p>
                     </div>
                   </div>
-                </li>
-              )}
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* Vehicle Status Overview */}
-      <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-3xl p-8 shadow-[0_4px_24px_0_rgba(59,130,246,0.15)] dark:shadow-[0_4px_24px_0_rgba(34,197,94,0.25)]">
-        <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
-            Vehicle Fleet Status
-          </h3>
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-            {vehicles.map(vehicle => (
-              <div key={vehicle.id} className={`p-4 rounded-lg border ${
-                vehicle.needs_refuel ? 'border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/20' : 
-                vehicle.status === 'available' ? 'border-green-300 bg-green-50 dark:border-green-600 dark:bg-green-900/20' :
-                'border-yellow-300 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-900/20'
-              }`}>
-                <div className="flex justify-between items-center mb-2">
-                  <div className="font-bold text-gray-900 dark:text-gray-100">{vehicle.id}</div>
-                  <div className={`px-2 py-1 rounded text-xs font-medium ${
-                    vehicle.status === 'available' ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200' :
-                    vehicle.status === 'on-route' ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200' :
-                    'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-                  }`}>
+                  <div className={`px-3 py-1 rounded-full text-xs font-medium text-white ${getStatusColor(vehicle.status)}`}>
                     {vehicle.status}
                   </div>
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                  {vehicle.make} {vehicle.model}
+                
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Fuel Level</span>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">{vehicle.fuel_percentage}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full ${
+                        vehicle.fuel_percentage > 60 
+                          ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
+                          : vehicle.fuel_percentage > 30 
+                            ? 'bg-gradient-to-r from-yellow-500 to-orange-500'
+                            : 'bg-gradient-to-r from-red-500 to-pink-500'
+                      }`}
+                      style={{ width: `${vehicle.fuel_percentage}%` }}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-gray-500 dark:text-gray-400">Range</span>
+                      <p className="font-semibold text-gray-900 dark:text-white">{vehicle.estimated_range_km}km</p>
                 </div>
-                <div className="flex justify-between text-xs text-gray-600 dark:text-gray-300">
-                  <span>Fuel: {vehicle.fuel_percentage}%</span>
-                  <span>Range: {vehicle.estimated_range_km}km</span>
+                    <div>
+                      <span className="text-gray-500 dark:text-gray-400">Efficiency</span>
+                      <p className="font-semibold text-gray-900 dark:text-white">{vehicle.fuel_efficiency_kmpl}km/L</p>
                 </div>
+                  </div>
+                  
                 {vehicle.needs_refuel && (
-                  <div className="mt-2 text-xs text-red-600 dark:text-red-400 font-medium">
-                    ⚠️ Needs Refuel
+                    <div className="bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg p-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-red-600 dark:text-red-400">⚠️</span>
+                        <span className="text-xs font-medium text-red-700 dark:text-red-300">
+                          Needs Refuel
+                        </span>
+                      </div>
                   </div>
                 )}
+                </div>
               </div>
             ))}
           </div>
         </div>
+
       </div>
     </div>
   );

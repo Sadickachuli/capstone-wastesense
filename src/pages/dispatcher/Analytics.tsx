@@ -57,9 +57,7 @@ export default function Analytics() {
   });
 
   useEffect(() => {
-    fetchAnalytics();
-    fetchVehicles();
-    fetchRealAnalytics();
+    fetchAllData();
   }, [period]);
 
   useEffect(() => {
@@ -79,54 +77,71 @@ export default function Analytics() {
     return () => observer.disconnect();
   }, []);
 
-  const fetchAnalytics = async () => {
+  const fetchAllData = async () => {
+    setLoading(true);
+    setError('');
+    
     try {
-      const API_BASE_URL = environment.getApiUrl();
-      const res = await axios.get(`${API_BASE_URL}/fuel/analytics?period=${period}`);
-      if (res.data.summary) {
-        setFuelAnalytics(res.data.summary);
+      // Fetch all data concurrently
+      const [fuelRes, vehiclesRes, reportsRes] = await Promise.allSettled([
+        fetchAnalytics(),
+        fetchVehicles(),
+        fetchReports()
+      ]);
+
+      // Handle fuel analytics
+      if (fuelRes.status === 'fulfilled' && fuelRes.value) {
+        setFuelAnalytics(fuelRes.value);
       }
-    } catch (err) {
-      setError('Failed to fetch fuel analytics');
-      console.error('Failed to fetch analytics:', err);
-    }
-  };
 
-  const fetchVehicles = async () => {
-    try {
-      const API_BASE_URL = environment.getApiUrl();
-      const res = await axios.get(`${API_BASE_URL}/fuel/vehicles`);
-      setVehicles(res.data.vehicles);
-    } catch (err) {
-      console.error('Failed to fetch vehicles:', err);
-    }
-  };
+      // Handle vehicles
+      if (vehiclesRes.status === 'fulfilled' && vehiclesRes.value) {
+        setVehicles(vehiclesRes.value);
+      }
 
-  const fetchRealAnalytics = async () => {
-    try {
-      // Fetch active reports for current collections
-      const API_BASE_URL = environment.getApiUrl();
-      const reportsRes = await axios.get(`${API_BASE_URL}/auth/reports/active`);
-      const activeReports = reportsRes.data.reports || [];
+      // Handle reports and calculate analytics
+      const reports = reportsRes.status === 'fulfilled' ? reportsRes.value || [] : [];
+      const fuelData = fuelRes.status === 'fulfilled' ? fuelRes.value : null;
       
-      // Calculate real metrics from data
       const analytics: AnalyticsSummary = {
-        totalCollections: activeReports.length,
-        completedRoutes: 0, // Will be updated when route completion tracking is implemented
-        activeRoutes: Math.ceil(activeReports.length / 3), // Approximate routes based on reports
-        totalDistance: fuelAnalytics?.total_distance || 0,
-        efficiency: fuelAnalytics ? 
-          Math.round((fuelAnalytics.total_distance / Math.max(fuelAnalytics.total_fuel_consumed, 1)) * 10) / 10 : 0,
-        complaints: 0, // Can be calculated from reports with negative sentiment
+        totalCollections: reports.length,
+        completedRoutes: 0,
+        activeRoutes: Math.ceil(reports.length / 3),
+        totalDistance: fuelData?.total_distance || 0,
+        efficiency: fuelData ? 
+          Math.round((fuelData.total_distance / Math.max(fuelData.total_fuel_consumed, 1)) * 10) / 10 : 0,
+        complaints: 0,
       };
       
       setAnalyticsSummary(analytics);
+      
     } catch (err) {
-      console.error('Failed to fetch real analytics:', err);
+      console.error('Failed to fetch analytics data:', err);
+      setError('Failed to load analytics data. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+
+  const fetchAnalytics = async () => {
+    const API_BASE_URL = environment.getApiUrl();
+    const res = await axios.get(`${API_BASE_URL}/fuel/analytics?period=${period}`);
+    return res.data.summary;
+  };
+
+  const fetchVehicles = async () => {
+    const API_BASE_URL = environment.getApiUrl();
+    const res = await axios.get(`${API_BASE_URL}/fuel/vehicles`);
+    return res.data.vehicles;
+  };
+
+  const fetchReports = async () => {
+    const API_BASE_URL = environment.getApiUrl();
+    const res = await axios.get(`${API_BASE_URL}/auth/reports/active`);
+    return res.data.reports || [];
+  };
+
+
 
   const averageFuelEfficiency = vehicles.length > 0 ? 
     vehicles.reduce((sum, v) => sum + v.fuel_efficiency_kmpl, 0) / vehicles.length : 0;
@@ -213,15 +228,15 @@ export default function Analytics() {
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Time Period:
               </label>
-              <select 
-                value={period}
-                onChange={(e) => setPeriod(e.target.value)}
+          <select 
+            value={period}
+            onChange={(e) => setPeriod(e.target.value)}
                 className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm font-medium text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
               >
                 <option value="7">Last 7 Days</option>
                 <option value="30">Last 30 Days</option>
                 <option value="90">Last 90 Days</option>
-              </select>
+          </select>
             </div>
           </div>
         </div>
@@ -258,8 +273,8 @@ export default function Analytics() {
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Collections</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">{analyticsSummary.totalCollections}</p>
                 </div>
-              </div>
-            </div>
+          </div>
+        </div>
 
             {/* Active Routes */}
             <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all duration-300">
@@ -273,8 +288,8 @@ export default function Analytics() {
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Routes</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">{analyticsSummary.activeRoutes}</p>
                 </div>
-              </div>
-            </div>
+          </div>
+        </div>
 
             {/* Total Distance */}
             <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all duration-300">
@@ -288,8 +303,8 @@ export default function Analytics() {
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Distance ({getPeriodLabel(period)})</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">{fuelAnalytics?.total_distance?.toFixed(0) || '0'} km</p>
                 </div>
-              </div>
-            </div>
+          </div>
+        </div>
 
             {/* Efficiency */}
             <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all duration-300">
@@ -303,8 +318,8 @@ export default function Analytics() {
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Avg Efficiency</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">{averageFuelEfficiency.toFixed(1)} km/L</p>
                 </div>
-              </div>
-            </div>
+          </div>
+        </div>
           </div>
         </div>
 
@@ -329,8 +344,8 @@ export default function Analytics() {
                   <div className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Total Cost</span>
                     <span className="text-lg font-bold text-gray-900 dark:text-white">₵{fuelAnalytics.total_cost.toFixed(2)}</span>
-                  </div>
-                  
+      </div>
+
                   <div className="flex justify-between items-center p-4 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-xl">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Cost per KM</span>
                     <span className="text-lg font-bold text-gray-900 dark:text-white">₵{fuelAnalytics.avg_cost_per_km.toFixed(2)}</span>
@@ -341,7 +356,7 @@ export default function Analytics() {
                     <span className="text-lg font-bold text-gray-900 dark:text-white">{fuelAnalytics.total_trips}</span>
                   </div>
                 </div>
-              </div>
+                  </div>
 
               {/* Consumption Overview */}
               <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
@@ -395,7 +410,7 @@ export default function Analytics() {
                       <div>
                         <h3 className="font-semibold text-gray-900 dark:text-white">{vehicle.make} {vehicle.model}</h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{vehicle.status.replace('-', ' ')}</p>
-                      </div>
+                    </div>
                     </div>
                   </div>
                   
@@ -414,18 +429,18 @@ export default function Analytics() {
                         }`}
                         style={{ width: `${vehicle.fuel_percentage}%` }}
                       />
-                    </div>
+          </div>
                     
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600 dark:text-gray-400">Range</span>
                       <span className="font-medium text-gray-900 dark:text-white">{vehicle.estimated_range_km} km</span>
-                    </div>
+        </div>
                     
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600 dark:text-gray-400">Efficiency</span>
                       <span className="font-medium text-gray-900 dark:text-white">{vehicle.fuel_efficiency_kmpl} km/L</span>
-                    </div>
-                    
+      </div>
+
                     {vehicle.needs_refuel && (
                       <div className="mt-3 p-2 bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 rounded-lg border border-red-200 dark:border-red-800">
                         <p className="text-sm text-red-700 dark:text-red-400 font-medium flex items-center gap-2">
@@ -439,7 +454,7 @@ export default function Analytics() {
                   </div>
                 </div>
               ))}
-            </div>
+                </div>
           ) : (
             <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl p-8 border border-gray-200/50 dark:border-gray-700/50 shadow-sm text-center">
               <div className="w-16 h-16 bg-gradient-to-br from-gray-400 to-gray-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -449,7 +464,7 @@ export default function Analytics() {
               </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No Fleet Data</h3>
               <p className="text-gray-600 dark:text-gray-400">Vehicle information will appear here once fleet data is available.</p>
-            </div>
+          </div>
           )}
         </div>
       </div>

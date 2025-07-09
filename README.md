@@ -252,7 +252,8 @@ python main.py
 
 > - # **Landing Page**
 
-![image](https://github.com/user-attachments/assets/4c04e1cc-2724-4ac6-ae15-72840830956c)
+![image](https://github.com/user-attachments/assets/01408c15-662c-4501-aa2b-6177041d1d5d)
+
 
 > - # **Sign In**
 

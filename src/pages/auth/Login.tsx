@@ -127,85 +127,85 @@ export default function Login() {
           {/* Form Container */}
           <div className={`${isDarkMode ? 'bg-gray-800/50' : 'bg-white/80'} backdrop-blur-lg rounded-2xl shadow-2xl border ${isDarkMode ? 'border-gray-700' : 'border-white/20'} p-8 relative`}>
             {/* Dark Mode Toggle */}
-            <button
-              onClick={toggleDarkMode}
+        <button
+          onClick={toggleDarkMode}
               className={`absolute top-4 right-4 p-2 rounded-lg transition-all duration-200 ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}
-              aria-label="Toggle dark mode"
-            >
+          aria-label="Toggle dark mode"
+        >
               {isDarkMode ? '☀️' : '🌙'}
-            </button>
+        </button>
 
             {/* Header */}
             <div className="text-center mb-8">
               <h2 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                Sign in to your account
-              </h2>
+            Sign in to your account
+          </h2>
               <p className={`mt-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 Welcome back! Please enter your credentials
               </p>
-            </div>
+        </div>
 
             {/* Form */}
             <form onSubmit={formik.handleSubmit} className="space-y-6">
               {/* Email/Employee ID Field */}
-              <div>
+            <div>
                 <label htmlFor="email" className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Email Address or Employee ID
-                </label>
+              </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <span className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>👤</span>
                   </div>
-                  <input
-                    id="email"
-                    type="text"
-                    autoComplete="username"
+              <input
+                id="email"
+                type="text"
+                autoComplete="username"
                     className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 ${
                       isDarkMode 
                         ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                         : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                     } ${
-                      formik.touched.email && formik.errors.email
+                  formik.touched.email && formik.errors.email
                         ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                        : ''
-                    }`}
+                    : ''
+                }`}
                     placeholder="Enter email or employee ID"
-                    {...formik.getFieldProps('email')}
-                  />
+                {...formik.getFieldProps('email')}
+              />
                 </div>
-                {formik.touched.email && formik.errors.email && (
+              {formik.touched.email && formik.errors.email && (
                   <p className="mt-1 text-sm text-red-500 flex items-center">
                     <span className="mr-1">❌</span>
                     {formik.errors.email}
                   </p>
-                )}
-              </div>
+              )}
+            </div>
 
               {/* Password Field */}
-              <div>
+            <div>
                 <label htmlFor="password" className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Password
-                </label>
+                Password
+              </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <span className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>🔒</span>
                   </div>
-                  <input
-                    id="password"
+              <input
+                id="password"
                     type={showPassword ? 'text' : 'password'}
-                    autoComplete="current-password"
+                autoComplete="current-password"
                     className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 ${
                       isDarkMode 
                         ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                         : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                     } ${
-                      formik.touched.password && formik.errors.password
+                  formik.touched.password && formik.errors.password
                         ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                        : ''
-                    }`}
+                    : ''
+                }`}
                     placeholder="Enter your password"
-                    {...formik.getFieldProps('password')}
-                  />
+                {...formik.getFieldProps('password')}
+              />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
@@ -214,23 +214,23 @@ export default function Login() {
                     {showPassword ? '🙈' : '👁️'}
                   </button>
                 </div>
-                {formik.touched.password && formik.errors.password && (
+              {formik.touched.password && formik.errors.password && (
                   <p className="mt-1 text-sm text-red-500 flex items-center">
                     <span className="mr-1">❌</span>
-                    {formik.errors.password}
-                  </p>
-                )}
-              </div>
+                  {formik.errors.password}
+                </p>
+              )}
+          </div>
 
               {/* Error Message */}
-              {error && (
+          {error && (
                 <div className="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 rounded-lg p-4">
                   <div className="flex items-center">
                     <span className="text-red-500 mr-2">⚠️</span>
                     <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
-                  </div>
-                </div>
-              )}
+              </div>
+            </div>
+          )}
 
               {/* Submit Button */}
               <button
@@ -252,19 +252,19 @@ export default function Login() {
 
               {/* Links */}
               <div className="flex items-center justify-between text-sm">
-                <Link
-                  to="/forgot-password"
+              <Link
+                to="/forgot-password"
                   className={`font-medium hover:underline transition-colors ${isDarkMode ? 'text-green-400 hover:text-green-300' : 'text-green-600 hover:text-green-500'}`}
-                >
+              >
                   Forgot password?
-                </Link>
-                <Link
+              </Link>
+              <Link
                   to="/auth/signup"
                   className={`font-medium hover:underline transition-colors ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'}`}
-                >
+              >
                   Create account
-                </Link>
-              </div>
+              </Link>
+            </div>
 
 
             </form>

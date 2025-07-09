@@ -110,7 +110,7 @@ export default function Profile() {
                     <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-400 rounded-lg flex items-center justify-center">
                       <span className="text-white text-lg">📱</span>
                     </div>
-                    <div>
+              <div>
                       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Phone Number</p>
                       <p className="text-lg font-semibold text-gray-900 dark:text-white">
                         {user?.phone || 'No phone provided'}
@@ -167,7 +167,7 @@ export default function Profile() {
                 </div>
               </div>
 
-            </div>
+          </div>
         </div>
       ) : (
           <div className="w-full max-w-4xl mx-auto">

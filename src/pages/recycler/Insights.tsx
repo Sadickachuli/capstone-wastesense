@@ -20,18 +20,66 @@ const WASTE_COLORS: Record<string, string> = {
   glass: '#10b981',   // teal
   textile: '#a21caf', // purple
   other: '#f43f5e',   // pink/red
+  // Capitalized versions for pie chart
+  Plastic: '#2563eb',
+  Metal: '#6b7280',
+  Organic: '#22c55e',
+  Paper: '#eab308',
+  Glass: '#10b981',
+  Textile: '#a21caf',
+  Other: '#f43f5e',
 };
 
 const getWasteIcon = (type: string) => {
   switch (type) {
-    case 'plastic': return '🧴';
-    case 'paper': return '📄';
-    case 'glass': return '🪟';
-    case 'metal': return '🔩';
-    case 'organic': return '🌱';
-    case 'textile': return '🧵';
-    case 'other': return '🗑️';
-    default: return '📦';
+    case 'plastic': 
+      return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2 M 19 8 L 5 8 M 10 8 L 10 18 M 14 8 L 14 18" />
+        </svg>
+      );
+    case 'paper':
+      return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      );
+    case 'glass':
+      return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 2l3 7h6l3-7M9 9v13a1 1 0 001 1h4a1 1 0 001-1V9" />
+        </svg>
+      );
+    case 'metal':
+      return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
+        </svg>
+      );
+    case 'organic':
+      return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.25 4.5l7.5 7.5-7.5 7.5-7.5-7.5z" />
+        </svg>
+      );
+    case 'textile':
+      return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      );
+    case 'other':
+      return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      );
+    default: 
+      return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+      );
   }
 };
 
@@ -179,11 +227,19 @@ export default function Insights() {
             }
           });
           
-          // Convert back to percentages
+          // Convert back to percentages and ensure they add up to 100%
           if (totalWeight > 0) {
             Object.keys(aggregateComposition).forEach(type => {
-              aggregateComposition[type] = Math.round((aggregateComposition[type] / totalWeight));
+              aggregateComposition[type] = (aggregateComposition[type] / totalWeight);
             });
+            
+            // Normalize to ensure percentages add up to 100%
+            const total = Object.values(aggregateComposition).reduce((sum, val) => sum + val, 0);
+            if (total > 0) {
+              Object.keys(aggregateComposition).forEach(type => {
+                aggregateComposition[type] = Math.round((aggregateComposition[type] / total) * 100 * 100) / 100;
+              });
+            }
           }
           
           setComposition(aggregateComposition);
@@ -283,12 +339,12 @@ export default function Insights() {
 
         // Aggregate by date
         const trendData = Object.entries(groupedByDate)
-          .map(([date, records]) => {
+          .map(([date, records]: [string, any[]]) => {
             const totalWeight = records.reduce((sum, record) => sum + (record.current_capacity || 0), 0);
             const aggregateComposition: Record<string, number> = {};
             
             // Calculate weighted averages
-            records.forEach(record => {
+            records.forEach((record: any) => {
               const weight = record.current_capacity || 0;
               if (weight > 0) {
                 ['plastic', 'paper', 'glass', 'metal', 'organic', 'textile', 'other'].forEach(type => {
@@ -297,14 +353,14 @@ export default function Insights() {
                 });
               }
             });
-            
+
             // Convert back to percentages
             if (totalWeight > 0) {
               Object.keys(aggregateComposition).forEach(type => {
-                aggregateComposition[type] = Math.round((aggregateComposition[type] / totalWeight));
+                aggregateComposition[type] = Math.round((aggregateComposition[type] / totalWeight) * 100) / 100;
               });
             }
-            
+
             return {
               date,
               totalWeight,
@@ -313,7 +369,7 @@ export default function Insights() {
           })
           .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
           .slice(-30); // Last 30 days
-        
+
         setTrendData(trendData);
       } else {
         // Single site
@@ -322,19 +378,19 @@ export default function Insights() {
           const records = res.data.history || [];
           const trendData = records
             .map((record: any) => ({
-              date: record.date,
+            date: record.date,
               totalWeight: record.current_capacity || 0,
-              plastic: record.plastic_percent || 0,
-              paper: record.paper_percent || 0,
-              glass: record.glass_percent || 0,
-              metal: record.metal_percent || 0,
-              organic: record.organic_percent || 0,
-              textile: record.textile_percent || 0,
-              other: record.other_percent || 0,
+            plastic: record.plastic_percent || 0,
+            paper: record.paper_percent || 0,
+            glass: record.glass_percent || 0,
+            metal: record.metal_percent || 0,
+            organic: record.organic_percent || 0,
+            textile: record.textile_percent || 0,
+            other: record.other_percent || 0,
             }))
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
             .slice(-30); // Last 30 days
-          
+
           setTrendData(trendData);
         } catch (error) {
           console.error('Failed to fetch trend data:', error);
@@ -365,9 +421,19 @@ export default function Insights() {
 
   const getCompositionData = () => {
     if (!composition) return [];
-    return Object.entries(composition)
+    
+    const data = Object.entries(composition)
       .filter(([, value]) => value > 0)
-      .map(([name, value]) => ({ name, value }));
+      .map(([name, value]) => ({ 
+        name: name.charAt(0).toUpperCase() + name.slice(1), 
+        value: Math.round(value * 100) / 100 
+      }))
+      .sort((a, b) => b.value - a.value);
+    
+    console.log('Pie chart data:', data);
+    console.log('Total percentage:', data.reduce((sum, item) => sum + item.value, 0));
+    
+    return data;
   };
 
   const axisColor = isDarkMode ? '#E5E7EB' : '#374151';
@@ -375,10 +441,10 @@ export default function Insights() {
   const tooltipTextColor = isDarkMode ? '#F9FAFB' : '#111827';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gradient-to-br dark:from-green-950 dark:via-gray-900 dark:to-green-900">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Enhanced Header */}
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-6 mb-8">
+        <div className="relative z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-6 mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center gap-6">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center">
@@ -392,25 +458,27 @@ export default function Insights() {
                   AI-powered waste analytics and trend analysis
                 </p>
               </div>
-            </div>
-            
+      </div>
+
             {/* Controls */}
-            <div className="flex flex-col sm:flex-row gap-4 lg:ml-auto">
-              <div className="bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm rounded-2xl p-3 border border-white/20 dark:border-gray-600/20">
+            <div className="flex flex-col sm:flex-row gap-4 lg:ml-auto relative z-50">
+              <div className="relative z-50 bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm rounded-2xl p-3 border border-white/20 dark:border-gray-600/20">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   📅 Analysis Date
                 </label>
                 <DatePicker
                   selected={selectedDate}
-                  onChange={(date) => setSelectedDate(date)}
+                  onChange={(date: Date | null) => setSelectedDate(date)}
                   includeDates={availableDates}
                   placeholderText="Select date"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white relative z-50 cursor-pointer"
                   dateFormat="MMM d, yyyy"
+                  popperClassName="z-50"
+                  popperPlacement="bottom-start"
                 />
               </div>
               
-              <div className="bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm rounded-2xl p-3 border border-white/20 dark:border-gray-600/20">
+              <div className="relative z-40 bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm rounded-2xl p-3 border border-white/20 dark:border-gray-600/20">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   🏢 Site Filter
                 </label>
@@ -432,37 +500,37 @@ export default function Insights() {
         </div>
 
         {/* Waste Site Cards with Background Images */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {sites.map((site) => {
-            const siteDeliveries = getDeliveriesForSite(site.id);
-            const isSelected = selectedSiteForDeliveries === site.id;
-            
-            return (
-              <div key={site.id} className="relative group">
+        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {sites.map((site) => {
+          const siteDeliveries = getDeliveriesForSite(site.id);
+          const isSelected = selectedSiteForDeliveries === site.id;
+          
+          return (
+            <div key={site.id} className="relative group">
                 {/* Site Card with Background Image */}
-                <div
-                  onClick={() => handleSiteCardClick(site.id)}
+              <div
+                onClick={() => handleSiteCardClick(site.id)}
                   className={`relative overflow-hidden rounded-3xl cursor-pointer transition-all duration-300 transform hover:scale-105 hover:shadow-2xl ${
                     isSelected ? 'ring-4 ring-blue-500 shadow-2xl scale-105' : 'shadow-xl'
-                  }`}
-                  style={{ height: '300px' }}
-                >
-                  {/* Background Image */}
-                  <div 
-                    className="absolute inset-0 bg-cover bg-center"
-                    style={{
-                      backgroundImage: site.id === 'WS001' 
-                        ? 'url(/north-ds.webp)' 
-                        : 'url(/south-ds.jpg)',
-                    }}
-                  />
-                  
+                }`}
+                style={{ height: '300px' }}
+              >
+                {/* Background Image */}
+                <div 
+                  className="absolute inset-0 bg-cover bg-center"
+                  style={{
+                    backgroundImage: site.id === 'WS001' 
+                      ? 'url(/north-ds.webp)' 
+                      : 'url(/south-ds.jpg)',
+                  }}
+                />
+                
                   {/* Modern Glassmorphism Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-black/40 to-black/60 backdrop-blur-sm" />
-                  
-                  {/* Card Content */}
-                  <div className="relative z-10 p-6 h-full flex flex-col justify-between text-white">
-                    <div>
+                
+                {/* Card Content */}
+                <div className="relative z-10 p-6 h-full flex flex-col justify-between text-white">
+                  <div>
                       <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
                         {site.name}
                       </h2>
@@ -470,77 +538,77 @@ export default function Insights() {
                         <span className="text-sm">📍</span>
                         {site.location}
                       </p>
-                      
+                    
                       {/* Enhanced Stats with Modern Cards */}
                       <div className="grid grid-cols-2 gap-3 mb-4">
                         <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-3 border border-white/10">
                           <div className="text-xs text-gray-200 mb-1">Current Capacity</div>
                           <div className="text-lg font-bold text-blue-200">{site.currentCapacity} kg</div>
-                        </div>
+                      </div>
                         <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-3 border border-white/10">
                           <div className="text-xs text-gray-200 mb-1">Incoming Deliveries</div>
                           <div className="text-lg font-bold text-yellow-300">{siteDeliveries.length}</div>
-                        </div>
                       </div>
-                    </div>
+          </div>
+        </div>
 
-                    {/* Click Indicator */}
+                  {/* Click Indicator */}
                     <div className="flex items-center justify-between bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
                       <div className="text-sm text-gray-200 flex items-center gap-2">
                         <span className="text-xs">👆</span>
-                        Click to view deliveries
-                      </div>
+                      Click to view deliveries
+                    </div>
                       <div className={`transform transition-transform duration-300 text-white ${isSelected ? 'rotate-180' : ''}`}>
-                        ↓
-                      </div>
+                      ↓
                     </div>
                   </div>
                 </div>
+              </div>
 
                 {/* Enhanced Deliveries Panel */}
-                {isSelected && (
+              {isSelected && (
                   <div className="mt-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 overflow-hidden animate-fadeIn">
-                    <div className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                           <span className="text-xl">🚚</span> 
                           Incoming Deliveries to {site.name}
-                        </h3>
-                        <button
-                          onClick={() => setSelectedSiteForDeliveries(null)}
+                      </h3>
+                      <button
+                        onClick={() => setSelectedSiteForDeliveries(null)}
                           className="w-8 h-8 bg-gradient-to-br from-red-400 to-red-600 rounded-xl flex items-center justify-center text-white hover:shadow-lg transition-all duration-300 hover:scale-105"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                      
-                      {siteDeliveries.length === 0 ? (
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    
+                    {siteDeliveries.length === 0 ? (
                         <div className="text-center py-8 bg-gray-50/50 dark:bg-gray-700/50 rounded-2xl">
                           <div className="w-16 h-16 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-4">
                             <span className="text-white text-2xl">📦</span>
                           </div>
                           <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">No Deliveries Scheduled</h4>
                           <p className="text-gray-600 dark:text-gray-400">No deliveries currently scheduled for this site</p>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {siteDeliveries.map((delivery, index) => (
-                            <div
-                              key={delivery.id}
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {siteDeliveries.map((delivery, index) => (
+                          <div
+                            key={delivery.id}
                               className="bg-gray-50/50 dark:bg-gray-700/50 rounded-2xl p-4 hover:shadow-lg transition-all duration-300"
-                            >
+                          >
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-3">
                                   <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center">
                                     <span className="text-white text-sm">#{index + 1}</span>
                                   </div>
                                   <div>
-                                    <p className="font-medium text-gray-900 dark:text-white">
+                                <p className="font-medium text-gray-900 dark:text-white">
                                       Delivery #{index + 1}
                                     </p>
                                     <p className="text-sm text-gray-600 dark:text-gray-400">
                                       {new Date(delivery.estimatedArrival).toLocaleDateString()}
-                                    </p>
+                                </p>
                                   </div>
                                 </div>
                                 <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
@@ -559,30 +627,30 @@ export default function Insights() {
                               <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div className="flex items-center gap-2">
                                   <span className="text-lg">🚛</span>
-                                  <div>
-                                    <span className="text-gray-500 dark:text-gray-400">Truck:</span>
-                                    <div className="font-medium text-gray-900 dark:text-white">{delivery.truckId}</div>
-                                  </div>
+                                <div>
+                                  <span className="text-gray-500 dark:text-gray-400">Truck:</span>
+                                  <div className="font-medium text-gray-900 dark:text-white">{delivery.truckId}</div>
+                                </div>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <span className="text-lg">🗺️</span>
-                                  <div>
-                                    <span className="text-gray-500 dark:text-gray-400">Zone:</span>
-                                    <div className="font-medium text-gray-900 dark:text-white">{delivery.zone}</div>
-                                  </div>
+                                <div>
+                                  <span className="text-gray-500 dark:text-gray-400">Zone:</span>
+                                  <div className="font-medium text-gray-900 dark:text-white">{delivery.zone}</div>
                                 </div>
                               </div>
                             </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
 
         {/* Analysis Results */}
         {selectedDate && (
@@ -592,22 +660,22 @@ export default function Insights() {
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl flex items-center justify-center">
                   <span className="text-white text-xl">📊</span>
-                </div>
-                <div>
+          </div>
+          <div>
                   <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
                     Composition Analysis - {formatDate(selectedDate)}
                   </h2>
                   <p className="text-gray-600 dark:text-gray-400">
                     {selectedSite === 'all' ? 'Aggregated across all sites' : `For ${getSiteName(selectedSite)}`}
-                  </p>
-                </div>
-              </div>
+            </p>
+          </div>
+      </div>
 
               {loading ? (
                 <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl p-12 text-center">
                   <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
                     <span className="text-white text-2xl">🤖</span>
-                  </div>
+        </div>
                   <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">
                     Analyzing Waste Composition...
                   </h3>
@@ -616,28 +684,28 @@ export default function Insights() {
                   </p>
                 </div>
               ) : composition && totalWeight ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Composition Chart */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Composition Chart */}
                   <div className="bg-gray-50/50 dark:bg-gray-700/50 rounded-2xl p-6">
                     <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
                       <span className="text-lg">🥧</span>
                       Material Breakdown
-                    </h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <PieChart>
-                        <Pie
+          </h3>
+              <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
                           data={getCompositionData()}
-                          dataKey="value"
-                          nameKey="name"
-                          cx="50%"
-                          cy="50%"
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
                           outerRadius={100}
-                          label={({ name, value }) => `${name}: ${value}%`}
-                        >
+                      label={({ name, value }) => `${name}: ${value}%`}
+                    >
                           {getCompositionData().map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={WASTE_COLORS[entry.name]} />
-                          ))}
-                        </Pie>
+                      ))}
+                    </Pie>
                         <Tooltip 
                           contentStyle={{ 
                             backgroundColor: tooltipBg,
@@ -647,11 +715,11 @@ export default function Insights() {
                             boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
                           }} 
                         />
-                      </PieChart>
-                    </ResponsiveContainer>
+                  </PieChart>
+              </ResponsiveContainer>
                   </div>
-
-                  {/* Composition Details */}
+              
+              {/* Composition Details */}
                   <div className="space-y-4">
                     <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-2xl p-6">
                       <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
@@ -661,7 +729,7 @@ export default function Insights() {
                       <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                         {totalWeight.toFixed(1)} tons
                       </p>
-                    </div>
+                </div>
 
                     <div className="grid grid-cols-1 gap-3">
                       {Object.entries(composition)
@@ -677,7 +745,7 @@ export default function Insights() {
                                 </span>
                               </div>
                               <span className="text-lg font-bold text-gray-800 dark:text-gray-200">
-                                {percentage}%
+                                {(Math.round(percentage * 100) / 100).toFixed(1)}%
                               </span>
                             </div>
                             <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
@@ -695,8 +763,8 @@ export default function Insights() {
                           </div>
                         ))}
                     </div>
-                  </div>
-                </div>
+              </div>
+            </div>
               ) : (
                 <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700/20 dark:to-gray-800/20 rounded-2xl p-12 text-center">
                   <div className="w-16 h-16 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -704,13 +772,13 @@ export default function Insights() {
                   </div>
                   <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">
                     No Data Available
-                  </h3>
+              </h3>
                   <p className="text-gray-600 dark:text-gray-400">
                     No waste composition data found for the selected date and site.
-                  </p>
-                </div>
+                        </p>
+                      </div>
               )}
-            </div>
+                      </div>
 
             {/* AI Analysis Image */}
             {annotatedImage && (
@@ -718,7 +786,7 @@ export default function Insights() {
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-teal-500 rounded-xl flex items-center justify-center">
                     <span className="text-white text-xl">🤖</span>
-                  </div>
+                    </div>
                   <div>
                     <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
                       AI Visual Analysis
@@ -726,11 +794,11 @@ export default function Insights() {
                     <p className="text-gray-600 dark:text-gray-400">
                       Machine learning detected waste objects
                     </p>
-                  </div>
+                </div>
                 </div>
                 <div className="bg-gray-50/50 dark:bg-gray-700/50 rounded-2xl p-6">
-                  <img 
-                    src={`data:image/jpeg;base64,${annotatedImage}`}
+                    <img
+                      src={`data:image/jpeg;base64,${annotatedImage}`}
                     alt="AI Annotated Waste Analysis"
                     className="w-full h-auto rounded-xl shadow-lg"
                   />
@@ -753,7 +821,7 @@ export default function Insights() {
                       AI analysis for each individual site
                     </p>
                   </div>
-                </div>
+                    </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {Object.entries(allSiteImages).map(([siteId, image]) => (
                     <div key={siteId} className="bg-gray-50/50 dark:bg-gray-700/50 rounded-2xl p-4">
@@ -766,13 +834,13 @@ export default function Insights() {
                         alt={`AI Analysis for ${getSiteName(siteId)}`}
                         className="w-full h-auto rounded-xl shadow-lg"
                       />
-                    </div>
+                  </div>
                   ))}
-                </div>
-              </div>
-            )}
+            </div>
           </div>
-        )}
+            )}
+        </div>
+      )}
 
         {/* Trend Analysis */}
         <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-8">
@@ -784,10 +852,10 @@ export default function Insights() {
               <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
                 Trend Analysis (30 Days)
               </h2>
-              <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 dark:text-gray-400">
                 {selectedSite === 'all' ? 'Aggregated trends across all sites' : `Trends for ${getSiteName(selectedSite)}`}
-              </p>
-            </div>
+          </p>
+        </div>
           </div>
 
           {trendLoading ? (
@@ -797,34 +865,34 @@ export default function Insights() {
               </div>
               <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">
                 Analyzing Trends...
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400">
                 Processing historical data patterns
-              </p>
-            </div>
+          </p>
+              </div>
           ) : trendData.length > 0 ? (
-            <div className="space-y-8">
+          <div className="space-y-8">
               {/* Weight Trend */}
               <div className="bg-gray-50/50 dark:bg-gray-700/50 rounded-2xl p-6">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
                   <span className="text-lg">⚖️</span>
                   Weight Trend
-                </h3>
+              </h3>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={trendData}>
-                    <XAxis 
+                  <XAxis 
                       dataKey="date" 
                       stroke={axisColor}
                       tick={{ fill: axisColor, fontSize: 12 }}
                       tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    />
-                    <YAxis 
+                  />
+                  <YAxis 
                       stroke={axisColor}
                       tick={{ fill: axisColor, fontSize: 12 }}
                       label={{ value: 'Weight (tons)', angle: -90, position: 'insideLeft' }}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
                         backgroundColor: tooltipBg,
                         border: 'none',
                         borderRadius: '12px',
@@ -832,7 +900,7 @@ export default function Insights() {
                         boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
                       }}
                       labelFormatter={(value) => new Date(value).toLocaleDateString()}
-                    />
+                  />
                     <Line 
                       type="monotone" 
                       dataKey="totalWeight" 
@@ -841,31 +909,31 @@ export default function Insights() {
                       dot={{ fill: '#3B82F6', strokeWidth: 2, r: 6 }}
                       activeDot={{ r: 8, stroke: '#3B82F6', strokeWidth: 2 }}
                     />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
 
               {/* Composition Trend */}
               <div className="bg-gray-50/50 dark:bg-gray-700/50 rounded-2xl p-6">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
                   <span className="text-lg">🧪</span>
                   Composition Trend
-                </h3>
+              </h3>
                 <ResponsiveContainer width="100%" height={400}>
                   <LineChart data={trendData}>
-                    <XAxis 
+                  <XAxis 
                       dataKey="date" 
                       stroke={axisColor}
                       tick={{ fill: axisColor, fontSize: 12 }}
                       tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    />
-                    <YAxis 
+                  />
+                  <YAxis 
                       stroke={axisColor}
                       tick={{ fill: axisColor, fontSize: 12 }}
                       label={{ value: 'Percentage (%)', angle: -90, position: 'insideLeft' }}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
                         backgroundColor: tooltipBg,
                         border: 'none',
                         borderRadius: '12px',
@@ -887,23 +955,23 @@ export default function Insights() {
                         name={type.charAt(0).toUpperCase() + type.slice(1)}
                       />
                     ))}
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+                </LineChart>
+              </ResponsiveContainer>
             </div>
+              </div>
           ) : (
             <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700/20 dark:to-gray-800/20 rounded-2xl p-12 text-center">
               <div className="w-16 h-16 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-white text-2xl">📊</span>
-              </div>
+                </div>
               <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">
                 No Trend Data Available
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400">
                 Insufficient historical data to generate trends.
-              </p>
-            </div>
-          )}
+          </p>
+        </div>
+      )}
         </div>
 
 

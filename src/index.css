@@ -218,7 +218,7 @@
 
 .animate-slide-in-right {
   animation: slideInFromRight 0.6s ease-out;
-}
+  }
 
 .animate-fade-in-up {
   animation: fadeInUp 0.6s ease-out;
@@ -251,7 +251,7 @@
 
 .animate-pulse-glow {
   animation: pulse-glow 2s infinite;
-}
+  }
 
 .animate-float {
   animation: float 3s ease-in-out infinite;
@@ -291,7 +291,7 @@
   -webkit-backdrop-filter: blur(10px);
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
-}
+  }
 
 .glass-effect-dark {
   backdrop-filter: blur(10px);
@@ -350,7 +350,7 @@
 ::-webkit-scrollbar-thumb {
   background: rgba(156, 163, 175, 0.5);
   border-radius: 4px;
-}
+  }
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(156, 163, 175, 0.8);
@@ -403,7 +403,7 @@
 .dark .image-skeleton {
   background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
   background-size: 200% 100%;
-}
+  }
 
 /* Enhanced tooltip styles */
 .tooltip {
@@ -462,7 +462,7 @@
   width: 20px;
   height: 20px;
   animation: spin 1s linear infinite;
-}
+  }
 
 @keyframes spin {
   0% { transform: rotate(0deg); }

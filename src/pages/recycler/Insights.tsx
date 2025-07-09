@@ -252,7 +252,7 @@ export default function Insights() {
             if (total > 0) {
               Object.keys(aggregateComposition).forEach(type => {
                 aggregateComposition[type] = Math.round((aggregateComposition[type] / total) * 100 * 100) / 100;
-              });
+            });
             }
           }
           
@@ -364,9 +364,9 @@ export default function Insights() {
                 ['plastic', 'paper', 'glass', 'metal', 'organic', 'textile', 'other'].forEach(type => {
               const percent = record[`${type}_percent`] || 0;
                   aggregateComposition[type] = (aggregateComposition[type] || 0) + (percent * weight);
-                });
-              }
             });
+              }
+          });
 
             // Convert back to percentages
             if (totalWeight > 0) {
@@ -379,7 +379,7 @@ export default function Insights() {
             date,
               totalWeight,
               ...aggregateComposition
-            };
+          };
           })
           .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
           .slice(-30); // Last 30 days

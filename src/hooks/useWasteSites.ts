@@ -68,25 +68,42 @@ export function useWasteSites() {
       // Build normalized data object
       const normalizedData = { ...data };
       keys.forEach((k, i) => { normalizedData[k] = values[i]; });
+      
+      // Try to update the composition
       await api.wasteSites.updateComposition(id, { ...normalizedData, updated_by: user?.id });
-      // Refetch sites after update
-      const dataAfter = await api.wasteSites.list();
-      const mapped = dataAfter.map((site: any) => ({
-        ...site,
-        composition: site.composition || {
-          plastic: Number(site.composition_plastic ?? site.composition?.plastic ?? 0),
-          paper: Number(site.composition_paper ?? site.composition?.paper ?? 0),
-          glass: Number(site.composition_glass ?? site.composition?.glass ?? 0),
-          metal: Number(site.composition_metal ?? site.composition?.metal ?? 0),
-          organic: Number(site.composition_organic ?? site.composition?.organic ?? 0),
-          textile: Number(site.composition_textile ?? site.composition?.textile ?? 0),
-          other: Number(site.composition_other ?? site.composition?.other ?? 0),
-        },
-      }));
-      setSites(mapped);
+      
+      // Try to refetch sites after update, but don't fail if refetch fails
+      try {
+        const dataAfter = await api.wasteSites.list();
+        const mapped = dataAfter.map((site: any) => ({
+          ...site,
+          composition: site.composition || {
+            plastic: Number(site.composition_plastic ?? site.composition?.plastic ?? 0),
+            paper: Number(site.composition_paper ?? site.composition?.paper ?? 0),
+            glass: Number(site.composition_glass ?? site.composition?.glass ?? 0),
+            metal: Number(site.composition_metal ?? site.composition?.metal ?? 0),
+            organic: Number(site.composition_organic ?? site.composition?.organic ?? 0),
+            textile: Number(site.composition_textile ?? site.composition?.textile ?? 0),
+            other: Number(site.composition_other ?? site.composition?.other ?? 0),
+          },
+        }));
+        setSites(mapped);
+      } catch (refetchError) {
+        // Log the refetch error but don't throw it - the update was successful
+        console.warn('Failed to refetch sites after update, but update was successful:', refetchError);
+        // Manually update the site in the current state to reflect the change
+        setSites(prevSites => 
+          prevSites.map(site => 
+            site.id === id 
+              ? { ...site, composition: { ...site.composition, ...normalizedData }, currentCapacity: normalizedData.currentCapacity || site.currentCapacity }
+              : site
+          )
+        );
+      }
+      
       return true;
     } catch (err) {
-      console.error(err);
+      console.error('Failed to update waste site composition:', err);
       throw err;
     }
   };

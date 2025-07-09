@@ -146,17 +146,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               
               {/* Logout Button */}
               <div className="pt-4 mt-4 border-t border-green-200/60 dark:border-green-800/30">
-                <button
-                  onClick={logout}
+              <button
+                onClick={logout}
                   className="group relative flex items-center w-full px-3 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 rounded-lg hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100/50 dark:hover:from-red-900/20 dark:hover:to-red-800/20 hover:text-red-700 dark:hover:text-red-300 transition-all duration-300 transform hover:scale-105 hover:translate-x-2 active:scale-95 active:translate-x-0"
                   style={slideInAnimation(navItems.length * 0.1)}
-                >
+              >
                   <ArrowLeftOnRectangleIcon className="mr-3 h-5 w-5 flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:-rotate-12" />
                   <span className="transition-all duration-300 group-hover:translate-x-1">Logout</span>
                   
                   {/* Hover effect overlay */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/5 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-500 rounded-lg"></div>
-                </button>
+              </button>
               </div>
             </nav>
 

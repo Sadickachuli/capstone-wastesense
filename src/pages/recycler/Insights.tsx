@@ -103,6 +103,20 @@ export default function Insights() {
   const [selectedSiteForDeliveries, setSelectedSiteForDeliveries] = useState<string | null>(null);
   const [loadingDeliveries, setLoadingDeliveries] = useState(false);
 
+  // Add new state for zoom modal and download functionality
+  const [isZoomModalOpen, setIsZoomModalOpen] = useState(false);
+  const [zoomedImageData, setZoomedImageData] = useState<{
+    src: string;
+    alt: string;
+    siteName: string;
+  } | null>(null);
+
+  // Add state for download status
+  const [downloadStatus, setDownloadStatus] = useState<{
+    isDownloading: boolean;
+    message: string;
+  }>({ isDownloading: false, message: '' });
+
   // Fetch detection history to get available dates
   useEffect(() => {
     async function fetchDetectionHistory() {
@@ -348,7 +362,7 @@ export default function Insights() {
               const weight = record.current_capacity || 0;
               if (weight > 0) {
                 ['plastic', 'paper', 'glass', 'metal', 'organic', 'textile', 'other'].forEach(type => {
-                  const percent = record[`${type}_percent`] || 0;
+              const percent = record[`${type}_percent`] || 0;
                   aggregateComposition[type] = (aggregateComposition[type] || 0) + (percent * weight);
                 });
               }
@@ -358,11 +372,11 @@ export default function Insights() {
             if (totalWeight > 0) {
               Object.keys(aggregateComposition).forEach(type => {
                 aggregateComposition[type] = Math.round((aggregateComposition[type] / totalWeight) * 100) / 100;
-              });
-            }
+            });
+          }
 
-            return {
-              date,
+          return {
+            date,
               totalWeight,
               ...aggregateComposition
             };
@@ -435,6 +449,72 @@ export default function Insights() {
     
     return data;
   };
+
+  // Add zoom functionality
+  const handleZoomImage = (imageData: string, siteName: string) => {
+    setZoomedImageData({
+      src: `data:image/jpeg;base64,${imageData}`,
+      alt: `AI Annotated Waste Detection - ${siteName}`,
+      siteName
+    });
+    setIsZoomModalOpen(true);
+  };
+
+  // Add download functionality
+  const handleDownloadImage = (imageData: string, siteName: string) => {
+    setDownloadStatus({ isDownloading: true, message: 'Preparing download...' });
+    
+    try {
+      // Create a temporary anchor element to trigger download
+      const link = document.createElement('a');
+      link.href = `data:image/jpeg;base64,${imageData}`;
+      link.download = `waste-analysis-${siteName.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setDownloadStatus({ isDownloading: false, message: 'Download completed!' });
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setDownloadStatus({ isDownloading: false, message: '' });
+      }, 3000);
+    } catch (error) {
+      setDownloadStatus({ isDownloading: false, message: 'Download failed. Please try again.' });
+      console.error('Download failed:', error);
+      
+      // Clear error message after 3 seconds
+      setTimeout(() => {
+        setDownloadStatus({ isDownloading: false, message: '' });
+      }, 3000);
+    }
+  };
+
+  // Close zoom modal
+  const handleCloseZoomModal = () => {
+    setIsZoomModalOpen(false);
+    setZoomedImageData(null);
+  };
+
+  // Add keyboard shortcut for closing modal
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isZoomModalOpen) {
+        handleCloseZoomModal();
+      }
+    };
+
+    if (isZoomModalOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      // Prevent body scrolling when modal is open
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isZoomModalOpen]);
 
   const axisColor = isDarkMode ? '#E5E7EB' : '#374151';
   const tooltipBg = isDarkMode ? '#1F2937' : '#FFFFFF';
@@ -760,9 +840,9 @@ export default function Insights() {
                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                               ≈ {((percentage / 100) * totalWeight).toFixed(1)} tons
                             </p>
-                          </div>
-                        ))}
                     </div>
+                  ))}
+                </div>
               </div>
             </div>
               ) : (
@@ -784,9 +864,11 @@ export default function Insights() {
             {annotatedImage && (
               <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-8">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-teal-500 rounded-xl flex items-center justify-center">
-                    <span className="text-white text-xl">🤖</span>
-                    </div>
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-teal-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
                   <div>
                     <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
                       AI Visual Analysis
@@ -794,14 +876,70 @@ export default function Insights() {
                     <p className="text-gray-600 dark:text-gray-400">
                       Machine learning detected waste objects
                     </p>
+                  </div>
                 </div>
-                </div>
-                <div className="bg-gray-50/50 dark:bg-gray-700/50 rounded-2xl p-6">
+                
+                {/* Enhanced Image Container */}
+                <div className="relative group overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-700">
+                  {/* Glassmorphism overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-black/5 dark:from-black/30 dark:via-transparent dark:to-black/10 pointer-events-none"></div>
+                  
+                  {/* Main Image */}
+                  <div className="relative p-6">
                     <img
                       src={`data:image/jpeg;base64,${annotatedImage}`}
-                    alt="AI Annotated Waste Analysis"
-                    className="w-full h-auto rounded-xl shadow-lg"
-                  />
+                      alt="AI Annotated Waste Analysis"
+                      className="w-full h-auto rounded-xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-[1.02] cursor-pointer border border-white/20 dark:border-gray-600/20"
+                    />
+                    
+                    {/* Hover overlay with action buttons */}
+                    <div className="absolute inset-6 bg-black/50 backdrop-blur-sm rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4">
+                      <button 
+                        onClick={() => handleZoomImage(annotatedImage, selectedSite === 'all' ? 'All Sites Analysis' : getSiteName(selectedSite))}
+                        className="bg-white/20 backdrop-blur-sm border border-white/30 text-white px-6 py-3 rounded-lg hover:bg-white/30 transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        Zoom
+                      </button>
+                      <button 
+                        onClick={() => handleDownloadImage(annotatedImage, selectedSite === 'all' ? 'All Sites Analysis' : getSiteName(selectedSite))}
+                        className="bg-white/20 backdrop-blur-sm border border-white/30 text-white px-6 py-3 rounded-lg hover:bg-white/30 transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
+                        disabled={downloadStatus.isDownloading}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        {downloadStatus.isDownloading ? 'Downloading...' : 'Download'}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Analysis Status Bar */}
+                  <div className="bg-gradient-to-r from-green-500/10 to-teal-500/10 dark:from-green-500/20 dark:to-teal-500/20 p-4 backdrop-blur-sm">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-green-500 rounded-full animate-pulse"></div>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Analysis Complete</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1">
+                          <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          <span className="text-xs text-gray-600 dark:text-gray-400">Objects Detected</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                          <span className="text-xs text-gray-600 dark:text-gray-400">Classified</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -810,8 +948,10 @@ export default function Insights() {
             {selectedSite === 'all' && Object.keys(allSiteImages).length > 0 && (
               <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 dark:border-gray-700/20 p-8">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center">
-                    <span className="text-white text-xl">🏢</span>
+                  <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
@@ -821,23 +961,94 @@ export default function Insights() {
                       AI analysis for each individual site
                     </p>
                   </div>
-                    </div>
+                </div>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {Object.entries(allSiteImages).map(([siteId, image]) => (
-                    <div key={siteId} className="bg-gray-50/50 dark:bg-gray-700/50 rounded-2xl p-4">
-                      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-                        <span className="text-lg">📍</span>
-                        {getSiteName(siteId)}
-                      </h3>
-                      <img 
-                        src={`data:image/jpeg;base64,${image}`}
-                        alt={`AI Analysis for ${getSiteName(siteId)}`}
-                        className="w-full h-auto rounded-xl shadow-lg"
-                      />
-                  </div>
+                    <div key={siteId} className="relative group overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-700 shadow-lg hover:shadow-xl transition-all duration-300">
+                      {/* Glassmorphism overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-black/5 dark:from-black/30 dark:via-transparent dark:to-black/10 pointer-events-none"></div>
+                      
+                      {/* Site Header */}
+                      <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20 p-4 backdrop-blur-sm">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-sm">
+                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                              {getSiteName(siteId)}
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Site ID: {siteId}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Enhanced Image Container */}
+                      <div className="relative p-4">
+                        <img 
+                          src={`data:image/jpeg;base64,${image}`}
+                          alt={`AI Analysis for ${getSiteName(siteId)}`}
+                          className="w-full h-auto rounded-xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-[1.02] cursor-pointer border border-white/20 dark:border-gray-600/20"
+                        />
+                        
+                        {/* Hover overlay with action buttons */}
+                        <div className="absolute inset-4 bg-black/50 backdrop-blur-sm rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-3">
+                          <button 
+                            onClick={() => handleZoomImage(image, getSiteName(siteId))}
+                            className="bg-white/20 backdrop-blur-sm border border-white/30 text-white px-5 py-2.5 rounded-lg hover:bg-white/30 transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            Zoom
+                          </button>
+                          <button 
+                            onClick={() => handleDownloadImage(image, getSiteName(siteId))}
+                            className="bg-white/20 backdrop-blur-sm border border-white/30 text-white px-5 py-2.5 rounded-lg hover:bg-white/30 transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
+                            disabled={downloadStatus.isDownloading}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            {downloadStatus.isDownloading ? 'Downloading...' : 'Download'}
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* Analysis Status Bar */}
+                      <div className="bg-gradient-to-r from-green-500/10 to-teal-500/10 dark:from-green-500/20 dark:to-teal-500/20 p-3 backdrop-blur-sm">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Analysis Complete</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1">
+                              <svg className="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                              <span className="text-xs text-gray-600 dark:text-gray-400">Objects Detected</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <svg className="w-3 h-3 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                              </svg>
+                              <span className="text-xs text-gray-600 dark:text-gray-400">Classified</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   ))}
-            </div>
-          </div>
+                </div>
+              </div>
             )}
         </div>
       )}
@@ -976,6 +1187,58 @@ export default function Insights() {
 
 
       </div>
+
+      {/* Zoom Modal */}
+      {isZoomModalOpen && zoomedImageData && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="relative max-w-[90vw] max-h-[90vh] w-full h-full flex items-center justify-center">
+            {/* Close Button */}
+            <button 
+              onClick={handleCloseZoomModal}
+              className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm border border-white/30 text-white w-12 h-12 rounded-full hover:bg-white/30 transition-all duration-200 flex items-center justify-center z-10"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            {/* Image */}
+            <img 
+              src={zoomedImageData.src}
+              alt={zoomedImageData.alt}
+              className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+            />
+            
+            {/* Image Info */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 backdrop-blur-sm text-white px-6 py-3 rounded-full">
+              <p className="text-sm font-medium">
+                {zoomedImageData.siteName} - Waste Analysis
+              </p>
+              <p className="text-xs text-gray-300 mt-1">
+                Press ESC to close
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Download Notification */}
+      {downloadStatus.message && (
+        <div className="fixed bottom-4 right-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-white/20 dark:border-gray-700/20 rounded-xl shadow-xl p-4 flex items-center gap-3 z-50">
+          {downloadStatus.isDownloading ? (
+            <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          ) : (
+            <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          )}
+          <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
+            {downloadStatus.message}
+          </span>
+        </div>
+      )}
     </div>
   );
 } 

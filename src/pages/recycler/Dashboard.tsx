@@ -582,7 +582,7 @@ export default function RecyclerDashboard() {
                   <div className="w-16 h-16 rounded-lg bg-blue-600 dark:bg-blue-700 flex items-center justify-center shadow-sm">
                     <span className="text-white text-xl font-bold">
                       {user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : 'RC'}
-                    </span>
+              </span>
                   </div>
                   <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center">
                     <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -612,8 +612,8 @@ export default function RecyclerDashboard() {
                 </div>
               </div>
             </div>
-          </div>
         </div>
+      </div>
 
                 {/* Key Performance Indicators */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -728,9 +728,9 @@ export default function RecyclerDashboard() {
                   {totalWeight ? `${totalWeight} kg` : 'No data'} total waste processed
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Breakdown by material type</p>
-              </div>
+            </div>
               <div className="grid grid-cols-2 gap-3">
-                {allTypes.map((type) => (
+              {allTypes.map((type) => (
                   <div key={type} className="flex items-center gap-2">
                     <div 
                       className="w-4 h-4 rounded-full"
@@ -747,7 +747,7 @@ export default function RecyclerDashboard() {
 
                 {/* Site-Specific Analysis */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
-          {northSite && northComp && (
+        {northSite && northComp && (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer group animate-slide-in-left">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-6 h-6 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center group-hover:bg-green-200 dark:group-hover:bg-green-900/50 transition-colors duration-300">
@@ -802,8 +802,8 @@ export default function RecyclerDashboard() {
                     
                     {/* Main Image */}
                     <div className="relative p-4">
-                      <img
-                        src={`data:image/jpeg;base64,${currentImages[northSite.id]}`}
+                <img
+                  src={`data:image/jpeg;base64,${currentImages[northSite.id]}`}
                         alt="AI Annotated Waste Detection - North Site"
                         className="w-full rounded-xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-[1.02] cursor-pointer border border-white/20 dark:border-gray-600/20"
                         style={{ maxHeight: 280, objectFit: 'cover' }}
@@ -870,22 +870,22 @@ export default function RecyclerDashboard() {
                       </div>
                       <span className="text-sm text-gray-600 dark:text-gray-400">
                         {northComp.created_at ? (() => {
-                          const date = new Date(northComp.created_at);
-                          return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
-                        })() : 'Unknown time'}
+                    const date = new Date(northComp.created_at);
+                    return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
+                  })() : 'Unknown time'}
                       </span>
                     </div>
                   </div>
-                </div>
-              )}
+              </div>
+            )}
               <div className="mt-4 flex items-center gap-2">
                 <span className="text-lg font-bold text-gray-900 dark:text-white">{Math.round(northComp.current_capacity)} kg</span>
                 <span className="text-sm text-gray-600 dark:text-gray-400">processed today</span>
-              </div>
             </div>
-          )}
+          </div>
+        )}
 
-                  {southSite && southComp && (
+        {southSite && southComp && (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer group animate-slide-in-right">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors duration-300">
@@ -940,8 +940,8 @@ export default function RecyclerDashboard() {
                     
                     {/* Main Image */}
                     <div className="relative p-4">
-                      <img
-                        src={`data:image/jpeg;base64,${currentImages[southSite.id]}`}
+                <img
+                  src={`data:image/jpeg;base64,${currentImages[southSite.id]}`}
                         alt="AI Annotated Waste Detection - South Site"
                         className="w-full rounded-xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-[1.02] cursor-pointer border border-white/20 dark:border-gray-600/20"
                         style={{ maxHeight: 280, objectFit: 'cover' }}
@@ -1008,19 +1008,19 @@ export default function RecyclerDashboard() {
                       </div>
                       <span className="text-sm text-gray-600 dark:text-gray-400">
                         {southComp.created_at ? (() => {
-                          const date = new Date(southComp.created_at);
-                          return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
-                        })() : 'Unknown time'}
+                    const date = new Date(southComp.created_at);
+                    return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
+                  })() : 'Unknown time'}
                       </span>
-                    </div>
-                  </div>
-                </div>
-              )}
+              </div>
+            </div>
+          </div>
+        )}
               <div className="mt-4 flex items-center gap-2">
                 <span className="text-lg font-bold text-gray-900 dark:text-white">{Math.round(southComp.current_capacity)} kg</span>
                 <span className="text-sm text-gray-600 dark:text-gray-400">processed today</span>
-              </div>
-          </div>
+      </div>
+        </div>
         )}
         </div>
                 {/* Environmental Impact Assessment */}
@@ -1030,10 +1030,10 @@ export default function RecyclerDashboard() {
               <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
               </svg>
-            </div>
+        </div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Environmental Impact Today</h2>
-          </div>
-          
+      </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-6 text-center border border-green-200 dark:border-green-800 hover:border-green-300 dark:hover:border-green-700 hover:shadow-md transition-all duration-300 cursor-pointer group animate-bounce-in">
               <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 dark:group-hover:bg-green-900/50 transition-colors duration-300">
@@ -1055,8 +1055,8 @@ export default function RecyclerDashboard() {
                     decimals={0}
                     duration={2500}
                   /> miles driving
-              </p>
-            </div>
+            </p>
+          </div>
             
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 text-center border border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md transition-all duration-300 cursor-pointer group animate-bounce-in" style={{animationDelay: '0.1s'}}>
               <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors duration-300">
@@ -1073,9 +1073,9 @@ export default function RecyclerDashboard() {
               </p>
               <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Trees Saved</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Through paper recycling
-              </p>
-            </div>
+              Through paper recycling
+            </p>
+          </div>
             
             <div className="bg-teal-50 dark:bg-teal-900/20 rounded-lg p-6 text-center border border-teal-200 dark:border-teal-800 hover:border-teal-300 dark:hover:border-teal-700 hover:shadow-md transition-all duration-300 cursor-pointer group animate-bounce-in" style={{animationDelay: '0.2s'}}>
               <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-teal-200 dark:group-hover:bg-teal-900/50 transition-colors duration-300">
@@ -1097,9 +1097,9 @@ export default function RecyclerDashboard() {
                     decimals={0}
                     duration={2500}
                   /> people/day
-              </p>
-            </div>
+            </p>
           </div>
+        </div>
         
           {/* Impact Calculation Details */}
           <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
@@ -1108,7 +1108,7 @@ export default function RecyclerDashboard() {
                 <svg className="w-4 h-4 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
-              </div>
+            </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Impact Calculation Methodology</h3>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -1116,17 +1116,17 @@ export default function RecyclerDashboard() {
                 <div className="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-1">Paper</div>
                 <div className="text-xs text-gray-600 dark:text-gray-400">3.3kg CO₂/kg</div>
                 <div className="text-xs text-gray-600 dark:text-gray-400">60L H₂O/kg</div>
-              </div>
+            </div>
               <div className="text-center bg-white dark:bg-gray-600 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
                 <div className="text-sm font-semibold text-purple-600 dark:text-purple-400 mb-1">Plastic</div>
                 <div className="text-xs text-gray-600 dark:text-gray-400">2.0kg CO₂/kg</div>
                 <div className="text-xs text-gray-600 dark:text-gray-400">40L H₂O/kg</div>
-              </div>
+            </div>
               <div className="text-center bg-white dark:bg-gray-600 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
                 <div className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Metal</div>
                 <div className="text-xs text-gray-600 dark:text-gray-400">6.0kg CO₂/kg</div>
                 <div className="text-xs text-gray-600 dark:text-gray-400">95L H₂O/kg</div>
-            </div>
+          </div>
               <div className="text-center bg-white dark:bg-gray-600 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
                 <div className="text-sm font-semibold text-green-600 dark:text-green-400 mb-1">Glass</div>
                 <div className="text-xs text-gray-600 dark:text-gray-400">0.5kg CO₂/kg</div>
@@ -1134,10 +1134,10 @@ export default function RecyclerDashboard() {
             </div>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
-              * Based on EPA and recycling industry research data
-            </p>
-          </div>
+            * Based on EPA and recycling industry research data
+          </p>
         </div>
+      </div>
       </div>
       
       {/* Zoom Modal */}

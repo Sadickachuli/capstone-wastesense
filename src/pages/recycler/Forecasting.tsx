@@ -147,7 +147,7 @@ export default function Forecasting() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-              {[1,2,3,4,5].map(i => (
+            {[1,2,3,4,5].map(i => (
                 <div key={i} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center">
                   <div className="w-full bg-gray-200 dark:bg-gray-600 rounded animate-pulse mb-3" style={{ height: `${60 + i*10}px` }}></div>
                   <div className="h-4 w-16 bg-gray-200 dark:bg-gray-600 rounded animate-pulse mx-auto"></div>
@@ -165,7 +165,7 @@ export default function Forecasting() {
                   </p>
                 </div>
               </div>
-            </div>
+          </div>
         </div>
       )}
       

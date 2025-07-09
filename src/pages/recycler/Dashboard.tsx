@@ -762,13 +762,19 @@ export default function RecyclerDashboard() {
               </div>
               <div className="mb-4">
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={allTypes.map(type => ({ type, percent: northComp[`${type}_percent`] ?? 0 }))}>
+              <BarChart data={allTypes.map(type => ({ 
+                type: type.charAt(0).toUpperCase() + type.slice(1), 
+                percent: northComp[`${type}_percent`] ?? 0,
+                fill: WASTE_COLORS[type] || '#8884d8'
+              }))}>
                 <XAxis dataKey="type" />
                 <YAxis unit="%" domain={[0, 100]} />
                 <Tooltip />
-                {allTypes.map(type => (
-                  <Bar key={type} dataKey={d => d.type === type ? d.percent : 0} name={type} fill={WASTE_COLORS[type] || '#8884d8'} />
-                ))}
+                <Bar dataKey="percent" fill="#8884d8">
+                  {allTypes.map((type, index) => (
+                    <Cell key={`cell-${index}`} fill={WASTE_COLORS[type] || '#8884d8'} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
               </div>
@@ -900,13 +906,19 @@ export default function RecyclerDashboard() {
               </div>
               <div className="mb-4">
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={allTypes.map(type => ({ type, percent: southComp[`${type}_percent`] ?? 0 }))}>
+              <BarChart data={allTypes.map(type => ({ 
+                type: type.charAt(0).toUpperCase() + type.slice(1), 
+                percent: southComp[`${type}_percent`] ?? 0,
+                fill: WASTE_COLORS[type] || '#8884d8'
+              }))}>
                 <XAxis dataKey="type" />
                 <YAxis unit="%" domain={[0, 100]} />
                 <Tooltip />
-                {allTypes.map(type => (
-                  <Bar key={type} dataKey={d => d.type === type ? d.percent : 0} name={type} fill={WASTE_COLORS[type] || '#8884d8'} />
-                ))}
+                <Bar dataKey="percent" fill="#8884d8">
+                  {allTypes.map((type, index) => (
+                    <Cell key={`cell-${index}`} fill={WASTE_COLORS[type] || '#8884d8'} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
               </div>

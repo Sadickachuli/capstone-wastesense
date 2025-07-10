@@ -320,7 +320,7 @@ python main.py
 
 ### 🚀 **Live Application**
 
-# WEB APPLICATION LIVE AT: https://wastesense-frontend.onrender.com/
+# WEB APPLICATION IS LIVE AT: https://wastesense-frontend.onrender.com/
 
 - **check the credential list to login and test it with the different roles**
 

@@ -107,7 +107,7 @@ export default function Login() {
             </h2>
             
             <p className={`text-lg mb-8 ${isDarkMode ? 'text-gray-300' : 'text-gray-100'}`}>
-              Join thousands of users transforming Ghana's waste management with AI-powered solutions
+              Join users transforming Ghana's waste management with AI-powered solutions
             </p>
 
             {/* Features Preview */}

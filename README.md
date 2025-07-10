@@ -256,37 +256,40 @@ python main.py
 
 
 
-> - # **Sign In**
+> - # **Sign In and Sign Up**
 
-![09 06 2025_18 06 28_REC](https://github.com/user-attachments/assets/782013f6-9f12-4927-9a17-ca1c624d2145)
+![image](https://github.com/user-attachments/assets/ff8e92e0-52e2-44eb-8831-cd633c83943c)
+![image](https://github.com/user-attachments/assets/76118539-1b9d-4c1a-be6a-d9798ffd4ffb)
+
 
 > - # **Recycler account (with forecasting and analytics)**
 
-![image](https://github.com/user-attachments/assets/3665465c-fc42-47e8-a94e-547137bacca0)
-![Screenshot 2025-07-04 122819](https://github.com/user-attachments/assets/5e42e5d5-0b5d-44c0-8efa-4e3019ee1d97)
-![image](https://github.com/user-attachments/assets/adf08496-cd85-409d-b897-2273d04cff78)
-![image](https://github.com/user-attachments/assets/c0d044c3-348c-4d29-97a1-360282176422)
-![image](https://github.com/user-attachments/assets/6b455ed3-2324-4317-b2d5-a547c16da147)
-![image](https://github.com/user-attachments/assets/a871f78c-61dd-4ff6-b432-a3e10f1db2e1)
-![image](https://github.com/user-attachments/assets/74623aea-a1c8-4e14-b4f2-282c67d398ec)
-![image](https://github.com/user-attachments/assets/ac311d2b-07cb-4924-97c0-07beed2c01d6)
+![image](https://github.com/user-attachments/assets/a667a5d0-fef1-4204-860f-1d0cf9c0279f)
+![image](https://github.com/user-attachments/assets/e8047717-ae17-4a13-8339-91fe2266fcec)
+![image](https://github.com/user-attachments/assets/6c949b61-957a-48d2-8e6c-989ea66d84f3)
+![image](https://github.com/user-attachments/assets/a4af760b-a242-411b-8179-db535515847b)
+![image](https://github.com/user-attachments/assets/22da964b-b8c4-4483-960a-d7807dd3694a)
+![image](https://github.com/user-attachments/assets/37c28cd4-0b8a-4c24-b307-519545f8205c)
+![image](https://github.com/user-attachments/assets/0df4062b-f177-4d4a-827a-5add697d8720)
+![image](https://github.com/user-attachments/assets/566e047e-079b-4c43-9c86-80da9b4c1827)
+![image](https://github.com/user-attachments/assets/eaf83254-cb09-41e8-a286-2cb8b6c1c141)
 
 
 > - # **Dispatcher account (with real-time updates, real-time fuel tracking, manual and ML waste composition input)**
 
-![image](https://github.com/user-attachments/assets/c8072643-0d8e-4030-917f-e576f1d114fc)
-![image](https://github.com/user-attachments/assets/55cd7e09-8a27-4a8d-8cc6-500d60aa2347)
-![image](https://github.com/user-attachments/assets/f7ecac1b-e856-4fb3-8d9d-ffe762e2e66c)
-![image](https://github.com/user-attachments/assets/db0d07c3-fe54-4078-9188-3292e9fa0996)
-
+![image](https://github.com/user-attachments/assets/f2ca430c-a99c-48d9-ba2d-48a594369ad7)
+![image](https://github.com/user-attachments/assets/a0950c4c-f81a-4bfd-8dda-5fa7502314c2)
+![image](https://github.com/user-attachments/assets/2ba6c77c-4bb5-4607-937d-28c4049442b6)
+![image](https://github.com/user-attachments/assets/7bea428e-b8f0-456e-a376-4297f23916ce)
+![image](https://github.com/user-attachments/assets/29bc56b0-47d3-4e0f-af7a-f63472cf8773)
 
 
 > - # **Resident account**
 
-![image](https://github.com/user-attachments/assets/9a6a9e38-11c8-4bf2-9ec3-e1e006716e24)
-![image](https://github.com/user-attachments/assets/d076cfcc-f45f-4eb9-b41c-ea8390d411e2)
-![image](https://github.com/user-attachments/assets/704ce0ec-0aee-4f71-86bb-3a2b5d3c66c0)
-
+![image](https://github.com/user-attachments/assets/927f2715-ce22-485e-ae4a-6b125aa682cf)
+![image](https://github.com/user-attachments/assets/3884f7dd-4e0f-4c5d-b828-b51bb6dfc909)
+![image](https://github.com/user-attachments/assets/9b2631b8-69e9-4bea-a29d-560ad9e9b113)
+![image](https://github.com/user-attachments/assets/b52b8576-6bb4-4099-98f3-55e705f523d7)
 
 ---
 

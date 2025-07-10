@@ -1051,9 +1051,9 @@ export default function DispatcherDashboard() {
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Available Trucks</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Fleet Management</p>
-              </div>
-            </div>
-            
+          </div>
+        </div>
+
             <div className="space-y-4">
               <div className="text-center">
                 <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -2393,7 +2393,7 @@ export default function DispatcherDashboard() {
           </div>
         ))}
       </div>
-    </div>
+      </div>
     </div>
   );
 } 

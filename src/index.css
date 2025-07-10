@@ -199,15 +199,76 @@
   }
 }
 
+/* Enhanced Landing Page Animations */
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 @keyframes float {
-  0% {
+  0%, 100% {
     transform: translateY(0px);
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes floatDelayed {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+@keyframes scrollLeft {
+  0% {
+    transform: translateX(0);
   }
   100% {
-    transform: translateY(0px);
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes gradientXY {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
   }
 }
 
@@ -255,6 +316,20 @@
 
 .animate-float {
   animation: float 3s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: floatDelayed 3s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.animate-scroll-left {
+  animation: scrollLeft 20s linear infinite;
+}
+
+.animate-gradient-xy {
+  background-size: 400% 400%;
+  animation: gradientXY 3s ease infinite;
 }
 
 /* Image hover effects */

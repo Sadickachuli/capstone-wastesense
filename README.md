@@ -249,6 +249,13 @@ python main.py
 ---
 
 ## Designs (Screenshots)
+
+> - # **Landing Page**
+
+![image](https://github.com/user-attachments/assets/3c30b6a5-f71b-4230-ab21-68ef8a4162e0)
+
+
+
 > - # **Sign In**
 
 ![09 06 2025_18 06 28_REC](https://github.com/user-attachments/assets/782013f6-9f12-4927-9a17-ca1c624d2145)

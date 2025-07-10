@@ -310,9 +310,9 @@ export default function LandingPage() {
                 Testimonials
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-500 transition-all duration-300 group-hover:w-full"></span>
               </a>
-            </div>
+        </div>
 
-            <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4">
               <button
                 onClick={toggleDarkMode}
                 className={`relative p-3 rounded-xl transition-all duration-300 group ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700' : 'bg-gray-100 hover:bg-gray-200'}`}
@@ -328,7 +328,7 @@ export default function LandingPage() {
                     </svg>
                   )}
                 </div>
-              </button>
+          </button>
               <Link
                 to="/auth/signin"
                 className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 hover:scale-105 ${isDarkMode ? 'text-gray-300 hover:text-white hover:bg-slate-800' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'}`}
@@ -370,8 +370,8 @@ export default function LandingPage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div className={`space-y-8 ${heroInView ? 'animate-slideInLeft' : 'opacity-0'}`}>
-              <div className="space-y-6">
-                <h1 className="text-5xl md:text-7xl font-bold leading-relaxed">
+              <div className="space-y-8">
+                <h1 className="text-5xl md:text-7xl font-bold mb-6 pb-2" style={{ lineHeight: '1.2' }}>
                   <span className="block bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
                     Your waste is our
                   </span>
@@ -415,7 +415,7 @@ export default function LandingPage() {
                 <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500 to-blue-600 rounded-3xl blur opacity-30 group-hover:opacity-50 transition duration-700"></div>
                 <div className="relative">
                   <img
-                    src="/waste-bg3.jpg"
+                    src="/wastebg1.jpg"
                     alt="Smart Waste Management"
                     className="w-full h-auto rounded-3xl shadow-2xl transform group-hover:scale-105 transition-all duration-700"
                   />
@@ -502,8 +502,8 @@ export default function LandingPage() {
                     ></div>
                   </div>
                 </div>
-              </div>
-            ))}
+          </div>
+        ))}
           </div>
         </div>
       </section>
@@ -696,7 +696,7 @@ export default function LandingPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+              </div>
               ))}
             </div>
             

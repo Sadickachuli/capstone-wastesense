@@ -221,10 +221,10 @@ export default function ResidentDashboard() {
                 <div className="relative w-20 h-20 bg-gradient-to-br from-emerald-500 via-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl transform group-hover:scale-105 transition-all duration-300">
                   <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
                     <span className="text-white font-bold text-2xl tracking-wide">
-                      {user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : 'U'}
-                    </span>
-                  </div>
-                </div>
+            {user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : 'U'}
+          </span>
+        </div>
+      </div>
               </div>
               <div className="space-y-2">
                 <h1 className={`text-4xl font-bold bg-gradient-to-r ${isDarkMode ? 'from-white via-blue-100 to-emerald-200' : 'from-gray-900 via-blue-900 to-emerald-900'} bg-clip-text text-transparent`}>
@@ -244,7 +244,7 @@ export default function ResidentDashboard() {
                   <span className={`text-lg font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                     {user?.zone || 'Zone not assigned'}
                   </span>
-                </div>
+        </div>
               </div>
             </div>
             <div className={`mt-6 sm:mt-0 transition-all duration-600 ease-out delay-200 ${animationInView ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
@@ -450,8 +450,8 @@ export default function ResidentDashboard() {
                       {new Date(recentCompletedSchedule.estimatedCompletion).toLocaleDateString()}
                     </span>
                   </div>
-                </div>
-              ) : (
+            </div>
+          ) : (
                 <div className="text-center py-6">
                   <div className="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-500 rounded-2xl flex items-center justify-center mx-auto mb-3">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -464,10 +464,10 @@ export default function ResidentDashboard() {
                   <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
                     Collections are scheduled based on community reports
                   </p>
-                </div>
-              )}
             </div>
-          </div>
+          )}
+        </div>
+      </div>
 
           {/* Reports Summary Card */}
           <div className={`group relative overflow-hidden ${isDarkMode ? 'bg-gray-800/20' : 'bg-white/60'} backdrop-blur-xl rounded-3xl p-8 border ${isDarkMode ? 'border-gray-700/30' : 'border-white/30'} shadow-2xl hover:shadow-3xl transform hover:-translate-y-2 transition-all duration-700 ease-out ${cardsInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'} delay-300`}>
@@ -561,7 +561,7 @@ export default function ResidentDashboard() {
 
         {/* Enhanced Recent Reports & Eco Tips Section */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-12">
-          {/* Recent Reports */}
+      {/* Recent Reports */}
           <div ref={reportsRef} className={`group relative overflow-hidden ${isDarkMode ? 'bg-gray-800/20' : 'bg-white/60'} backdrop-blur-xl rounded-3xl p-8 border ${isDarkMode ? 'border-gray-700/30' : 'border-white/30'} shadow-2xl hover:shadow-3xl transform hover:-translate-y-1 transition-all duration-700 ease-out ${reportsInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
             <div className="relative">
@@ -594,7 +594,7 @@ export default function ResidentDashboard() {
                 </div>
               </div>
               
-              {loading ? (
+        {loading ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="relative">
                     <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -604,11 +604,11 @@ export default function ResidentDashboard() {
                     Loading reports...
                   </span>
                 </div>
-              ) : reports.length > 0 ? (
-                <div className="space-y-4">
+        ) : reports.length > 0 ? (
+          <div className="space-y-4">
                   {reports.slice(0, 3).map((report, index) => (
-                    <div
-                      key={report.id}
+              <div
+                key={report.id}
                       className={`group/item relative overflow-hidden p-5 rounded-2xl border ${isDarkMode ? 'bg-gray-700/30 border-gray-600/30' : 'bg-gray-50/50 border-gray-200/50'} backdrop-blur-sm hover:shadow-lg transform hover:-translate-y-1 transition-all duration-500 ${reportsInView ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}
                       style={{ transitionDelay: `${index * 100}ms` }}
                     >
@@ -621,7 +621,7 @@ export default function ResidentDashboard() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                               </svg>
                             </div>
-                            <div>
+                  <div>
                               <h4 className={`font-semibold ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
                                 Bin Full Report
                               </h4>
@@ -647,13 +647,13 @@ export default function ResidentDashboard() {
                               "{report.description}"
                             </p>
                           )}
-                        </div>
+                  </div>
                         <div className="flex flex-col items-end space-y-2">
-                          <span
+                  <span
                             className={`px-3 py-1.5 text-xs font-semibold rounded-full backdrop-blur-sm ${
-                              report.status === 'completed' || report.status === 'collected'
+                      report.status === 'completed' || report.status === 'collected'
                                 ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/30'
-                                : report.status === 'in-progress'
+                        : report.status === 'in-progress'
                                 ? 'bg-yellow-500/20 text-yellow-600 border border-yellow-500/30'
                                 : 'bg-blue-500/20 text-blue-600 border border-blue-500/30'
                             }`}
@@ -662,16 +662,16 @@ export default function ResidentDashboard() {
                              report.status === 'completed' ? 'Completed' :
                              report.status === 'in-progress' ? 'In Progress' :
                              'New'}
-                          </span>
+                  </span>
                           {report.status === 'in-progress' && (
                             <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
                           )}
                         </div>
-                      </div>
-                    </div>
-                  ))}
                 </div>
-              ) : (
+              </div>
+            ))}
+          </div>
+        ) : (
                 <div className="text-center py-12">
                   <div className="relative mx-auto mb-6">
                     <div className="w-20 h-20 bg-gradient-to-br from-gray-400 to-gray-500 rounded-3xl flex items-center justify-center shadow-xl">
@@ -725,8 +725,8 @@ export default function ResidentDashboard() {
                   </div>
                   <div className="absolute inset-0 w-8 h-8 bg-emerald-500 rounded-full animate-ping opacity-30"></div>
                 </div>
-              </div>
-              
+      </div>
+
               <div className="space-y-4">
                 {[
                   { 
@@ -816,7 +816,7 @@ export default function ResidentDashboard() {
                       </svg>
                     </div>
                   </div>
-                  <div>
+              <div>
                     <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                       Report Bin Full
                     </h3>
@@ -847,18 +847,18 @@ export default function ResidentDashboard() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                     </div>
-                    <input
-                      type="text"
+                <input
+                  type="text"
                       className={`w-full pl-12 pr-4 py-4 border rounded-2xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 ${
                         isDarkMode 
                           ? 'bg-gray-700/50 border-gray-600 text-white placeholder-gray-400' 
                           : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500'
                       }`}
-                      value={user?.zone || ''}
-                      readOnly
+                  value={user?.zone || ''}
+                  readOnly
                       placeholder="Zone not assigned"
-                    />
-                  </div>
+                />
+              </div>
                 </div>
                 
                 <div className="space-y-2">
@@ -866,14 +866,14 @@ export default function ResidentDashboard() {
                     Description <span className="text-gray-500 font-normal">(optional)</span>
                   </label>
                   <div className="relative">
-                    <textarea
+                <textarea
                       className={`w-full px-4 py-4 border rounded-2xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 resize-none ${
                         isDarkMode 
                           ? 'bg-gray-700/50 border-gray-600 text-white placeholder-gray-400' 
                           : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500'
                       }`}
-                      value={description}
-                      onChange={e => setDescription(e.target.value)}
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
                       placeholder="E.g., Bin is overflowing, extra bags left outside, urgent collection needed..."
                       rows={4}
                     />
@@ -901,7 +901,7 @@ export default function ResidentDashboard() {
                         </p>
                       </div>
                     </div>
-                  </div>
+              </div>
                 )}
                 
                 <div className="flex space-x-4 pt-4">
@@ -914,8 +914,8 @@ export default function ResidentDashboard() {
                         : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    Cancel
-                  </button>
+                  Cancel
+                </button>
                   <button
                     type="submit"
                     disabled={submitting}
@@ -937,9 +937,9 @@ export default function ResidentDashboard() {
                         </>
                       )}
                     </div>
-                  </button>
-                </div>
-              </form>
+                </button>
+              </div>
+            </form>
             </div>
           </div>
         </div>
@@ -966,7 +966,7 @@ export default function ResidentDashboard() {
       )}
     </div>
   );
-}
+} 
 
 {/* Add custom animations to global CSS */}
 <style jsx>{`

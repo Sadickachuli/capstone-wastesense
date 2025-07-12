@@ -332,6 +332,14 @@
   animation: gradientXY 3s ease infinite;
 }
 
+.animate-fade-in {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.animate-slide-up {
+  animation: fadeInUp 0.8s ease-out;
+}
+
 /* Image hover effects */
 .image-hover-effect {
   position: relative;

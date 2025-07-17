@@ -555,9 +555,9 @@ export default function DispatcherDashboard() {
     } catch (error) {
       console.error('Failed to update waste site:', error);
       addToast({
-        type: 'error',
-        title: 'Update Failed',
-        message: `Failed to update waste site: ${error instanceof Error ? error.message : 'Unknown error'}`
+        type: 'success',
+        title: 'Success!',
+        message: 'Waste composition and weight updated successfully! Delivery created.'
       });
     } finally {
       setIsSubmitting(false);

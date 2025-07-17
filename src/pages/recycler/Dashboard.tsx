@@ -248,6 +248,12 @@ export default function RecyclerDashboard() {
     message: string;
   }>({ isDownloading: false, message: '' });
 
+  // AI Composition Analysis State (for recyclers)
+  const [wasteImage, setWasteImage] = useState<File | null>(null);
+  const [detectionResult, setDetectionResult] = useState<any>(null);
+  const [detectionLoading, setDetectionLoading] = useState(false);
+  const [detectionError, setDetectionError] = useState('');
+
   // Add CSS animations to the head
   useEffect(() => {
     const style = document.createElement('style');
@@ -534,6 +540,50 @@ export default function RecyclerDashboard() {
       document.body.style.overflow = 'unset';
   };
   }, [isZoomModalOpen]);
+
+  // AI Analysis Functions (for recyclers to analyze waste composition)
+  const handleWasteImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setWasteImage(e.target.files[0]);
+      setDetectionResult(null);
+      setDetectionError('');
+    }
+  };
+
+  const handleWasteImageUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!wasteImage) return;
+    
+    setDetectionLoading(true);
+    setDetectionError('');
+    setDetectionResult(null);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', wasteImage);
+      
+      // Use LLM for waste composition analysis
+      const res = await axios.post(`${API_BASE_URL}/auth/detect-waste-llm`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      
+      setDetectionResult({ 
+        result: res.data.composition, 
+        annotated_image: res.data.annotated_image || '',
+        raw: res.data.raw 
+      });
+    } catch (err: any) {
+      setDetectionError(err?.response?.data?.message || 'Failed to detect waste composition');
+    } finally {
+      setDetectionLoading(false);
+    }
+  };
+
+  const handleResetAnalysis = () => {
+    setWasteImage(null);
+    setDetectionResult(null);
+    setDetectionError('');
+  };
 
   if (sitesLoading || notificationsLoading) {
     return (
@@ -1081,6 +1131,103 @@ export default function RecyclerDashboard() {
         </div>
         )}
         </div>
+
+        {/* AI Composition Analysis Tool for Recyclers */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8 hover:shadow-md transition-all duration-300">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-6 h-6 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">AI Waste Composition Analyzer</h2>
+            <div className="ml-auto flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-sm font-medium text-green-600 dark:text-green-400">Ready</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <form onSubmit={handleWasteImageUpload} className="space-y-4">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleWasteImageChange}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-purple-500"
+                />
+                
+                {wasteImage && (
+                  <img 
+                    src={URL.createObjectURL(wasteImage)} 
+                    alt="Uploaded" 
+                    className="w-full h-32 object-cover rounded-lg border"
+                  />
+                )}
+
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={!wasteImage || detectionLoading}
+                    className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {detectionLoading ? 'Analyzing...' : 'Analyze'}
+                  </button>
+                  {wasteImage && (
+                    <button
+                      type="button"
+                      onClick={handleResetAnalysis}
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      Reset
+                    </button>
+                  )}
+                </div>
+              </form>
+
+              {detectionError && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-red-700 dark:text-red-400 text-sm">
+                  {detectionError}
+                </div>
+              )}
+            </div>
+
+            <div>
+              {detectionResult ? (
+                <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
+                  <h3 className="font-bold text-gray-900 dark:text-white mb-3">AI Results</h3>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    {Object.entries(detectionResult.result).map(([type, percentage]) => (
+                      <div key={type} className="flex justify-between">
+                        <span className="capitalize">{type}:</span>
+                        <span className="font-bold">{Number(percentage)}%</span>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {detectionResult.annotated_image && (
+                    <div className="mt-3">
+                      <img 
+                        src={`data:image/jpeg;base64,${detectionResult.annotated_image}`}
+                        alt="AI Analysis"
+                        className="w-full rounded-lg cursor-pointer"
+                        onClick={() => handleZoomImage(detectionResult.annotated_image, 'AI Analysis')}
+                      />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-8 text-center border-2 border-dashed border-gray-300 dark:border-gray-600">
+                  <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">Upload an image to analyze waste composition</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
                 {/* Environmental Impact Assessment */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 hover:shadow-md transition-all duration-300 animate-fade-in-up">
           <div className="flex items-center gap-3 mb-6">

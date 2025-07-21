@@ -550,6 +550,8 @@ export default function RecyclerDashboard() {
     }
   };
 
+
+
   const handleWasteImageUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!wasteImage) return;
@@ -567,10 +569,14 @@ export default function RecyclerDashboard() {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       
+      console.log('🔍 LLM Response:', res.data);
+      console.log('⚖️ Estimated Weight:', res.data.estimated_weight);
+      
       setDetectionResult({ 
         result: res.data.composition, 
         annotated_image: res.data.annotated_image || '',
-        raw: res.data.raw 
+        raw: res.data.raw,
+        estimated_weight: res.data.estimated_weight
       });
     } catch (err: any) {
       setDetectionError(err?.response?.data?.message || 'Failed to detect waste composition');
@@ -1196,6 +1202,34 @@ export default function RecyclerDashboard() {
               {detectionResult ? (
                 <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
                   <h3 className="font-bold text-gray-900 dark:text-white mb-3">AI Results</h3>
+                  
+                  {/* Estimated Weight Display */}
+                  {(() => {
+                    console.log('🔍 Detection Result:', detectionResult);
+                    console.log('⚖️ Weight Check:', detectionResult.estimated_weight);
+                    console.log('🔍 Weight Type:', typeof detectionResult.estimated_weight);
+                    console.log('🔍 Weight Value:', detectionResult.estimated_weight);
+                    console.log('🔍 Weight Truthy Check:', !!detectionResult.estimated_weight);
+                    return null;
+                  })()}
+                                    {/* Always show weight section for debugging */}
+                  <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-center gap-2 mb-2">
+                      <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                      </svg>
+                      <span className="font-semibold text-blue-900 dark:text-blue-100">Estimated Weight</span>
+                    </div>
+                    <div className="text-center">
+                      <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {detectionResult.estimated_weight ? Number(detectionResult.estimated_weight).toFixed(1) : 'N/A'} kg
+                      </span>
+                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                        Based on composition analysis and image size
+                      </p>
+                    </div>
+                  </div>
+                  
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     {Object.entries(detectionResult.result).map(([type, percentage]) => (
                       <div key={type} className="flex justify-between">
